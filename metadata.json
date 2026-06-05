@@ -1,0 +1,8 @@
+{
+  "name": "Foren Clue",
+  "description": "India\u0027s First Dedicated Forensic EdTech Platform featuring case-based learning, courses, and interactive experiences.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
