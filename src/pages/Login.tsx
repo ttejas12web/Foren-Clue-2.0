@@ -53,10 +53,21 @@ export default function Login() {
   }, [user, loading, navigate, from]);
 
   const handleGoogleLogin = async () => {
+    setAuthError('');
+    setAuthSuccess('');
     try {
       await signInWithGoogle();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      let errMsg = error.message || "An unexpected error occurred during Google sign-in.";
+      if (error.code === 'auth/unauthorized-domain') {
+        errMsg = "UNAUTHORIZED_DOMAIN";
+      } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found') {
+        errMsg = "GOOGLE_NOT_ENABLED";
+      } else if (error.code === 'auth/popup-blocked') {
+        errMsg = "The sign-in popup was blocked by your browser settings. Please allow popups for this site.";
+      }
+      setAuthError(errMsg);
     }
   };
 
@@ -185,7 +196,13 @@ export default function Login() {
                   <AlertCircle size={16} className="shrink-0 mt-0.5 animate-pulse" />
                   <div className="flex-1 min-w-0">
                     <span className="font-bold uppercase tracking-wider block mb-1">
-                      {authError === 'EMAIL_NOT_ENABLED' ? "Email Sign-in Disabled" : "Authorization Revoked"}
+                      {authError === 'EMAIL_NOT_ENABLED' 
+                        ? "Email Sign-in Disabled" 
+                        : authError === 'UNAUTHORIZED_DOMAIN' 
+                        ? "Unauthorized Domain for Google Login" 
+                        : authError === 'GOOGLE_NOT_ENABLED'
+                        ? "Google Authentication Disabled"
+                        : "Authorization Revoked"}
                     </span>
                     {authError === 'EMAIL_NOT_ENABLED' ? (
                       <div className="mt-2 text-text-muted space-y-2">
@@ -203,6 +220,41 @@ export default function Login() {
                         <p className="mt-3 text-[10px] border-t border-red-500/10 pt-2 text-warning font-bold">
                           💡 Alternative quick fix: You can use "Sign In with Google" below, which works immediately!
                         </p>
+                      </div>
+                    ) : authError === 'UNAUTHORIZED_DOMAIN' ? (
+                      <div className="mt-2 text-text-muted space-y-2">
+                        <p className="font-bold text-red-500 dark:text-red-400">
+                          This website domain is not added to the authorized list in your Firebase project (<span className="font-mono">gen-lang-client-0244976845</span>).
+                        </p>
+                        <p className="text-[11px] font-semibold text-text-main">
+                          Current Domain to Auth: <span className="bg-black/30 px-1.5 py-0.5 rounded font-mono text-warning text-sm select-all">{window.location.hostname}</span>
+                        </p>
+                        <p className="text-[11px]">To authorize this domain and enable Google Login:</p>
+                        <ol className="list-decimal pl-4 space-y-1.5 mt-1 font-sans text-[11px] text-text-muted select-text">
+                          <li>Go to the <span className="font-bold text-text-main underline">Firebase Console</span>.</li>
+                          <li>Navigate to <span className="font-bold">Build &gt; Authentication</span>.</li>
+                          <li>Click on the <span className="font-bold">Settings</span> tab on the top-right.</li>
+                          <li>Select <span className="font-bold">Authorized domains</span> in the side pane.</li>
+                          <li>Click <span className="font-bold">Add domain</span> and paste: <span className="bg-black/40 px-1 py-0.5 rounded font-mono text-warning select-all text-xs">{window.location.hostname}</span></li>
+                          <li>Click <span className="font-bold">Add</span> to save the changes.</li>
+                        </ol>
+                        <p className="text-[10px] text-warning/90 mt-2 font-bold leading-relaxed">
+                          💡 Note: If you have a custom domain mapped (like <span className="font-mono">forensicspot.com</span>), make sure both the preview/development URL AND your custom domain are added there!
+                        </p>
+                      </div>
+                    ) : authError === 'GOOGLE_NOT_ENABLED' ? (
+                      <div className="mt-2 text-text-muted space-y-2">
+                        <p className="font-bold text-red-500 dark:text-red-400">
+                          Google Login is not enabled in your Firebase Authentication settings.
+                        </p>
+                        <p className="text-[11px]">To enable Google Sign-In in your project:</p>
+                        <ol className="list-decimal pl-4 space-y-1.5 mt-1 font-sans text-[11px] text-text-muted select-text">
+                          <li>Go to the <span className="font-bold text-text-main underline">Firebase Console</span>.</li>
+                          <li>Navigate to <span className="font-bold">Build &gt; Authentication</span>.</li>
+                          <li>Click on the <span className="font-bold">Sign-in method</span> tab.</li>
+                          <li>Click <span className="font-bold">Add new provider</span> and select <span className="font-bold">Google</span>.</li>
+                          <li>Toggle <span className="font-bold">Enable</span>, select your <span className="font-bold">Project support email</span>, and click <span className="font-bold">Save</span>.</li>
+                        </ol>
                       </div>
                     ) : (
                       <span>{authError}</span>
