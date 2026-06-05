@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 import { storage } from './firebase';
 
 class LocalFileStore {
@@ -132,28 +132,74 @@ async function uploadToServerDisk(file: File, onStatusChange?: (msg: string) => 
 }
 
 /**
- * Resilient upload utility that tries Cloud Storage with a fail-fast timeout,
+ * Resilient upload utility that tries Cloud Storage with progress updates and a timeout,
  * falls back to our Express server uploads disk, and ultimately falls back to IndexedDB.
  */
 export async function uploadFileResilient(
-  file: File, 
+  file: File | Blob, 
   cloudPath: string, 
   onStatusChange?: (msg: string) => void
 ): Promise<{ url: string; isFallback: boolean }> {
   
+  // Convert Blob into a File if it's not already, ensuring it has a 'name' field
+  let fileToUpload: File;
+  if (file instanceof File) {
+    fileToUpload = file;
+  } else {
+    const extension = file.type.split('/')[1] || 'bin';
+    fileToUpload = new File([file], `evidence_${Date.now()}.${extension}`, { type: file.type });
+  }
+
   if (storage) {
     try {
-      if (onStatusChange) onStatusChange('Attempting secure upload to Firebase Cloud Storage...');
+      if (onStatusChange) onStatusChange('Connecting to Firebase Cloud Storage...');
       const fileRef = ref(storage, cloudPath);
       
-      // Attempt Firebase Storage upload with a strict 4.5-second timeout
-      const uploadTask = uploadBytes(fileRef, file);
-      const snapshot = await withTimeout(uploadTask, 4500, "Firebase Cloud Storage took too long to respond.");
-      
-      const getUrlTask = getDownloadURL(snapshot.ref);
-      const downloadUrl = await withTimeout(getUrlTask, 3000, "Firebase URL retrieval timeout.");
-      
-      return { url: downloadUrl, isFallback: false };
+      const uploadPromise = new Promise<{ url: string; isFallback: boolean }>((resolve, reject) => {
+        if (onStatusChange) onStatusChange('Starting Cloud Storage upload...');
+        
+        const metadata = {
+          contentType: fileToUpload.type || 'application/octet-stream',
+        };
+        
+        const uploadTask = uploadBytesResumable(fileRef, fileToUpload, metadata);
+        
+        let completed = false;
+
+        const unsubscribe = uploadTask.on('state_changed', 
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const progressFormatted = isNaN(progress) ? 0 : Math.round(progress);
+            if (onStatusChange) {
+              onStatusChange(`Cloud Storage: ${progressFormatted}% complete`);
+            }
+          }, 
+          (err) => {
+            if (!completed) {
+              completed = true;
+              unsubscribe();
+              reject(err);
+            }
+          }, 
+          async () => {
+            try {
+              if (!completed) {
+                completed = true;
+                unsubscribe();
+                if (onStatusChange) onStatusChange('Retrieving secure download URL...');
+                const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve({ url: downloadUrl, isFallback: false });
+              }
+            } catch (err) {
+              reject(err);
+            }
+          }
+        );
+      });
+
+      // Attempt Firebase Storage upload with a generous 45-second timeout
+      const result = await withTimeout(uploadPromise, 45000, "Firebase Storage took too long to complete.");
+      return result;
     } catch (err: any) {
       console.warn("Cloud storage upload rejected or timed out. Handing off to Express server disk layer:", err);
     }
@@ -163,7 +209,7 @@ export async function uploadFileResilient(
 
   // Fallback 1: High-performance shared Server Disk storage
   try {
-    const serverUrl = await uploadToServerDisk(file, onStatusChange);
+    const serverUrl = await uploadToServerDisk(fileToUpload, onStatusChange);
     return { url: serverUrl, isFallback: false };
   } catch (serverErr) {
     console.warn("Express server disk write failed or rejected. Resorting to fallback local IndexedDB database:", serverErr);
@@ -173,8 +219,8 @@ export async function uploadFileResilient(
   if (onStatusChange) onStatusChange('Switching to local browser sandbox database (IndexedDB)...');
   
   // Create a clean key for IndexedDB
-  const uniqueId = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-  const localUrl = await localFileStore.saveFile(uniqueId, file);
+  const uniqueId = `${Date.now()}_${fileToUpload.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const localUrl = await localFileStore.saveFile(uniqueId, fileToUpload);
   
   return { url: localUrl, isFallback: true };
 }

@@ -35,9 +35,10 @@ import {
   updateDoc,
   getDoc
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL } from 'firebase/storage';
 import { db, storage, OperationType, handleFirestoreError } from '../lib/firebase';
 import { compressImage } from '../lib/image-utils';
+import { uploadFileResilient } from '../lib/localFileStore';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserBadge, UserBadgeCompact } from '../components/ui/UserBadge';
 
@@ -161,14 +162,12 @@ export default function Community() {
         const compressedBlob = await compressImage(newImageFile, 800, 0.6);
         
         try {
-          if (storage) {
-            setPostingStatus('Uploading evidence...');
-            const fileRef = ref(storage, `doubts/${id}/evidence-${Date.now()}.jpg`);
-            const snapshot = await uploadBytes(fileRef, compressedBlob);
-            imageUrl = await getDownloadURL(snapshot.ref);
-          } else {
-            throw new Error('Storage not initialized');
-          }
+          const uploadResult = await uploadFileResilient(
+            compressedBlob, 
+            `doubts/${id}/evidence-${Date.now()}.jpg`, 
+            (msg) => setPostingStatus(msg)
+          );
+          imageUrl = uploadResult.url;
         } catch (storageErr) {
           console.warn("Storage upload failed, fallback to base64:", storageErr);
           setPostingStatus('Encoding evidence...');
@@ -682,14 +681,12 @@ export function PostCard({
         const compressedBlob = await compressImage(editImageFile, 800, 0.6);
         
         try {
-          if (storage) {
-            setEditStatus('Uploading updated evidence...');
-            const fileRef = ref(storage, `doubts/${doubt.id}/evidence-${Date.now()}.jpg`);
-            const snapshot = await uploadBytes(fileRef, compressedBlob);
-            finalImageUrl = await getDownloadURL(snapshot.ref);
-          } else {
-            throw new Error('Storage unavailable');
-          }
+          const uploadResult = await uploadFileResilient(
+            compressedBlob, 
+            `doubts/${doubt.id}/evidence-${Date.now()}.jpg`, 
+            (msg) => setEditStatus(msg)
+          );
+          finalImageUrl = uploadResult.url;
         } catch (storageErr) {
           console.warn("Storage upload failed, fallback to base64 in update:", storageErr);
           setEditStatus('Encoding base64...');
