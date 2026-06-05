@@ -104,7 +104,7 @@ const convertToBase64 = (file: File): Promise<string> => {
   });
 };
 
-async function uploadToServerDisk(file: File, onStatusChange?: (msg: string) => void): Promise<string> {
+async function uploadToServerDisk(file: File, cloudPath: string, onStatusChange?: (msg: string) => void): Promise<string> {
   if (onStatusChange) onStatusChange('Routing upload safely to High-Performance Server storage...');
   const base64Data = await convertToBase64(file);
   const response = await fetch('/api/upload', {
@@ -115,7 +115,8 @@ async function uploadToServerDisk(file: File, onStatusChange?: (msg: string) => 
     body: JSON.stringify({
       fileName: file.name,
       fileType: file.type,
-      base64Data: base64Data
+      base64Data: base64Data,
+      cloudPath: cloudPath
     })
   });
 
@@ -209,13 +210,39 @@ export async function uploadFileResilient(
 
   // Fallback 1: High-performance shared Server Disk storage
   try {
-    const serverUrl = await uploadToServerDisk(fileToUpload, onStatusChange);
+    const serverUrl = await uploadToServerDisk(fileToUpload, cloudPath, onStatusChange);
     return { url: serverUrl, isFallback: false };
   } catch (serverErr) {
     console.warn("Express server disk write failed or rejected. Resorting to fallback local IndexedDB database:", serverErr);
   }
 
-  // Fallback 2: Local IndexedDB (strictly browser-local offline sandbox)
+  // Fallback 2: For images, convert to highly-compressed Base64 data-URL so other users can view it too!
+  if (fileToUpload.type.startsWith('image/')) {
+    if (onStatusChange) onStatusChange('Encoding image to resilient offline-safe Base64...');
+    try {
+      const { compressImage } = await import('./image-utils');
+      // Compress to a friendly resolution and quality so it fits comfortably within Firestore boundaries
+      const compressedBlob = await compressImage(fileToUpload, 800, 0.6);
+      const base64Url = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(compressedBlob);
+      });
+      return { url: base64Url, isFallback: true };
+    } catch (compressErr) {
+      console.warn("Compression failed during Base64 fallback, using raw file:", compressErr);
+      const base64Url = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileToUpload);
+      });
+      return { url: base64Url, isFallback: true };
+    }
+  }
+
+  // Fallback 3: Local IndexedDB (for non-image files like large PDFs, which are too big for Base64 injection)
   if (onStatusChange) onStatusChange('Switching to local browser sandbox database (IndexedDB)...');
   
   // Create a clean key for IndexedDB

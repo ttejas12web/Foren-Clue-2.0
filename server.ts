@@ -34,6 +34,7 @@ function getDbAdmin() {
       try {
         admin.initializeApp({
           projectId: firebaseConfig.projectId,
+          storageBucket: firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`,
         });
       } catch (err) {
         console.error("Firebase Admin initialization error:", err);
@@ -81,7 +82,7 @@ async function startServer() {
   // Base64 server disk file upload endpoint for resilient backup
   app.post("/api/upload", async (req, res) => {
     try {
-      const { fileName, fileType, base64Data } = req.body;
+      const { fileName, fileType, base64Data, cloudPath } = req.body;
       if (!base64Data) {
         return res.status(400).json({ error: "Missing base64Data of file." });
       }
@@ -91,21 +92,52 @@ async function startServer() {
       const buffer = Buffer.from(base64Clean, "base64");
 
       const sanitizedName = (fileName || `upload_${Date.now()}`).replace(/[^a-zA-Z0-9.\-_]/g, "_");
+
+      let finalUrl = "";
+      let uploadedToFirebase = false;
+
+      // Try uploading to Firebase Storage permanently from Server
+      try {
+        // Ensure Admin SDK is initialized via lazy helper
+        getDbAdmin();
+
+        const bucketName = firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`;
+        const bucket = admin.storage().bucket(bucketName);
+        const gcsPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
+         
+        const gcsFile = bucket.file(gcsPath);
+
+        await gcsFile.save(buffer, {
+          metadata: {
+            contentType: fileType || "application/octet-stream",
+          },
+          resumable: false,
+        });
+
+        finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media`;
+        console.log(`[Firebase Storage Admin upload] Successfully uploaded ${gcsPath} to ${finalUrl}`);
+        uploadedToFirebase = true;
+      } catch (storageErr) {
+        console.warn("[Firebase Storage Admin upload failed, falling back to server disk write]:", storageErr);
+      }
+
+      // Always write to server disk as duplicate cache/failsafe
       const uniqueFileName = `${Date.now()}_${sanitizedName}`;
       const filePath = path.join(uploadsDir, uniqueFileName);
-
       await fs.promises.writeFile(filePath, buffer);
-      console.log(`[Server disk upload] File written: ${uniqueFileName} (${buffer.length} bytes)`);
+      console.log(`[Server disk upload cache, file written] ${uniqueFileName} (${buffer.length} bytes)`);
 
-      // Construct a relative URL so it resolves correctly on any binding domain e.g. forenclue.in
-      const relativeUrl = `/api/uploads/${uniqueFileName}`;
+      if (!uploadedToFirebase) {
+        finalUrl = `/api/uploads/${uniqueFileName}`;
+      }
 
       res.json({
         success: true,
-        url: relativeUrl,
-        relativePath: relativeUrl,
+        url: finalUrl,
+        relativePath: `/api/uploads/${uniqueFileName}`,
         fileName: uniqueFileName,
-        size: buffer.length
+        size: buffer.length,
+        uploadedToFirebase
       });
     } catch (err: any) {
       console.error("[Server disk upload error]:", err);
