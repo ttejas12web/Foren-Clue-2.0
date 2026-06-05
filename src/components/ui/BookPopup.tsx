@@ -59,7 +59,7 @@ export default function BookPopup() {
             <div className="relative mx-auto max-w-[150px] aspect-[3/4.2] rounded-xl overflow-hidden shadow-[0_12px_28px_rgba(0,0,0,0.5)] border border-white/10 mb-5 group">
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent z-10" />
               <img 
-                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEive7NdnBis_kLLqaN2d8q37014tEMd2ftmqFkeCIiLjxkG2sDfip5VQldxh9izJC-KTsD4ZfXnILFWEOG2jmJkwdKww8-jqW-2jAqpTsv4AOE47MkqpHHibGcBN4GhPqN3OIF1xxIbs0KQLRgxfk2XJRsdlQyY_JqqRnajm2-pB1xoiZN4BnkdtDc9ICU/s1500/1779707899.png" 
+                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhxqof8d16pIw99ooiQFBmvUy66_m-xt5h5dqkOo_FeIKmOI9zyDRi6ugPBrFFcwH7ctXZlTGOJjplnfSl7514_w1DTc5Lh9ofqasFs813oVYcSb0xGQXK_cGPTpn9QSXK0FJGtABFYcG6B9UJ05JoM8nngI_hcyATHhipGD63UP44zdyFidt_SZM16RHc/s1536/0E77EF71-2531-44E9-9C0B-0F14A5324EB3.png" 
                 alt="Forensic Careers Blueprint Book" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
