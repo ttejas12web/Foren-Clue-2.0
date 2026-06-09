@@ -35,6 +35,8 @@ import {
   FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { DNAViewer } from "@/components/ui/ThreeDElement";
 import { SEO } from "@/components/layout/SEO";
 
@@ -69,7 +71,8 @@ interface CareerTrack {
 
 export default function Careers() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Selected career track tab state
   const [activeTab, setActiveTab] = useState<string>('csi');
@@ -82,6 +85,17 @@ export default function Careers() {
   const [quizStep, setQuizStep] = useState<number>(0);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
   const [quizRecommendation, setQuizRecommendation] = useState<string | null>(null);
+
+  // Load careerSpeciality from profile when available
+  useEffect(() => {
+    if (userProfile?.careerSpeciality) {
+      setActiveTab(userProfile.careerSpeciality);
+      setQuizRecommendation(userProfile.careerSpeciality);
+      if (userProfile.careerQuizAnswers) {
+        setQuizAnswers(userProfile.careerQuizAnswers);
+      }
+    }
+  }, [userProfile]);
 
   // Milestone expansion state: maps milestone ID to boolean
   const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({
@@ -514,7 +528,7 @@ export default function Careers() {
   }, [completedItems, careerTracks, user]);
 
   // 3-Question Path Finder Quiz Logic
-  const handleQuizAnswer = (option: string) => {
+  const handleQuizAnswer = async (option: string) => {
     const newAnswers = [...quizAnswers, option];
     setQuizAnswers(newAnswers);
     
@@ -541,6 +555,23 @@ export default function Careers() {
 
       setQuizRecommendation(maxTrack);
       setQuizStep(3); // Result screen
+
+      // Save to user profile in Firestore if logged in
+      if (user?.uid) {
+        setIsSaving(true);
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            careerSpeciality: maxTrack,
+            careerQuizAnswers: newAnswers
+          });
+          console.log("Successfully saved career roadmap visualizer data to user profile in Firestore:", maxTrack);
+        } catch (error) {
+          console.error("Failed to save career visualizer data to user profile:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      }
     }
   };
 
@@ -819,7 +850,7 @@ export default function Careers() {
                     Based on your analytical preferences and workplace styles, our platform recommends focusing on:
                   </p>
 
-                  <div className="my-6 inline-block bg-white/5 px-6 py-4 rounded-xl border border-warning/30 max-w-sm">
+                  <div className="my-6 inline-block bg-white/5 px-6 py-4 rounded-xl border border-warning/30 max-w-sm w-full sm:w-auto">
                     <span className="block font-mono text-[9px] uppercase tracking-wider text-warning mb-1">Recommended Pathway</span>
                     <span className="text-lg font-heading font-black text-white uppercase block">
                       {quizRecommendation === 'csi' && 'Crime Scene Investigator (CSI)'}
@@ -827,6 +858,12 @@ export default function Careers() {
                       {quizRecommendation === 'tox' && 'Forensic Toxicologist'}
                       {quizRecommendation === 'digital' && 'Digital Forensics Expert'}
                     </span>
+                    {user && (
+                      <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-mono text-emerald-400 uppercase tracking-widest bg-emerald-500/10 py-1.5 px-3 rounded-lg border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>{isSaving ? "Syncing profile..." : "Saved to Profile"}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-3">

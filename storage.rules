@@ -59,5 +59,28 @@ service firebase.storage {
         allow delete: if true;
       }
     }
+
+    // Doubts and community discussion images and attachments
+    match /doubts {
+      match /{allPaths=**} {
+        // Publicly readable for the community forum
+        allow read: if true;
+
+        // Image upload max size of 15MB
+        allow create, update: if request.resource.size < 15 * 1024 * 1024;
+
+        // Allow deletion
+        allow delete: if true;
+      }
+    }
+
+    // Default uploads folder cache
+    match /uploads {
+      match /{allPaths=**} {
+        allow read: if true;
+        allow create, update: if request.resource.size < 50 * 1024 * 1024;
+        allow delete: if true;
+      }
+    }
   }
 }

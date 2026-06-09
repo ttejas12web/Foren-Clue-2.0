@@ -18,6 +18,8 @@ interface UserProfile {
   quizScores?: Record<string, Record<string, number>>;
   doubtsCount?: number;
   commentsCount?: number;
+  careerSpeciality?: string | null;
+  careerQuizAnswers?: string[] | null;
 }
 
 interface AuthContextType {

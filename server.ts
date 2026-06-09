@@ -56,10 +56,14 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Create uploads directory on server start if it doesn't exist
+  // Create uploads and temp directory on server start if it doesn't exist
   const uploadsDir = path.join(process.cwd(), "uploads");
+  const tempDirBase = path.join(uploadsDir, "temp");
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!fs.existsSync(tempDirBase)) {
+    fs.mkdirSync(tempDirBase, { recursive: true });
   }
 
   // Serve uploaded files statically
@@ -77,6 +81,148 @@ async function startServer() {
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Chunked upload endpoint to bypass nginx 1MB request limits in iframe sandboxes
+  app.post("/api/upload-chunk", async (req, res) => {
+    try {
+      const { uploadId, chunkIndex, totalChunks, fileName, fileType, base64Data, cloudPath } = req.body;
+      
+      if (!uploadId || chunkIndex === undefined || totalChunks === undefined || !base64Data) {
+        return res.status(400).json({ error: "Missing required chunk upload payload parameters." });
+      }
+
+      const tempUploadDir = path.join(tempDirBase, uploadId);
+      if (!fs.existsSync(tempUploadDir)) {
+        fs.mkdirSync(tempUploadDir, { recursive: true });
+      }
+
+      // Strip potential data url prefix
+      const base64Clean = base64Data.replace(/^data:.*?;base64,/, "");
+      const chunkBuffer = Buffer.from(base64Clean, "base64");
+
+      const chunkPath = path.join(tempUploadDir, `chunk_${chunkIndex}`);
+      await fs.promises.writeFile(chunkPath, chunkBuffer);
+
+      console.log(`[Chunk upload] Saved chunk ${chunkIndex + 1}/${totalChunks} for upload ${uploadId} (${chunkBuffer.length} bytes)`);
+
+      // If it is the last chunk, perform concatenation and process save
+      if (chunkIndex === totalChunks - 1) {
+        console.log(`[Chunk upload] Last chunk received. Consolidating all ${totalChunks} chunks...`);
+        const buffers: Buffer[] = [];
+        for (let i = 0; i < totalChunks; i++) {
+          const currentChunkPath = path.join(tempUploadDir, `chunk_${i}`);
+          if (!fs.existsSync(currentChunkPath)) {
+            throw new Error(`Missing expected chunk file ${i} at ${currentChunkPath}`);
+          }
+          const chunkBuf = await fs.promises.readFile(currentChunkPath);
+          buffers.push(chunkBuf);
+        }
+
+        const consolidatedBuffer = Buffer.concat(buffers);
+        console.log(`[Chunk upload] Consolidation successful. Full size: ${consolidatedBuffer.length} bytes`);
+
+        // Perform standard upload logic
+        const sanitizedName = (fileName || `upload_${Date.now()}`).replace(/[^a-zA-Z0-9.\-_]/g, "_");
+        let finalUrl = "";
+        let uploadedToFirebase = false;
+
+        // Try permanently uploading of consolidated file to Firebase Storage from Server Admin SDK
+        try {
+          getDbAdmin();
+
+          const bucketCandidates: string[] = [];
+          if (firebaseConfig.storageBucket) {
+            bucketCandidates.push(firebaseConfig.storageBucket);
+          }
+          if (firebaseConfig.projectId) {
+            const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
+            const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
+            const rawIdBucket = firebaseConfig.projectId;
+            if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
+            if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
+            if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
+          }
+
+          const gcsPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
+          const token = crypto.randomUUID();
+          let lastErr: any = null;
+
+          for (const bucketName of bucketCandidates) {
+            try {
+              console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
+              const bucket = admin.storage().bucket(bucketName);
+              const gcsFile = bucket.file(gcsPath);
+
+              await gcsFile.save(consolidatedBuffer, {
+                metadata: {
+                  contentType: fileType || "application/octet-stream",
+                  metadata: {
+                    firebaseStorageDownloadTokens: token,
+                  }
+                },
+                resumable: false,
+              });
+
+              finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
+              console.log(`[Firebase Storage Admin upload] Successfully uploaded consolidated file ${gcsPath} to ${bucketName} with url ${finalUrl}`);
+              uploadedToFirebase = true;
+              break;
+            } catch (err: any) {
+              console.warn(`[Firebase Storage Admin upload] Attempt failed for bucket ${bucketName}:`, err.message || err);
+              lastErr = err;
+            }
+          }
+
+          if (!uploadedToFirebase && lastErr) {
+            throw lastErr;
+          }
+        } catch (storageErr: any) {
+          console.warn("[Firebase Storage Admin upload failed (consolidated), falling to server disk]:", storageErr.message || storageErr);
+        }
+
+        // Always save to server disk as fail-safe backup
+        const uniqueFileName = `${Date.now()}_${sanitizedName}`;
+        const filePath = path.join(uploadsDir, uniqueFileName);
+        await fs.promises.writeFile(filePath, consolidatedBuffer);
+        console.log(`[Server disk upload cache, consolidated file written] ${uniqueFileName} (${consolidatedBuffer.length} bytes)`);
+
+        if (!uploadedToFirebase) {
+          finalUrl = `/api/uploads/${uniqueFileName}`;
+        }
+
+        // Clean up temporary chunks
+        try {
+          for (let i = 0; i < totalChunks; i++) {
+            await fs.promises.unlink(path.join(tempUploadDir, `chunk_${i}`));
+          }
+          await fs.promises.rmdir(tempUploadDir);
+          console.log(`[Chunk upload] Cleaned up temp upload directory: ${tempUploadDir}`);
+        } catch (cleanupErr) {
+          console.warn(`[Chunk upload] Cleaned up error or warning:`, cleanupErr);
+        }
+
+        return res.json({
+          success: true,
+          url: finalUrl,
+          relativePath: `/api/uploads/${uniqueFileName}`,
+          fileName: uniqueFileName,
+          size: consolidatedBuffer.length,
+          uploadedToFirebase
+        });
+      }
+
+      // For intermediate chunks, return progress status
+      res.json({
+        success: true,
+        chunkReceived: chunkIndex,
+        isCompleted: false
+      });
+
+    } catch (err: any) {
+      console.error("[Chunk upload endpoint error]:", err);
+      res.status(500).json({ error: err.message || "Failed to process slice upload chunk." });
+    }
   });
 
   // Base64 server disk file upload endpoint for resilient backup
@@ -101,22 +247,52 @@ async function startServer() {
         // Ensure Admin SDK is initialized via lazy helper
         getDbAdmin();
 
-        const bucketName = firebaseConfig.storageBucket || `${firebaseConfig.projectId}.firebasestorage.app`;
-        const bucket = admin.storage().bucket(bucketName);
+        const bucketCandidates: string[] = [];
+        if (firebaseConfig.storageBucket) {
+          bucketCandidates.push(firebaseConfig.storageBucket);
+        }
+        if (firebaseConfig.projectId) {
+          const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
+          const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
+          const rawIdBucket = firebaseConfig.projectId;
+          if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
+          if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
+          if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
+        }
+
         const gcsPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
-         
-        const gcsFile = bucket.file(gcsPath);
+        const token = crypto.randomUUID();
+        let lastErr: any = null;
 
-        await gcsFile.save(buffer, {
-          metadata: {
-            contentType: fileType || "application/octet-stream",
-          },
-          resumable: false,
-        });
+        for (const bucketName of bucketCandidates) {
+          try {
+            console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
+            const bucket = admin.storage().bucket(bucketName);
+            const gcsFile = bucket.file(gcsPath);
 
-        finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media`;
-        console.log(`[Firebase Storage Admin upload] Successfully uploaded ${gcsPath} to ${finalUrl}`);
-        uploadedToFirebase = true;
+            await gcsFile.save(buffer, {
+              metadata: {
+                contentType: fileType || "application/octet-stream",
+                metadata: {
+                  firebaseStorageDownloadTokens: token,
+                }
+              },
+              resumable: false,
+            });
+
+            finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
+            console.log(`[Firebase Storage Admin upload] Successfully uploaded ${gcsPath} to ${bucketName} with url ${finalUrl}`);
+            uploadedToFirebase = true;
+            break;
+          } catch (err: any) {
+            console.warn(`[Firebase Storage Admin upload] Attempt failed for bucket ${bucketName}:`, err.message || err);
+            lastErr = err;
+          }
+        }
+
+        if (!uploadedToFirebase && lastErr) {
+          throw lastErr;
+        }
       } catch (storageErr) {
         console.warn("[Firebase Storage Admin upload failed, falling back to server disk write]:", storageErr);
       }
@@ -310,22 +486,63 @@ async function startServer() {
         console.error("Error fetching preview metadata:", dbError);
       }
 
+      // Resolve protocol and host dynamically with proxies awareness for fully-qualified social URLs
+      let protocol = 'https';
+      const forwardedProto = req.headers['x-forwarded-proto'];
+      if (forwardedProto) {
+        protocol = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
+      }
+      let host = req.headers['x-forwarded-host'] || req.get('host') || 'forenclue.in';
+      if (Array.isArray(host)) host = host[0];
+      
+      const absoluteUrl = `${protocol}://${host}${req.originalUrl}`;
+
       // Format image URL
       let ogImageUrl = image;
-      if (ogImageUrl && !ogImageUrl.startsWith('http://') && !ogImageUrl.startsWith('https://')) {
-        ogImageUrl = `https://${req.get('host')}${ogImageUrl}`;
+      if (ogImageUrl) {
+        if (!ogImageUrl.startsWith('http://') && !ogImageUrl.startsWith('https://')) {
+          // Prepend absolute site base url to local relative images
+          ogImageUrl = `${protocol}://${host}${ogImageUrl}`;
+        }
+
+        // Dynamically optimize Google User Content / Blogger size parameters to match social preview standards (1200px width)
+        if (ogImageUrl.includes('googleusercontent.com')) {
+          const pathRegex = /\/s\d+(?:-[a-zA-Z0-9_-]+)*\//;
+          if (pathRegex.test(ogImageUrl)) {
+            ogImageUrl = ogImageUrl.replace(pathRegex, '/s1200/');
+          } else {
+            const queryRegex = /=s\d+(?:-[a-zA-Z0-9_-]+)*/;
+            if (queryRegex.test(ogImageUrl)) {
+              ogImageUrl = ogImageUrl.replace(queryRegex, '=s1200');
+            }
+          }
+        }
+      }
+
+      // Standardize mimetype format for crawlers
+      let ogImageType = 'image/png';
+      if (ogImageUrl && ogImageUrl.toLowerCase().endsWith('.jpg') || ogImageUrl?.toLowerCase().endsWith('.jpeg')) {
+        ogImageType = 'image/jpeg';
+      } else if (ogImageUrl && ogImageUrl.toLowerCase().endsWith('.webp')) {
+        ogImageType = 'image/webp';
+      } else if (ogImageUrl && ogImageUrl.toLowerCase().endsWith('.gif')) {
+        ogImageType = 'image/gif';
       }
 
       // Dynamic meta tags injection
       const metaTags = `
     <!-- Dynamic social media preview tags -->
     <meta name="description" content="${summary.replace(/"/g, '&quot;')}" />
-    <link rel="canonical" href="${fullUrl}" />
+    <link rel="canonical" href="${absoluteUrl}" />
+    <link rel="image_src" href="${ogImageUrl}" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${summary.replace(/"/g, '&quot;')}" />
     <meta property="og:image" content="${ogImageUrl}" />
     <meta property="og:image:secure_url" content="${ogImageUrl}" />
-    <meta property="og:url" content="${fullUrl}" />
+    <meta property="og:image:type" content="${ogImageType}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="${absoluteUrl}" />
     <meta property="og:type" content="${req.path === '/cases' || req.path === '/courses' ? 'article' : 'website'}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />

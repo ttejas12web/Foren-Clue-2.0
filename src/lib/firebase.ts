@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -13,12 +13,23 @@ const getRuntimeConfig = () => {
       config.authDomain = 'forensicspot.com';
     }
   }
+  // Standardize the storage bucket to legacy appspot.com if the modern .firebasestorage.app bucket is not yet active/provisioned
+  if (config.storageBucket && config.storageBucket.endsWith('.firebasestorage.app')) {
+    config.storageBucket = config.storageBucket.replace('.firebasestorage.app', '.appspot.com');
+  }
   return config;
 };
 
 const app = initializeApp(getRuntimeConfig());
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
-export const auth = getAuth(app);
+
+// Initialize Firebase Auth explicitly with browserLocalPersistence to bypass the buggy indexedDB persistence 
+// inside sandboxed/restricted iframe preview environments. This avoids the "INTERNAL ASSERTION FAILED: Pending promise was never set" error.
+// We also supply browserPopupRedirectResolver explicitly to prevent "auth/argument-error" on signInWithPopup.
+export const auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence],
+  popupRedirectResolver: browserPopupRedirectResolver
+});
 export let storage: any;
 try {
   storage = getStorage(app);

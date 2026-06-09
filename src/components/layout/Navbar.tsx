@@ -12,6 +12,7 @@ const navLinks = [
   { name: 'Courses', path: '/courses' },
   { name: 'Case Studies', path: '/cases' },
   { name: 'Careers', path: '/careers' },
+  { name: 'Careers Handbook', path: '/files' },
   { name: 'Services', path: '/services' },
   { name: 'E-Library', path: '/ebooks' },
   { name: 'About Us', path: '/about' },

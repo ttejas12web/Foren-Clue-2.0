@@ -22,7 +22,9 @@
         "doubtsCount": { "type": "integer" },
         "commentsCount": { "type": "integer" },
         "progress": { "type": "object" },
-        "quizScores": { "type": "object" }
+        "quizScores": { "type": "object" },
+        "careerSpeciality": { "type": "string" },
+        "careerQuizAnswers": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["uid", "email", "createdAt"]
     },

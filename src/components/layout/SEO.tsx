@@ -67,23 +67,35 @@ export function SEO({
     setMetaTag('property', 'og:type', type);
     setMetaTag('property', 'og:url', absoluteCanonicalUrl);
 
+    // Determine the optimal image URL (override low-res thumbnail parameters if present)
+    let ogImg = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1200/4b5616a4-6069-44a7-ba52-88f965165067.png';
     if (image) {
-      setMetaTag('property', 'og:image', image);
-    } else {
-      // General fall-back logo image
-      setMetaTag('property', 'og:image', 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s372/4b5616a4-6069-44a7-ba52-88f965165067.png');
+      ogImg = image;
     }
+
+    // Proactively optimize Blogger and Google User Content image parameters to deliver ultra-crisp s1200 sizes for social crawlers (Telegram, WhatsApp, etc.)
+    if (ogImg && ogImg.includes('googleusercontent.com')) {
+      const pathRegex = /\/s\d+(?:-[a-zA-Z0-9_-]+)*\//;
+      if (pathRegex.test(ogImg)) {
+        ogImg = ogImg.replace(pathRegex, '/s1200/');
+      } else {
+        const queryRegex = /=s\d+(?:-[a-zA-Z0-9_-]+)*/;
+        if (queryRegex.test(ogImg)) {
+          ogImg = ogImg.replace(queryRegex, '=s1200');
+        }
+      }
+    }
+
+    setMetaTag('property', 'og:image', ogImg);
+    setMetaTag('property', 'og:image:secure_url', ogImg);
+    setMetaTag('property', 'og:image:width', '1200');
+    setMetaTag('property', 'og:image:height', '630');
 
     // Twitter Card social preview metadata
     setMetaTag('name', 'twitter:card', 'summary_large_image');
     setMetaTag('name', 'twitter:title', shareTitle);
     setMetaTag('name', 'twitter:description', description);
-    
-    if (image) {
-      setMetaTag('name', 'twitter:image', image);
-    } else {
-      setMetaTag('name', 'twitter:image', 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s372/4b5616a4-6069-44a7-ba52-88f965165067.png');
-    }
+    setMetaTag('name', 'twitter:image', ogImg);
 
     // Dynamic insertion of Google Schema Markup Structured Data (Organization, Website details)
     const jsonLdData = {
@@ -97,7 +109,7 @@ export function SEO({
         'name': 'ForenClue',
         'logo': {
           '@type': 'ImageObject',
-          'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s372/4b5616a4-6069-44a7-ba52-88f965165067.png'
+          'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1600/4b5616a4-6069-44a7-ba52-88f965165067.png'
         }
       }
     };

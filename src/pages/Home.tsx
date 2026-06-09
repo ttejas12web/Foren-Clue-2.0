@@ -243,68 +243,45 @@ The ForenClue Curriculum Board
             
             {/* Book Mockup & Download Block (12 cols) */}
             <div className="lg:col-span-12 flex flex-col items-center justify-center">
-              {/* Coming Soon Tag */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-warning/15 border border-warning/30 rounded-full text-warning text-xs font-black uppercase tracking-widest mb-6 animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-warning animate-ping" />
-                Coming Soon
+              {/* Available Now Tag */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-warning/15 border border-warning/30 rounded-full text-warning text-xs font-black uppercase tracking-widest mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Available Now
               </div>
 
-              <div className="relative group max-w-sm w-full">
+              <Link to="/files" className="relative group max-w-sm w-full block cursor-pointer">
                 {/* Subtle Ambient Glow */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-warning to-amber-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                 
-                <div className="relative bg-surface border border-black/10 dark:border-white/5 p-6 rounded-2xl shadow-2xl flex flex-col items-center text-center animate-fadeIn">
+                <div className="relative bg-surface border border-black/10 dark:border-white/5 p-6 rounded-2xl shadow-2xl flex flex-col items-center text-center animate-fadeIn transition-colors hover:bg-surface-hover">
                   {/* Book Image */}
                   <div className="relative overflow-hidden rounded-xl border border-black/10 dark:border-white/10 aspect-[3/4] w-full max-w-[280px] mb-6 shadow-xl transition-all duration-500 group-hover:scale-105">
                     <img 
                       src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEive7NdnBis_kLLqaN2d8q37014tEMd2ftmqFkeCIiLjxkG2sDfip5VQldxh9izJC-KTsD4ZfXnILFWEOG2jmJkwdKww8-jqW-2jAqpTsv4AOE47MkqpHHibGcBN4GhPqN3OIF1xxIbs0KQLRgxfk2XJRsdlQyY_JqqRnajm2-pB1xoiZN4BnkdtDc9ICU/s1500/1779707899.png" 
-                      alt="Forensic Investigation Handbook Cover" 
+                      alt="Careers in Forensic Science Handbook Cover" 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute top-3 right-3 bg-warning text-crust text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded shadow-lg">
-                      Exclusive Preview
+                      Kindle Edition
                     </div>
                   </div>
 
                   {/* Title / Description under book */}
-                  <h3 className="font-heading font-black text-lg mb-4 uppercase tracking-tight text-text-main">
-                    Forensic Investigation Handbook
+                  <h3 className="font-heading font-black text-xl mb-2 uppercase tracking-tight text-text-main group-hover:text-warning transition-colors">
+                    Careers in Forensic Science
                   </h3>
+                  
+                  <p className="text-xs text-text-muted mb-6 leading-relaxed max-w-xs">
+                    Comprehensive Handbook For Careers In Forensic Science. Tap to view pathways, entrance examinations guidelines, admission guides, and reader reviews.
+                  </p>
 
-                  {/* Download / Notify Button with Newsletter subscription form */}
-                  {!isJoined ? (
-                    <form 
-                      onSubmit={(e) => { 
-                        e.preventDefault(); 
-                        if (waitlistEmail.trim()) {
-                          setIsJoined(true); 
-                        }
-                      }} 
-                      className="w-full flex flex-col gap-2.5"
-                    >
-                      <input 
-                        type="email" 
-                        required 
-                        placeholder="Enter your email for launch access & updates" 
-                        value={waitlistEmail}
-                        onChange={(e) => setWaitlistEmail(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl bg-crust border border-black/15 dark:border-white/10 text-text-main placeholder-text-muted focus:border-warning outline-none text-xs text-center"
-                      />
-                      <button 
-                        type="submit"
-                        className="w-full px-6 py-3 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-xs shadow-lg hover:shadow-warning/20 cursor-pointer active:scale-95"
-                      >
-                        Notify Me on Launch
-                      </button>
-                    </form>
-                  ) : (
-                    <div className="w-full p-4 bg-warning/10 border border-warning/20 rounded-xl text-center text-xs font-bold text-warning uppercase tracking-wide">
-                      ⚡ Registration Confirmed! We will email you on Launch!
-                    </div>
-                  )}
+                  <div className="w-full px-6 py-3 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-xs shadow-lg hover:shadow-warning/20">
+                    <span>View Handbook Details</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
           </div>

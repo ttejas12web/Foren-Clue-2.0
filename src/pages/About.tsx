@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { SEO } from '@/components/layout/SEO';
 
@@ -32,6 +33,7 @@ const TeamCard = ({ member }: { member: any }) => {
 
   return (
     <motion.div 
+      id={member.name.toLowerCase().replace(/\s+/g, '-')}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -73,6 +75,19 @@ const TeamCard = ({ member }: { member: any }) => {
 };
 
 export default function About() {
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const id = decodeURIComponent(hash.replace('#', ''));
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    }
+  }, []);
+
   const team = [
     {
       name: "Tejas Tapse",

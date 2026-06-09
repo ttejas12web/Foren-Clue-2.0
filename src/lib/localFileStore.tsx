@@ -122,14 +122,93 @@ async function uploadToServerDisk(file: File, cloudPath: string, onStatusChange?
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Server side upload pipeline rejected: ${text || response.statusText}`);
+    console.error(`[uploadToServerDisk] Server returned failing status ${response.status}:`, text);
+    throw new Error(`Server side upload pipeline rejected (${response.status}): ${text || response.statusText}`);
   }
 
   const data = await response.json();
   if (data && data.url) {
+    console.log(`[uploadToServerDisk] Successfully uploaded file to server. URL:`, data.url);
     return data.url;
   }
+  console.error(`[uploadToServerDisk] Server response parsed but missing URL:`, data);
   throw new Error('Malformed server file-upload response');
+}
+
+/**
+ * Splits a file into ultra-conservative, small chunks (e.g. 300KB each), transfers them individually 
+ * using /api/upload-chunk to bypass nginx client_max_body_size limits in preview iframe environment, 
+ * and gets the final aggregated remote url location back.
+ */
+async function uploadChunksToServer(
+  file: File, 
+  cloudPath: string, 
+  onStatusChange?: (msg: string) => void
+): Promise<string> {
+  const uploadId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const chunkSize = 300 * 1024; // 300KB chunks (highly conservative, well below 1MB nginx reverse proxy cap)
+  const totalChunks = Math.ceil(file.size / chunkSize);
+  
+  if (onStatusChange) onStatusChange(`Preparing secure multi-part chunked transfer (${totalChunks} segments)...`);
+  console.log(`[uploadChunksToServer] Initiating chunked upload of "${file.name}" (${file.size} bytes). Total pieces: ${totalChunks}`);
+
+  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+    const start = chunkIndex * chunkSize;
+    const end = Math.min(start + chunkSize, file.size);
+    const chunkBlob = file.slice(start, end);
+    
+    // Progress calculation
+    const percent = Math.round((chunkIndex / totalChunks) * 100);
+    if (onStatusChange) {
+      onStatusChange(`Uploading section ${chunkIndex + 1}/${totalChunks} (${percent}% uploaded)...`);
+    }
+
+    // Convert slice to data URL
+    const base64Data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error(`Failed to convert slice ${chunkIndex} to Base64`));
+      reader.readAsDataURL(chunkBlob);
+    });
+
+    const response = await fetch('/api/upload-chunk', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        uploadId,
+        chunkIndex,
+        totalChunks,
+        fileName: file.name,
+        fileType: file.type,
+        base64Data,
+        cloudPath
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[uploadChunksToServer] Chunk ${chunkIndex} upload failed with status ${response.status}:`, text);
+      throw new Error(`Slice transmission rejected (Piece ${chunkIndex + 1}/${totalChunks}): ${text || response.statusText}`);
+    }
+
+    // If it is the final chunk, parse response to fetch the aggregated relative server path URL
+    if (chunkIndex === totalChunks - 1) {
+      const data = await response.json();
+      if (data && data.url) {
+        console.log(`[uploadChunksToServer] Success! Server merged all chunks. Result URL:`, data.url);
+        if (onStatusChange) onStatusChange('All segments successfully merged and published on high-speed server!');
+        return data.url;
+      }
+      throw new Error('Server merged pieces but failed to return coupled URL directory referencing upload.');
+    } else {
+      // Very small delay to allow microtask cycle and prevent browser worker locking
+      await new Promise(resolve => setTimeout(resolve, 30));
+    }
+  }
+
+  throw new Error('Unpredicted flow termination during segment transfer sequence.');
 }
 
 /**
@@ -208,12 +287,23 @@ export async function uploadFileResilient(
     console.warn("Firebase Storage is not initialized in firebase.ts. Resorting to Express server disk layer.");
   }
 
-  // Fallback 1: High-performance shared Server Disk storage
+  // Fallback 1: High-performance shared Server Disk storage (Using chunked upload if file is over 500KB to bypass Nginx limitations)
   try {
-    const serverUrl = await uploadToServerDisk(fileToUpload, cloudPath, onStatusChange);
+    let serverUrl: string;
+    if (fileToUpload.size > 500 * 1024) {
+      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing chunked upload pipeline.`);
+      serverUrl = await uploadChunksToServer(fileToUpload, cloudPath, onStatusChange);
+    } else {
+      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing direct upload.`);
+      serverUrl = await uploadToServerDisk(fileToUpload, cloudPath, onStatusChange);
+    }
     return { url: serverUrl, isFallback: false };
-  } catch (serverErr) {
-    console.warn("Express server disk write failed or rejected. Resorting to fallback local IndexedDB database:", serverErr);
+  } catch (serverErr: any) {
+    const errorMsg = serverErr instanceof Error ? serverErr.message : String(serverErr);
+    console.error("Express server disk write failed or rejected. Complete Error details:", serverErr);
+    if (onStatusChange) {
+      onStatusChange(`Server Upload Failed: ${errorMsg}. Resorting to offline-fallback.`);
+    }
   }
 
   // Fallback 2: For images, convert to highly-compressed Base64 data-URL so other users can view it too!
