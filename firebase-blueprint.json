@@ -125,9 +125,30 @@
         "text": { "type": "string" }
       },
       "required": ["text"]
+    },
+    "PodcastEpisode": {
+      "title": "Podcast Episode",
+      "description": "Podcast episode detail block with play source and duration Info",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "date": { "type": "string" },
+        "duration": { "type": "string" },
+        "durationSec": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "audioUrl"]
     }
   },
   "firestore": {
+    "/podcastEpisodes/{episodeId}": {
+      "schema": "PodcastEpisode",
+      "description": "Admin dynamically publishable podcast episodes"
+    },
     "/courses/{courseId}": {
       "schema": "Course",
       "description": "Custom administrator-controlled investigation courses"

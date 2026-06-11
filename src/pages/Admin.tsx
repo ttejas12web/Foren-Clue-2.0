@@ -6,9 +6,9 @@ import {
   Lock, Mail, Key, LayoutGrid, BookOpen, Plus, Trash2, 
   Settings, CheckCircle2, AlertCircle, FileText, Upload, 
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
-  Globe, Edit3, MessageSquare
+  Globe, Edit3, MessageSquare, Radio
 } from 'lucide-react';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ResilientImage, uploadFileResilient } from '@/lib/localFileStore';
@@ -23,16 +23,19 @@ export default function Admin() {
   const [authError, setAuthError] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
 
-  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts'>('overview');
+   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast'>('overview');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
+  const [editingPodcastId, setEditingPodcastId] = useState<string | null>(null);
 
   // Courses Management State
   const [courses, setCourses] = useState<any[]>([]);
   const [doubts, setDoubts] = useState<any[]>([]);
+  const [podcastEpisodes, setPodcastEpisodes] = useState<any[]>([]);
   const [courseLoading, setCourseLoading] = useState(false);
+  const [podcastLoading, setPodcastLoading] = useState(false);
   const [newCourse, setNewCourse] = useState({
     title: '',
     instructor: 'Ayush Gaikwad',
@@ -74,10 +77,23 @@ export default function Admin() {
     desc: ''
   });
 
+  // Podcast Episode dynamic state
+  const [newEpisode, setNewEpisode] = useState({
+    title: '',
+    description: '',
+    coverImage: '',
+    audioUrl: '',
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    duration: '30:00',
+    durationSec: 1800
+  });
+
   // Direct Storage Upload loading states
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingThumb, setIsUploadingThumb] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [isUploadingPodcastCover, setIsUploadingPodcastCover] = useState(false);
 
   // Individual file upload feedback states
   const [pdfErrorText, setPdfErrorText] = useState('');
@@ -86,6 +102,10 @@ export default function Admin() {
   const [coverSuccessText, setCoverSuccessText] = useState('');
   const [thumbErrorText, setThumbErrorText] = useState('');
   const [thumbSuccessText, setThumbSuccessText] = useState('');
+  const [audioErrorText, setAudioErrorText] = useState('');
+  const [audioSuccessText, setAudioSuccessText] = useState('');
+  const [podcastCoverErrorText, setPodcastCoverErrorText] = useState('');
+  const [podcastCoverSuccessText, setPodcastCoverSuccessText] = useState('');
 
   // Website copy state
   const [copiedTexts, setCopiedTexts] = useState<any[]>([]);
@@ -99,47 +119,86 @@ export default function Admin() {
   // Fetch Admin Collections
   const fetchCollections = async () => {
     if (!isAdmin) return;
-    try {
-      setCourseLoading(true);
-      setEbookLoading(true);
+    
+    setCourseLoading(true);
+    setEbookLoading(true);
+    setPodcastLoading(true);
 
-      // Courses
+    // 1. Courses
+    try {
       const courseSnap = await getDocs(collection(db, 'courses'));
       const coursesList: any[] = [];
       courseSnap.forEach(docSnap => {
         coursesList.push({ docId: docSnap.id, ...docSnap.data() });
       });
       setCourses(coursesList);
+    } catch (e) {
+      console.error("Error fetching courses collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'courses');
+    } finally {
+      setCourseLoading(false);
+    }
 
-      // Ebooks
+    // 2. Ebooks
+    try {
       const ebookSnap = await getDocs(collection(db, 'ebooks'));
       const ebooksList: any[] = [];
       ebookSnap.forEach(docSnap => {
         ebooksList.push({ docId: docSnap.id, ...docSnap.data() });
       });
       setEbooks(ebooksList);
+    } catch (e) {
+      console.error("Error fetching ebooks collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'ebooks');
+    } finally {
+      setEbookLoading(false);
+    }
 
-      // Website Texts
+    // 3. Website Texts
+    try {
       const textSnap = await getDocs(collection(db, 'websiteTexts'));
       const textList: any[] = [];
       textSnap.forEach(docSnap => {
         textList.push({ id: docSnap.id, ...docSnap.data() });
       });
       setCopiedTexts(textList);
+    } catch (e) {
+      console.error("Error fetching websiteTexts collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'websiteTexts');
+    }
 
-      // Doubts
+    // 4. Doubts
+    try {
       const doubtsSnap = await getDocs(collection(db, 'doubts'));
       const doubtsList: any[] = [];
       doubtsSnap.forEach(docSnap => {
         doubtsList.push({ id: docSnap.id, ...docSnap.data() });
       });
       setDoubts(doubtsList);
-
     } catch (e) {
-      console.error("Error fetching collections", e);
+      console.error("Error fetching doubts collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'doubts');
+    }
+
+    // 5. Podcast Episodes
+    try {
+      const podcastsSnap = await getDocs(collection(db, 'podcastEpisodes'));
+      const podcastsList: any[] = [];
+      podcastsSnap.forEach(docSnap => {
+        podcastsList.push({ docId: docSnap.id, ...docSnap.data() });
+      });
+      // Sort podcasts by createdAt descending, if available
+      podcastsList.sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dbVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dbVal - da;
+      });
+      setPodcastEpisodes(podcastsList);
+    } catch (e) {
+      console.error("Error fetching podcastEpisodes collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'podcastEpisodes');
     } finally {
-      setCourseLoading(false);
-      setEbookLoading(false);
+      setPodcastLoading(false);
     }
   };
 
@@ -454,6 +513,153 @@ export default function Admin() {
     }
   };
 
+  const handlePodcastCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPodcastCoverErrorText('');
+    setPodcastCoverSuccessText('');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        setPodcastCoverErrorText('Please select a valid image file.');
+        return;
+      }
+      setIsUploadingPodcastCover(true);
+      setPodcastCoverSuccessText('Processing cover image...');
+      try {
+        const cleanName = `podcasts/covers/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadResult = await uploadFileResilient(file, cleanName, (msg) => setPodcastCoverSuccessText(msg));
+        setNewEpisode(prev => ({
+          ...prev,
+          coverImage: uploadResult.url
+        }));
+        setPodcastCoverSuccessText(uploadResult.isFallback
+          ? `Cover saved offline successfully! (${file.name})`
+          : `Cover uploaded successfully: ${file.name}`
+        );
+      } catch (err: any) {
+        console.error(err);
+        setPodcastCoverErrorText(`Cover upload failed: ${err.message || err}`);
+      } finally {
+        setIsUploadingPodcastCover(false);
+      }
+    }
+  };
+
+  const handleAudioUploadDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAudioErrorText('');
+    setAudioSuccessText('');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('audio/') && !file.name.endsWith('.mp3') && !file.name.endsWith('.wav') && !file.name.endsWith('.m4a') && !file.name.endsWith('.mp4') && !file.name.endsWith('.aac')) {
+        setAudioErrorText('Please select a valid audio file (e.g., mp3, wav, m4a).');
+        return;
+      }
+      setIsUploadingAudio(true);
+      setAudioSuccessText('Processing audio file...');
+      try {
+        const cleanName = `podcasts/audio/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadResult = await uploadFileResilient(file, cleanName, (msg) => setAudioSuccessText(msg));
+        
+        let durationStr = "30:00";
+        let durationSecVal = 1800;
+        try {
+          const audio = new Audio();
+          audio.src = URL.createObjectURL(file);
+          await new Promise<void>((resolve) => {
+            audio.addEventListener('loadedmetadata', () => {
+              const totalSecs = Math.round(audio.duration);
+              durationSecVal = totalSecs;
+              const mins = Math.floor(totalSecs / 60);
+              const secs = totalSecs % 60;
+              durationStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+              resolve();
+            });
+            audio.addEventListener('error', () => {
+              resolve();
+            });
+            setTimeout(resolve, 3000);
+          });
+        } catch (e1) {
+          console.log("Could not measure duration automatically:", e1);
+        }
+
+        setNewEpisode(prev => ({
+          ...prev,
+          audioUrl: uploadResult.url,
+          duration: durationStr,
+          durationSec: durationSecVal
+        }));
+        
+        setAudioSuccessText(uploadResult.isFallback
+          ? `Audio saved offline successfully! (${file.name})`
+          : `Audio uploaded successfully: ${file.name}`
+        );
+      } catch (err: any) {
+        console.error(err);
+        setAudioErrorText(`Audio upload failed: ${err.message || err}`);
+      } finally {
+        setIsUploadingAudio(false);
+      }
+    }
+  };
+
+  const handleCreatePodcastEpisode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMsg('');
+    setErrMsg('');
+
+    if (!newEpisode.title || !newEpisode.audioUrl) {
+      setErrMsg('Please enter a podcast title and audio URL.');
+      return;
+    }
+
+    try {
+      const episodePayload = {
+        title: newEpisode.title,
+        description: newEpisode.description || 'Listen to this podcast episode by ForenClue.',
+        coverImage: newEpisode.coverImage || 'https://www.dropbox.com/scl/fi/mcd47n75jiji29z8hyl9l/IMG_1221.png?rlkey=710x7h05bztk8kjcmxrvgpomj&st=hd2lg2mz&raw=1',
+        audioUrl: newEpisode.audioUrl,
+        date: newEpisode.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        duration: newEpisode.duration || '30:00',
+        durationSec: Number(newEpisode.durationSec) || 1800,
+        createdAt: new Date().toISOString()
+      };
+
+      if (editingPodcastId) {
+        await setDoc(doc(db, 'podcastEpisodes', editingPodcastId), episodePayload);
+        setSuccessMsg(`Podcast Episode "${newEpisode.title}" updated successfully!`);
+      } else {
+        await addDoc(collection(db, 'podcastEpisodes'), episodePayload);
+        setSuccessMsg(`Podcast Episode "${newEpisode.title}" published successfully!`);
+      }
+      
+      setEditingPodcastId(null);
+      setNewEpisode({
+        title: '',
+        description: '',
+        coverImage: '',
+        audioUrl: '',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        duration: '30:00',
+        durationSec: 1800
+      });
+      fetchCollections();
+    } catch (err: any) {
+      console.error(err);
+      setErrMsg(`Failed to submit podcast episode: ${err.message}`);
+    }
+  };
+
+  const handleDeletePodcastEpisode = async (episodeId: string) => {
+    if (!window.confirm("Are you sure you want to delete this podcast episode?")) return;
+    try {
+      await deleteDoc(doc(db, 'podcastEpisodes', episodeId));
+      setSuccessMsg("Podcast Episode successfully deleted.");
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Failed to delete podcast: ${err.message}`);
+    }
+  };
+
   // Helper to add lesson to modules mock config
   const addLessonToModule = (modIdx: number) => {
     const updated = [...modules];
@@ -660,6 +866,12 @@ export default function Admin() {
                   <FileText size={16} /> E-Library Books
                 </button>
                 <button 
+                  onClick={() => setActiveTab('podcast')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'podcast' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <Radio size={16} /> ForenClue Podcast
+                </button>
+                <button 
                   onClick={() => setActiveTab('doubts')}
                   className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'doubts' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
                 >
@@ -675,7 +887,7 @@ export default function Admin() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
                       <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Workspace Analytics</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Dynamic Courses</span>
                           <span className="text-3xl font-heading font-black text-warning">{courses.length}</span>
@@ -683,6 +895,10 @@ export default function Admin() {
                         <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">E-Library Resources</span>
                           <span className="text-3xl font-heading font-black text-warning">{ebooks.length}</span>
+                        </div>
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
+                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Podcast Episodes</span>
+                          <span className="text-3xl font-heading font-black text-warning">{podcastEpisodes.length}</span>
                         </div>
                         <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Customised Copy Keys</span>
@@ -700,6 +916,13 @@ export default function Admin() {
                         >
                           <h3 className="font-bold text-sm text-warning mb-2 uppercase">Create Investigation Course</h3>
                           <p className="text-xs text-text-muted leading-relaxed">Submit syllabus, lectures, pricing tags, and noticeboards dynamically into Firestore.</p>
+                        </div>
+                        <div 
+                          onClick={() => setActiveTab('podcast')}
+                          className="p-4 bg-base hover:bg-black/10 dark:hover:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl cursor-pointer transition-colors"
+                        >
+                          <h3 className="font-bold text-sm text-warning mb-2 uppercase">Upload Podcast Episode</h3>
+                          <p className="text-xs text-text-muted leading-relaxed">Publish new MP3 audio channels, dynamic titles, and podcast series covers directly.</p>
                         </div>
                       </div>
                     </div>
@@ -1244,6 +1467,277 @@ export default function Admin() {
                                   onClick={() => handleDeleteEbook(b.docId)}
                                   className="p-2 border border-red-500/10 hover:border-red-500/30 text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg transition-all"
                                   title="Remove Document"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 5. PODCASTS MANAGEMENT */}
+                {activeTab === 'podcast' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-6 flex items-center gap-2 text-warning">
+                        <Radio size={20} className="text-warning animate-pulse" />
+                        {editingPodcastId ? '🔧 Modify Podcast Episode' : '🎙️ Publish Podcast Episode'}
+                      </h2>
+                      
+                      <form onSubmit={handleCreatePodcastEpisode} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-text-muted">Episode Title *</label>
+                            <input
+                              type="text"
+                              value={newEpisode.title}
+                              onChange={(e) => setNewEpisode(prev => ({ ...prev, title: e.target.value }))}
+                              placeholder="e.g., 5. Handwriting Analysis Secrets"
+                              className="w-full bg-base border border-black/10 dark:border-white/5 rounded-lg px-4 py-2.5 text-xs font-medium focus:outline-none focus:border-warning/50 text-text-main"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-text-muted">Publish Date</label>
+                            <input
+                              type="text"
+                              value={newEpisode.date}
+                              onChange={(e) => setNewEpisode(prev => ({ ...prev, date: e.target.value }))}
+                              placeholder="e.g., Jun 21, 2026"
+                              className="w-full bg-base border border-black/10 dark:border-white/5 rounded-lg px-4 py-2.5 text-xs font-medium focus:outline-none focus:border-warning/50 text-text-main"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-text-muted">Short Description</label>
+                          <textarea
+                            value={newEpisode.description}
+                            onChange={(e) => setNewEpisode(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Provide a clear, rich, brief summary of what forensics knowledge or test prep tips are covered in this episode."
+                            rows={3}
+                            className="w-full bg-base border border-black/10 dark:border-white/5 rounded-lg p-4 text-xs font-medium focus:outline-none focus:border-warning/50 text-text-main resize-none"
+                          />
+                        </div>
+
+                        {/* Cover Art Configuration */}
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-3">
+                          <span className="text-xs font-bold uppercase tracking-widest text-warning block">Cover Art Artwork</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-medium mb-1.5 text-text-muted">Direct Image URL upload (Optional)</label>
+                              <input
+                                type="text"
+                                value={newEpisode.coverImage}
+                                onChange={(e) => setNewEpisode(prev => ({ ...prev, coverImage: e.target.value }))}
+                                placeholder="Paste cover image link here..."
+                                className="w-full bg-surface border border-black/10 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-warning/50 text-text-main"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1.5 text-text-muted">Or upload local cover JPG/PNG file</label>
+                              <div className="relative">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handlePodcastCoverUpload}
+                                  id="podcast-cover-upload"
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor="podcast-cover-upload"
+                                  className="flex items-center justify-center gap-2 w-full bg-surface hover:bg-surface/80 border border-dashed border-black/20 dark:border-white/10 rounded-lg px-3 py-2 text-xs font-bold cursor-pointer transition-colors text-text-main"
+                                >
+                                  {isUploadingPodcastCover ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin text-warning" />
+                                      <span>Uploading cover...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload size={14} />
+                                      <span>Browse Cover Image</span>
+                                    </>
+                                  )}
+                                </label>
+                              </div>
+                              {podcastCoverErrorText && <p className="text-[10px] text-red-400 mt-1">{podcastCoverErrorText}</p>}
+                              {podcastCoverSuccessText && <p className="text-[10px] text-green-400 mt-1">{podcastCoverSuccessText}</p>}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Audio URL Configuration */}
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-3">
+                          <span className="text-xs font-bold uppercase tracking-widest text-warning block">Acoustic Audio Channel *</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-medium mb-1.5 text-text-muted">Audio MP3 URL link *</label>
+                              <input
+                                type="text"
+                                value={newEpisode.audioUrl}
+                                onChange={(e) => setNewEpisode(prev => ({ ...prev, audioUrl: e.target.value }))}
+                                placeholder="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+                                className="w-full bg-surface border border-black/10 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-warning/50 text-text-main"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1.5 text-text-muted">Or Upload standard audio MP3 file</label>
+                              <div className="relative">
+                                <input
+                                  type="file"
+                                  accept="audio/*"
+                                  onChange={handleAudioUploadDirect}
+                                  id="podcast-audio-upload"
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor="podcast-audio-upload"
+                                  className="flex items-center justify-center gap-2 w-full bg-surface hover:bg-surface/80 border border-dashed border-black/20 dark:border-white/10 rounded-lg px-3 py-2 text-xs font-bold cursor-pointer transition-colors text-text-main"
+                                >
+                                  {isUploadingAudio ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin text-warning" />
+                                      <span>Uploading Audio...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload size={14} />
+                                      <span>Browse Audio File</span>
+                                    </>
+                                  )}
+                                </label>
+                              </div>
+                              {audioErrorText && <p className="text-[10px] text-red-400 mt-1">{audioErrorText}</p>}
+                              {audioSuccessText && <p className="text-[10px] text-green-400 mt-1">{audioSuccessText}</p>}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Duration Override config fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl">
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-text-muted">Duration Display Tag</label>
+                            <input
+                              type="text"
+                              value={newEpisode.duration}
+                              onChange={(e) => setNewEpisode(prev => ({ ...prev, duration: e.target.value }))}
+                              placeholder="e.g., 45 min 12 sec"
+                              className="w-full bg-surface border border-black/10 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-warning/50 text-text-main"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-text-muted">Duration (seconds)</label>
+                            <input
+                              type="number"
+                              value={newEpisode.durationSec}
+                              onChange={(e) => setNewEpisode(prev => ({ ...prev, durationSec: Number(e.target.value) }))}
+                              placeholder="2712"
+                              className="w-full bg-surface border border-black/10 dark:border-white/5 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-warning/50 text-text-main"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 justify-end pt-2">
+                          {editingPodcastId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingPodcastId(null);
+                                setNewEpisode({
+                                  title: '',
+                                  description: '',
+                                  coverImage: '',
+                                  audioUrl: '',
+                                  date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                                  duration: '30:00',
+                                  durationSec: 1800
+                                });
+                              }}
+                              className="px-5 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold tracking-wider hover:bg-zinc-700 transition"
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={isUploadingAudio || isUploadingPodcastCover}
+                            className={`px-6 py-2.5 bg-warning text-crust rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-warning/90 transition ${(isUploadingAudio || isUploadingPodcastCover) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {editingPodcastId ? 'Update Episode' : 'Broadcast Episode'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Dynamic Published Episodes List */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-6">🎙️ Dynamic Episodes Index</h2>
+                      
+                      {podcastLoading ? (
+                        <div className="flex justify-center items-center py-10 font-mono text-xs text-text-muted gap-2">
+                          <Loader2 size={16} className="animate-spin text-warning" /> Loading episodes...
+                        </div>
+                      ) : podcastEpisodes.length === 0 ? (
+                        <div className="text-center py-12 text-xs text-text-muted font-mono border border-dashed border-black/10 dark:border-white/5 rounded-xl">
+                          No episodes in dynamic database indexes yet. Any published episodes will overwrite or extend standard podcast indexes.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {podcastEpisodes.map((ep) => (
+                            <div 
+                              key={ep.docId}
+                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-base border border-black/5 dark:border-white/5 rounded-xl gap-4 hover:border-warning/20 transition-all group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={ep.coverImage || 'https://www.dropbox.com/scl/fi/mcd47n75jiji29z8hyl9l/IMG_1221.png?rlkey=710x7h05bztk8kjcmxrvgpomj&st=hd2lg2mz&raw=1'}
+                                  alt={ep.title}
+                                  referrerPolicy="no-referrer"
+                                  className="w-12 h-12 rounded object-cover border border-black/10 dark:border-white/5 shrink-0"
+                                />
+                                <div>
+                                  <h3 className="font-bold text-sm text-text-main group-hover:text-warning transition-colors">{ep.title}</h3>
+                                  <div className="flex items-center gap-2 text-[10px] text-text-muted font-mono mt-1">
+                                    <span>{ep.date}</span>
+                                    <span>•</span>
+                                    <span>{ep.duration || '30:00'}</span>
+                                  </div>
+                                  <p className="text-xs text-text-muted line-clamp-1 mt-1 max-w-sm sm:max-w-md lg:max-w-xl">
+                                    {ep.description}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 self-end sm:self-auto">
+                                <button
+                                  onClick={() => {
+                                    setEditingPodcastId(ep.docId);
+                                    setNewEpisode({
+                                      title: ep.title || '',
+                                      description: ep.description || '',
+                                      coverImage: ep.coverImage || '',
+                                      audioUrl: ep.audioUrl || '',
+                                      date: ep.date || '',
+                                      duration: ep.duration || '',
+                                      durationSec: ep.durationSec || 1800
+                                    });
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="p-2 border border-blue-500/10 hover:border-blue-500/30 text-blue-400 bg-blue-400/5 hover:bg-blue-400/10 rounded-lg transition-all"
+                                  title="Edit Episode Metadata"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePodcastEpisode(ep.docId)}
+                                  className="p-2 border border-red-500/10 hover:border-red-500/30 text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg transition-all"
+                                  title="Remove Episode"
                                 >
                                   <Trash2 size={14} />
                                 </button>

@@ -84,6 +84,12 @@ service cloud.firestore {
         && data.text is string && data.text.size() <= 5000;
     }
 
+    function isValidPodcastEpisode(data) {
+      return data.keys().hasAll(['title', 'audioUrl'])
+        && data.title is string && data.title.size() <= 300
+        && data.audioUrl is string && data.audioUrl.size() <= 2000;
+    }
+
     // --- Cases ---
     match /cases/{caseId} {
       allow read: if true;
@@ -101,6 +107,13 @@ service cloud.firestore {
     match /ebooks/{ebookId} {
       allow read: if true;
       allow create, update: if isAdminEmail() && isValidEbook(incoming());
+      allow delete: if isAdminEmail();
+    }
+
+    // --- Podcast Episodes ---
+    match /podcastEpisodes/{episodeId} {
+      allow read: if true;
+      allow create, update: if isAdminEmail() && isValidPodcastEpisode(incoming());
       allow delete: if isAdminEmail();
     }
 

@@ -8,9 +8,10 @@ import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ScrollToTop } from './components/layout/ScrollToTop';
+import { FloatingPodcastButton } from './components/ui/FloatingPodcastButton';
 import { motion, AnimatePresence } from 'motion/react';
-import BookPopup from './components/ui/BookPopup';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
+import { PodcastPromoPopup } from './components/ui/PodcastPromoPopup';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -25,6 +26,7 @@ const EBooks = lazy(() => import('./pages/EBooks'));
 const Files = lazy(() => import('./pages/Files'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Profile = lazy(() => import('./pages/Profile'));
+const Podcast = lazy(() => import('./pages/Podcast'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const CoursePlayer = lazy(() => import('./pages/CoursePlayer'));
 const MyDoubts = lazy(() => import('./pages/MyDoubts'));
@@ -46,7 +48,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -86,8 +88,9 @@ export default function App() {
         )}
       </AnimatePresence>
       <ScrollToTop />
-      <BookPopup />
+      <FloatingPodcastButton />
       <GoogleOneTap />
+      <PodcastPromoPopup />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/player/:courseId" element={<CoursePlayer />} />
@@ -110,6 +113,7 @@ export default function App() {
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/podcast" element={<Podcast />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

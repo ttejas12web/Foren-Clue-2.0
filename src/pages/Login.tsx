@@ -71,18 +71,23 @@ export default function Login() {
     }
   };
 
-  const handleAdminSubmit = (e: React.FormEvent) => {
+  const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminError('');
     if (!adminEmail || !adminPassword) {
       setAdminError('Please fill in all administrator access keys.');
       return;
     }
-    const success = adminLogin(adminEmail, adminPassword);
-    if (success) {
-      navigate('/admin');
-    } else {
-      setAdminError('Access Denied. Cryptographic master key matches failed.');
+    try {
+      const success = await adminLogin(adminEmail, adminPassword);
+      if (success) {
+        navigate('/admin');
+      } else {
+        setAdminError('Access Denied. Cryptographic master key matches failed.');
+      }
+    } catch (err: any) {
+      console.error("Admin sign-in error:", err);
+      setAdminError(err.message || 'Access Denied.');
     }
   };
 

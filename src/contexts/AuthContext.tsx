@@ -32,7 +32,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
-  adminLogin?: (email: string, password: string) => boolean;
+  adminLogin?: (email: string, password: string) => Promise<boolean>;
 }
 
 export const adminEmails = ['ayushgaikwad7050@gmail.com', 'ayushgaikwad705o@gmail.com', 'mrunmayeebodhe118@gmail.com', 'webcreator500@gmail.com', 'forenclue@gmail.com'];
@@ -309,9 +309,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const adminLogin = (email: string, password: string): boolean => {
+  const adminLogin = async (email: string, password: string): Promise<boolean> => {
     const normalizedEmail = email.trim().toLowerCase();
     if (normalizedEmail === 'forenclue@gmail.com' && password === 'forenclue@2025') {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err: any) {
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-email') {
+          try {
+            await createUserWithEmailAndPassword(auth, email, password);
+          } catch (signUpErr) {
+            console.warn("Could not register manual admin user to Firebase Auth:", signUpErr);
+          }
+        } else {
+          console.warn("Firebase Auth login failed for manual admin:", err);
+        }
+      }
       const session = { email: 'forenclue@gmail.com', displayName: 'Forenclue Team Admin' };
       setManualAdmin(session);
       sessionStorage.setItem('manualAdmin', JSON.stringify(session));

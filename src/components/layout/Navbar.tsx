@@ -12,7 +12,6 @@ const navLinks = [
   { name: 'Courses', path: '/courses' },
   { name: 'Case Studies', path: '/cases' },
   { name: 'Careers', path: '/careers' },
-  { name: 'Careers Handbook', path: '/files' },
   { name: 'Services', path: '/services' },
   { name: 'E-Library', path: '/ebooks' },
   { name: 'About Us', path: '/about' },
@@ -64,11 +63,19 @@ export function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link 
-            to="/" 
+            to={location.pathname === '/podcast' ? "/podcast" : "/"} 
             className="group"
           >
-            <Logo />
-            <span className="text-[9px] text-text-muted uppercase tracking-widest mt-1 block">Your Partner in Forensic Precision.</span>
+            {location.pathname === '/podcast' ? (
+               <div className="flex items-center gap-3">
+                 <span className="font-black text-xl tracking-tight text-text-main group-hover:text-warning transition-colors">ForenClue Podcast</span>
+               </div>
+            ) : (
+              <>
+                <Logo />
+                <span className="text-[9px] text-text-muted uppercase tracking-widest mt-1 block">Your Partner in Forensic Precision.</span>
+              </>
+            )}
           </Link>
 
           {/* Desktop Nav */}

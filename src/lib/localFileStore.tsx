@@ -343,7 +343,8 @@ export async function uploadFileResilient(
 }
 
 /**
- * Resolves any localdb:// URL or Base64 string to a usable web URL for images.
+ * Resolves any localdb:// URL or Base64 string to a usable web URL for images and media files.
+ * Also parses and optimizes third-party hosted files like Dropbox to ensure compatibility with native HTML5 media streaming.
  */
 export async function resolveFileUrl(url: string | null | undefined): Promise<string> {
   if (!url) return '';
@@ -355,6 +356,29 @@ export async function resolveFileUrl(url: string | null | undefined): Promise<st
     // Return a beautiful fallback if not present in DB
     return 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=300';
   }
+
+  // Optimize Dropbox URLs for direct streaming in audio/video players
+  if (url.includes('dropbox.com')) {
+    try {
+      let optimized = url;
+      // Convert standard Dropbox domains to dl.dropboxusercontent.com
+      optimized = optimized.replace(/(www\.)?dropbox\.com/gi, 'dl.dropboxusercontent.com');
+      
+      // Convert dl=0 or dl=1 to raw=1 (forces direct streaming/retrieval bypass)
+      if (optimized.includes('dl=0')) {
+        optimized = optimized.replace('dl=0', 'raw=1');
+      } else if (optimized.includes('dl=1')) {
+        optimized = optimized.replace('dl=1', 'raw=1');
+      } else if (!optimized.includes('raw=1')) {
+        const joiner = optimized.includes('?') ? '&' : '?';
+        optimized = `${optimized}${joiner}raw=1`;
+      }
+      return optimized;
+    } catch (e) {
+      console.warn("Failed to automatically optimize Dropbox URL:", e);
+    }
+  }
+
   return url;
 }
 
