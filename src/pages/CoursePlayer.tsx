@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -33,7 +33,12 @@ import {
   Plus,
   BookOpen,
   Trash2,
-  FileText
+  FileText,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize
 } from 'lucide-react';
 import { COURSES, Course, Lesson, Module } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +60,314 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+
+
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady?: () => void;
+    YT?: any;
+  }
+}
+
+const loadYoutubeAPI = () => {
+  if (window.YT && window.YT.Player) {
+    return Promise.resolve(window.YT);
+  }
+  return new Promise((resolve) => {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    if (firstScriptTag && firstScriptTag.parentNode) {
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+      document.head.appendChild(tag);
+    }
+    
+    const interval = setInterval(() => {
+      if (window.YT && window.YT.Player) {
+        clearInterval(interval);
+        resolve(window.YT);
+      }
+    }, 100);
+  });
+};
+
+function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { videoUrl: string; title: string, isAdmin: boolean, onEditVideoLink: () => void }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerRef = useRef<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(100);
+  const [isMuted, setIsMuted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Helper to get YouTube ID
+  const getYouTubeId = (url: string) => {
+    if (!url) return '';
+    let match = url.match(/\/embed\/([^/?#&]+)/);
+    if (match) return match[1];
+    match = url.match(/[?&]v=([^&#]+)/);
+    if (match) return match[1];
+    match = url.match(/youtu\.be\/([^/?#&]+)/);
+    if (match) return match[1];
+    return url; // Fallback to raw url
+  };
+
+  const videoId = getYouTubeId(videoUrl);
+  // We specify enablejsapi=1, controls=0, modestbranding=1 etc.
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1&origin=${window.location.origin}`;
+
+  useEffect(() => {
+    let interval: any;
+    let isMounted = true;
+
+    const initPlayer = async () => {
+      if (!videoId) return;
+      await loadYoutubeAPI();
+      
+      if (!isMounted) return;
+
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.error(e);
+        }
+        playerRef.current = null;
+      }
+
+      playerRef.current = new window.YT.Player(iframeRef.current, {
+        events: {
+          onReady: () => {
+            if (!isMounted) return;
+            setDuration(playerRef.current.getDuration() || 0);
+            playerRef.current.setVolume(volume);
+          },
+          onStateChange: (event: any) => {
+            if (!isMounted) return;
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              setIsPlaying(true);
+            } else {
+              setIsPlaying(false);
+            }
+          }
+        }
+      });
+
+      interval = setInterval(() => {
+        if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+          setCurrentTime(playerRef.current.getCurrentTime() || 0);
+          if (duration === 0) {
+            setDuration(playerRef.current.getDuration() || 0);
+          }
+        }
+      }, 500);
+    };
+
+    initPlayer();
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.error(e);
+        }
+        playerRef.current = null;
+      }
+    };
+  }, [videoId]);
+
+  const handlePlayPause = () => {
+    if (!playerRef.current || typeof playerRef.current.playVideo !== 'function') return;
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!playerRef.current || typeof playerRef.current.seekTo !== 'function') return;
+    const seekToVal = parseFloat(e.target.value);
+    playerRef.current.seekTo(seekToVal, true);
+    setCurrentTime(seekToVal);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!playerRef.current || typeof playerRef.current.setVolume !== 'function') return;
+    const volVal = parseInt(e.target.value);
+    setVolume(volVal);
+    playerRef.current.setVolume(volVal);
+    if (volVal === 0) {
+      if (typeof playerRef.current.mute === 'function') playerRef.current.mute();
+      setIsMuted(true);
+    } else {
+      if (typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
+      setIsMuted(false);
+    }
+  };
+
+  const handleToggleMute = () => {
+    if (!playerRef.current) return;
+    if (isMuted) {
+      if (typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
+      setIsMuted(false);
+      if (typeof playerRef.current.setVolume === 'function') playerRef.current.setVolume(volume || 50);
+    } else {
+      if (typeof playerRef.current.mute === 'function') playerRef.current.mute();
+      setIsMuted(true);
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative aspect-video bg-black rounded-xl overflow-hidden border border-black/10 dark:border-white/10 shadow-2xl flex flex-col group mb-8"
+    >
+      <div className="w-full h-full relative bg-black">
+        <iframe 
+          ref={iframeRef}
+          src={embedUrl}
+          title={title}
+          className="w-full h-full pointer-events-none"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+        
+        <div 
+          onClick={handlePlayPause}
+          className="absolute inset-0 cursor-pointer flex items-center justify-center z-10 bg-black/0 active:bg-black/10 transition-colors"
+        >
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-md p-4 rounded-full text-warning scale-90 group-hover:scale-100 duration-200">
+            {isPlaying ? <Pause size={28} /> : <Play size={28} fill="currentColor" />}
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2">
+        <div className="bg-warning/90 text-crust p-2 py-1 flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest shadow-lg">
+          <Activity size={12} className="animate-pulse" />
+          Live Transmission
+        </div>
+      </div>
+
+      {isAdmin && (
+        <div className="absolute top-4 right-4 z-20">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditVideoLink();
+            }}
+            className="bg-black/80 text-warning border border-warning/50 p-2 py-1 flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-black transition-colors backdrop-blur-md"
+          >
+            <Edit size={12} /> Edit Video Link
+          </button>
+        </div>
+      )}
+
+      {/* Elegant Controls overlay */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-neutral-950 via-neutral-900/95 to-transparent p-4 pt-10 z-30 transition-all duration-300 opacity-90 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0">
+        
+        <div className="flex items-center gap-3 w-full mb-3">
+          <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-right">
+            {formatTime(currentTime)}
+          </span>
+          <input 
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            onChange={handleSeek}
+            className="flex-1 accent-warning bg-neutral-800 rounded-lg appearance-none h-1 cursor-pointer focus:outline-none"
+          />
+          <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-left">
+            {formatTime(duration)}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handlePlayPause}
+              className="text-text-main hover:text-warning transition-colors focus:outline-none"
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+            </button>
+
+            <div className="flex items-center gap-2 group/volume">
+              <button 
+                onClick={handleToggleMute}
+                className="text-text-main hover:text-warning transition-colors focus:outline-none"
+                aria-label={isMuted ? "Unmute" : "Mute"}
+              >
+                {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              </button>
+              <input 
+                type="range"
+                min={0}
+                max={100}
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-16 accent-warning bg-neutral-800 rounded-lg appearance-none h-0.5 cursor-pointer focus:outline-none"
+              />
+            </div>
+            
+            <span className="text-[9px] font-mono font-black tracking-widest text-[#1db954] uppercase hidden md:inline ml-2">
+              FORENCLUE AUDIO/VIDEO TRANSMISSION PROTOCOL
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleToggleFullscreen}
+              className="text-text-main hover:text-warning transition-colors focus:outline-none"
+              aria-label="Toggle Fullscreen"
+            >
+              <Maximize size={16} />
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
 export default function CoursePlayer() {
   const { courseId } = useParams();
@@ -781,39 +1094,17 @@ export default function CoursePlayer() {
 
           <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
             {/* Video Player Section */}
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-black/10 dark:border-white/10 shadow-2xl group mb-8">
-              <iframe 
-                src={activeLesson?.videoUrl || ""}
-                title={activeLesson?.title}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-              
-              {/* Overlay elements to match the image style */}
-              <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
-                 <div className="bg-warning/90 text-crust p-2 py-1 flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest shadow-lg">
-                    <Activity size={12} />
-                    Live Transmission
-                 </div>
-              </div>
-              
-              {isAdmin && (
-                <div className="absolute top-4 right-4 z-20">
-                  <button 
-                    onClick={() => {
-                      const newUrl = prompt("Enter new YouTube Embed URL:", activeLesson?.videoUrl);
-                      if (newUrl !== null && activeLesson) {
-                         saveCourseOverride('lesson_video', { lessonId: activeLesson.id, value: newUrl });
-                      }
-                    }}
-                    className="bg-black/80 text-warning border border-warning/50 p-2 py-1 flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-black transition-colors backdrop-blur-md"
-                  >
-                    <Edit size={12} /> Edit Video Link
-                  </button>
-                </div>
-              )}
-            </div>
+            <ForenclueVideoPlayer 
+              videoUrl={activeLesson?.videoUrl || ""}
+              title={activeLesson?.title || ""}
+              isAdmin={!!isAdmin}
+              onEditVideoLink={() => {
+                const newUrl = prompt("Enter new YouTube Embed URL:", activeLesson?.videoUrl);
+                if (newUrl !== null && activeLesson) {
+                   saveCourseOverride('lesson_video', { lessonId: activeLesson.id, value: newUrl });
+                }
+              }}
+            />
 
             {/* Tabbed Content Section */}
             <div className="bg-surface/50 border border-black/10 dark:border-white/5 rounded-xl overflow-hidden backdrop-blur-md">
@@ -1277,79 +1568,6 @@ export default function CoursePlayer() {
         )}
       </AnimatePresence>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
-         <button 
-          onClick={() => setShowSettings(true)}
-          className="w-12 h-12 bg-warning text-crust rounded-full flex items-center justify-center transition-all shadow-xl hover:scale-110 active:scale-95 group"
-         >
-            <Settings size={20} />
-            <span className="absolute right-full mr-3 bg-base border border-black/10 dark:border-white/10 px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest text-text-main opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Investigation Settings</span>
-         </button>
-      </div>
-
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSettings(false)}
-              className="absolute inset-0 bg-base/90 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-surface border border-black/10 dark:border-white/10 w-full max-w-md rounded-2xl p-8 relative z-10 shadow-2xl"
-            >
-              <h3 className="text-xl font-heading font-black text-text-main uppercase tracking-tight mb-6 flex items-center gap-3">
-                 <Settings size={22} className="text-warning" />
-                 Forensic Console Config
-              </h3>
-              
-              <div className="space-y-6">
-                 <div className="flex items-center justify-between p-4 bg-black/5 dark:bg-white/2 rounded-xl border border-black/10 dark:border-white/5">
-                    <div>
-                       <p className="text-sm font-bold text-text-main uppercase tracking-wider">Auto-Play Next</p>
-                       <p className="text-[10px] text-text-muted">Automatically transition to the next case file</p>
-                    </div>
-                    <div className="w-10 h-5 bg-warning rounded-full relative">
-                       <div className="absolute right-1 top-1 bottom-1 aspect-square bg-crust rounded-full" />
-                    </div>
-                 </div>
-
-                 <div className="flex items-center justify-between p-4 bg-black/5 dark:bg-white/2 rounded-xl border border-black/10 dark:border-white/5">
-                    <div>
-                       <p className="text-sm font-bold text-text-main uppercase tracking-wider">Video Resolution</p>
-                       <p className="text-[10px] text-text-muted">High-definition forensic scan (1080p)</p>
-                    </div>
-                    <div className="text-[10px] font-black text-warning bg-warning/10 px-2 py-1 rounded">AUTO</div>
-                 </div>
-
-                 <div className="flex items-center justify-between p-4 bg-black/5 dark:bg-white/2 rounded-xl border border-black/10 dark:border-white/5">
-                    <div>
-                       <p className="text-sm font-bold text-text-main uppercase tracking-wider">Subtitle Stream</p>
-                       <p className="text-[10px] text-text-muted">English investigation transcripts</p>
-                    </div>
-                    <div className="w-10 h-5 bg-black/5 dark:bg-white/10 rounded-full relative">
-                       <div className="absolute left-1 top-1 bottom-1 aspect-square bg-black/5 dark:bg-white/30 rounded-full" />
-                    </div>
-                 </div>
-              </div>
-
-              <button 
-                onClick={() => setShowSettings(false)}
-                className="w-full mt-8 py-3 bg-warning text-crust font-black uppercase tracking-widest rounded-xl hover:bg-warning/90 transition-all text-xs"
-              >
-                Apply Adjustments
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

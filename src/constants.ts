@@ -59,6 +59,7 @@ export const COURSES: Course[] = [
         id: "m1",
         title: "Week-1 Introduction to Forensics",
         lessons: [
+          { id: "l_intro", title: "Course Introduction", duration: "8:57", videoUrl: "https://www.youtube.com/embed/MvVXE3bayMY" },
           { id: "l1", title: "Forensic Science Introduction", duration: "15:00", videoUrl: "https://www.youtube.com/embed/m6_v3Z95YpM" },
           { id: "l2", title: "History and Evolution", duration: "12:30", videoUrl: "https://www.youtube.com/embed/8-WNoI5Iu70" },
           { id: "l3", title: "Scope of Investigation", duration: "10:45", videoUrl: "https://www.youtube.com/embed/m6_v3Z95YpM" }

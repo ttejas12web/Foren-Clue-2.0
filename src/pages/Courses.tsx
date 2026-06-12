@@ -143,6 +143,10 @@ export default function Courses() {
   useEffect(() => {
     if (selectedCourse) {
       const fetchStudents = async () => {
+        if (!user) {
+          setEnrolledStudents([]);
+          return;
+        }
         try {
           const usersRef = collection(db, "users");
           const querySnapshot = await getDocs(usersRef);
@@ -179,7 +183,7 @@ export default function Courses() {
       setEnrolledStudents([]);
       setCourseAnnouncements([]);
     }
-  }, [selectedCourse]);
+  }, [selectedCourse, user]);
 
   const handlePurchase = async (courseId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
