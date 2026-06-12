@@ -142,43 +142,52 @@ export default function Courses() {
 
   useEffect(() => {
     if (selectedCourse) {
-      const fetchStudents = async () => {
-        if (!user) {
-          setEnrolledStudents([]);
-          return;
-        }
-        try {
-          const usersRef = collection(db, "users");
-          const querySnapshot = await getDocs(usersRef);
-          const students: any[] = [];
-          querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const purchased = data.purchasedCourses || [];
-            const isEnrolled = purchased.some((id: any) => {
-              const parsedId = typeof id === 'string' ? parseInt(id, 10) : id;
-              return parsedId === selectedCourse.id;
-            });
-            if (isEnrolled) {
-              students.push({ id: docSnap.id, ...data });
-            }
-          });
-          setEnrolledStudents(students);
-        } catch (error) {
-          console.error("Error fetching enrolled students:", error);
-        }
-      };
+      let unsubAnnouncements: (() => void) | null = null;
+      let unsubStudents: (() => void) | null = null;
 
-      const q = query(collection(db, 'announcements'), where('courseId', '==', selectedCourse.id));
-      const unsub = onSnapshot(q, (snapshot) => {
-        const announcements: any[] = [];
-        snapshot.forEach((doc) => {
-          announcements.push({ id: doc.id, ...doc.data() });
+      try {
+        const qAnn = query(collection(db, 'announcements'), where('courseId', '==', selectedCourse.id));
+        unsubAnnouncements = onSnapshot(qAnn, (snapshot) => {
+          const announcements: any[] = [];
+          snapshot.forEach((doc) => {
+            announcements.push({ id: doc.id, ...doc.data() });
+          });
+          setCourseAnnouncements(announcements.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds));
+        }, (error) => {
+          console.error("Error listening to announcements:", error);
+          handleFirestoreError(error, OperationType.LIST, 'announcements');
         });
-        setCourseAnnouncements(announcements.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds));
-      });
-      
-      fetchStudents();
-      return () => unsub();
+      } catch (error) {
+        console.error("Failed to query announcements:", error);
+      }
+
+      if (user) {
+        try {
+          const qStudents = query(
+            collection(db, "users"),
+            where("purchasedCourses", "array-contains", selectedCourse.id)
+          );
+          unsubStudents = onSnapshot(qStudents, (snapshot) => {
+            const students: any[] = [];
+            snapshot.forEach((docSnap) => {
+              students.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            setEnrolledStudents(students);
+          }, (error) => {
+            console.error("Error listening to enrolled students:", error);
+            handleFirestoreError(error, OperationType.LIST, 'users');
+          });
+        } catch (error) {
+          console.error("Failed to query real-time enrolled students:", error);
+        }
+      } else {
+        setEnrolledStudents([]);
+      }
+
+      return () => {
+        if (unsubAnnouncements) unsubAnnouncements();
+        if (unsubStudents) unsubStudents();
+      };
     } else {
       setEnrolledStudents([]);
       setCourseAnnouncements([]);

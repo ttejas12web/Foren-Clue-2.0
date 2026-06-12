@@ -2,13 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default deny
+    // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
     }
 
     // --- PHASE 3: Primitives ---
     function isSignedIn() { return request.auth != null; }
+    
+    // Admin check inspecting authentic Firebase Auth email claim
     function isAdminEmail() { 
       return isSignedIn() && 
         'email' in request.auth.token && 
@@ -21,33 +23,83 @@ service cloud.firestore {
           request.auth.token.email.lower() == 'forenclue@gmail.com'
         ); 
     }
+    
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
 
-    // Validation Blueprints
+    // Validation Blueprints (with strict type checks and .size() limits)
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'createdAt'])
         && data.uid is string && data.uid.size() <= 128
+        && data.uid == request.auth.uid
         && (!('email' in data) || data.email == null || (data.email is string && data.email.size() <= 256))
+        && (!('displayName' in data) || data.displayName == null || (data.displayName is string && data.displayName.size() <= 256))
+        && (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 2000))
+        && (!('purchasedCourses' in data) || data.purchasedCourses is list)
+        && (!('bookmarks' in data) || data.bookmarks is list)
+        && (!('lessonBookmarks' in data) || data.lessonBookmarks is map)
+        && (!('achievementTags' in data) || data.achievementTags is list)
+        && (!('progress' in data) || data.progress is map)
+        && (!('quizScores' in data) || data.quizScores is map)
+        && (!('doubtsCount' in data) || data.doubtsCount is number)
+        && (!('commentsCount' in data) || data.commentsCount is number)
         && (!('careerSpeciality' in data) || data.careerSpeciality == null || (data.careerSpeciality is string && data.careerSpeciality.size() <= 128))
-        && (!('careerQuizAnswers' in data) || data.careerQuizAnswers == null || (data.careerQuizAnswers is list && data.careerQuizAnswers.size() <= 10));
+        && (!('careerQuizAnswers' in data) || data.careerQuizAnswers == null || (data.careerQuizAnswers is list && data.careerQuizAnswers.size() <= 10))
+        && (!('mobileNumber' in data) || data.mobileNumber is string && data.mobileNumber.size() <= 32)
+        && (!('universityName' in data) || data.universityName is string && data.universityName.size() <= 256)
+        && (!('studyingYear' in data) || data.studyingYear is string && data.studyingYear.size() <= 64)
+        && (!('educationLevel' in data) || data.educationLevel is string && data.educationLevel.size() <= 128)
+        && (!('wishlist' in data) || data.wishlist is list);
     }
 
     function isValidDoubt(data) {
       return data.keys().hasAll(['id', 'title', 'content', 'authorId', 'authorName', 'createdAt'])
-        && data.title is string
-        && data.content is string;
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.content is string && data.content.size() <= 65536
+        && data.authorId is string && data.authorId.size() <= 128
+        && data.authorName is string && data.authorName.size() <= 256
+        && (!('category' in data) || data.category is string && data.category.size() <= 100)
+        && (!('imageUrl' in data) || data.imageUrl is string && data.imageUrl.size() <= 2000)
+        && (!('likes' in data) || data.likes is list || data.likes is number)
+        && (!('resolved' in data) || data.resolved is bool)
+        && (!('commentsCount' in data) || data.commentsCount is number)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function isValidComment(data) {
       return data.keys().hasAll(['id', 'content', 'authorId', 'authorName', 'createdAt'])
-        && data.content is string;
+        && data.id is string && data.id.size() <= 128
+        && data.content is string && data.content.size() <= 10000
+        && data.authorId is string && data.authorId.size() <= 128
+        && data.authorName is string && data.authorName.size() <= 256
+        && (!('authorPhoto' in data) || data.authorPhoto is string && data.authorPhoto.size() <= 2000)
+        && (!('likes' in data) || data.likes is list || data.likes is number)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidQna(data) {
+      return data.keys().hasAll(['courseId', 'lessonId', 'content', 'authorId', 'authorName', 'createdAt'])
+        && data.courseId is string && data.courseId.size() <= 128
+        && data.lessonId is string && data.lessonId.size() <= 128
+        && data.content is string && data.content.size() <= 10000
+        && data.authorId is string && data.authorId.size() <= 128
+        && data.authorName is string && data.authorName.size() <= 256;
+    }
+
+    function isValidQnaComment(data) {
+      return data.keys().hasAll(['content', 'authorId', 'authorName', 'createdAt'])
+        && data.content is string && data.content.size() <= 10000
+        && data.authorId is string && data.authorId.size() <= 128
+        && data.authorName is string && data.authorName.size() <= 256;
     }
 
     function isValidReport(data) {
       return data.keys().hasAll(['id', 'targetId', 'targetType', 'reporterId', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.targetId is string && data.targetId.size() <= 128
         && data.targetType in ['doubt', 'comment']
         && data.reporterId == request.auth.uid
         && data.createdAt is timestamp;
@@ -55,7 +107,8 @@ service cloud.firestore {
 
     function isValidCourseStat(data) {
       return data.keys().hasAll(['students', 'updatedAt'])
-        && data.students is number;
+        && data.students is number
+        && data.updatedAt is timestamp;
     }
 
     function isValidCourse(data) {
@@ -70,6 +123,25 @@ service cloud.firestore {
       return data.keys().hasAll(['title', 'pdfUrl'])
         && data.title is string && data.title.size() <= 200
         && data.pdfUrl is string && data.pdfUrl.size() <= 2000;
+    }
+
+    function isValidCase(data) {
+      return data.keys().hasAll(['title', 'updatedAt'])
+        && data.title is string && data.title.size() <= 300
+        && (!('details' in data) || data.details is string)
+        && (!('summary' in data) || data.summary is string)
+        && (!('image' in data) || data.image is string)
+        && (!('tag' in data) || data.tag is string)
+        && (!('year' in data) || data.year is string)
+        && (!('location' in data) || data.location is string)
+        && (!('difficulty' in data) || data.difficulty is string)
+        && (!('type' in data) || data.type is string)
+        && (!('status' in data) || data.status is string)
+        && (!('evidenceLabels' in data) || data.evidenceLabels is list)
+        && (!('forensicTechniques' in data) || data.forensicTechniques is list)
+        && (!('contentImages' in data) || data.contentImages is list)
+        && (!('attachments' in data) || data.attachments is list)
+        && (!('createdBy' in data) || data.createdBy is string);
     }
 
     function isValidAnnouncement(data) {
@@ -93,7 +165,8 @@ service cloud.firestore {
     // --- Cases ---
     match /cases/{caseId} {
       allow read: if true;
-      allow write: if isAdminEmail();
+      allow create, update: if isAdminEmail() && isValidCase(incoming());
+      allow delete: if isAdminEmail();
     }
 
     // --- Courses ---
@@ -137,14 +210,13 @@ service cloud.firestore {
       allow get: if true;
       allow list: if isSignedIn(); 
       
-      allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if isOwner(userId) && isValidUser(incoming());
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt;
     }
 
     // --- Reports ---
     match /reports/{reportId} {
-      allow create: if isSignedIn() && isValidId(reportId) && isValidReport(incoming()) && incoming().id == reportId;
-      // Reports are typically only readable by admins, but for now we'll keep it private
+      allow create: if isSignedIn() && isValidId(reportId) && isValidReport(incoming()) && incoming().id == reportId && incoming().createdAt == request.time;
       allow read: if false; 
     }
 
@@ -153,8 +225,8 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSignedIn() && (
         !exists(/databases/$(database)/documents/courseStats/$(courseId)) ? 
-          isValidCourseStat(incoming()) : 
-          incoming().diff(existing()).affectedKeys().hasOnly(['students', 'updatedAt'])
+          (isValidCourseStat(incoming()) && incoming().updatedAt == request.time) : 
+          (incoming().diff(existing()).affectedKeys().hasOnly(['students', 'updatedAt']) && incoming().updatedAt == request.time)
       );
     }
     
@@ -167,13 +239,13 @@ service cloud.firestore {
     // --- Lecture QnA ---
     match /lectureQna/{qnaId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && existing().authorId == request.auth.uid;
+      allow create: if isSignedIn() && isValidQna(incoming()) && incoming().authorId == request.auth.uid && incoming().createdAt == request.time;
+      allow update, delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
 
       match /comments/{commentId} {
         allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isSignedIn() && existing().authorId == request.auth.uid;
+        allow create: if isSignedIn() && isValidQnaComment(incoming()) && incoming().authorId == request.auth.uid && incoming().createdAt == request.time;
+        allow update, delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
       }
     }
 
@@ -183,14 +255,14 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true; 
 
-      allow create: if isSignedIn() && isValidId(doubtId) && isValidDoubt(incoming()) && incoming().id == doubtId && incoming().authorId == request.auth.uid;
-      allow update: if isSignedIn() && incoming().authorId == existing().authorId && (
+      allow create: if isSignedIn() && isValidId(doubtId) && isValidDoubt(incoming()) && incoming().id == doubtId && incoming().authorId == request.auth.uid && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && isValidDoubt(incoming()) && incoming().authorId == existing().authorId && incoming().createdAt == existing().createdAt && (
         // Action: Like (any signed-in user)
         (incoming().diff(existing()).affectedKeys().hasOnly(['likes'])) ||
         // Action: Resolve (owner only)
-        (existing().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['resolved', 'updatedAt'])) ||
+        (existing().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['resolved', 'updatedAt']) && incoming().updatedAt == request.time) ||
         // Action: Edit (owner only)
-        (existing().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'category', 'imageUrl', 'updatedAt']))
+        (existing().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'category', 'imageUrl', 'updatedAt']) && incoming().updatedAt == request.time)
       );
       allow delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
 
@@ -199,8 +271,14 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
 
-        allow create: if isSignedIn() && isValidId(commentId) && isValidComment(incoming()) && incoming().id == commentId;
-        allow update, delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
+        allow create: if isSignedIn() && isValidId(commentId) && isValidComment(incoming()) && incoming().id == commentId && incoming().authorId == request.auth.uid && incoming().createdAt == request.time;
+        allow update: if isSignedIn() && isValidComment(incoming()) && incoming().authorId == existing().authorId && incoming().createdAt == existing().createdAt && (
+          // Action: Like (any signed-in user)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['likes'])) ||
+          // Action: Edit (owner only)
+          (existing().authorId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'updatedAt']) && incoming().updatedAt == request.time)
+        );
+        allow delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
       }
     }
   }

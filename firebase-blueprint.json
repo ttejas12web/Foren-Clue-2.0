@@ -142,12 +142,62 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "audioUrl"]
+    },
+    "Case": {
+      "title": "Forensic Case Study",
+      "description": "A declassified forensic case file for investigative study",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "details": { "type": "string" },
+        "image": { "type": "string" },
+        "tag": { "type": "string" },
+        "year": { "type": "string" },
+        "location": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "evidenceLabels": { "type": "array", "items": { "type": "string" } },
+        "forensicTechniques": { "type": "array", "items": { "type": "string" } },
+        "contentImages": { "type": "array" },
+        "attachments": { "type": "array", "items": { "type": "string" } },
+        "createdBy": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "updatedAt"]
+    },
+    "LectureQna": {
+      "title": "Lecture Question and Answer",
+      "description": "A user-submitted question for a specific lecture",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["courseId", "lessonId", "content", "authorId", "createdAt"]
     }
   },
   "firestore": {
     "/podcastEpisodes/{episodeId}": {
       "schema": "PodcastEpisode",
       "description": "Admin dynamically publishable podcast episodes"
+    },
+    "/cases/{caseId}": {
+      "schema": "Case",
+      "description": "Declassified forensic case documents"
+    },
+    "/lectureQna/{qnaId}": {
+      "schema": "LectureQna",
+      "description": "Course lecture questions"
+    },
+    "/lectureQna/{qnaId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Replies to course lecture questions"
     },
     "/courses/{courseId}": {
       "schema": "Course",

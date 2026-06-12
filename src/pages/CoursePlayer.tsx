@@ -38,7 +38,11 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  Maximize
+  Maximize,
+  RotateCcw,
+  RotateCw,
+  Check,
+  ChevronDown
 } from 'lucide-react';
 import { COURSES, Course, Lesson, Module } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -102,6 +106,10 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
   const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [quality, setQuality] = useState('auto');
 
   // Helper to get YouTube ID
   const getYouTubeId = (url: string) => {
@@ -144,6 +152,9 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
             if (!isMounted) return;
             setDuration(playerRef.current.getDuration() || 0);
             playerRef.current.setVolume(volume);
+            if (typeof playerRef.current.setPlaybackRate === 'function') {
+              playerRef.current.setPlaybackRate(playbackSpeed);
+            }
           },
           onStateChange: (event: any) => {
             if (!isMounted) return;
@@ -198,6 +209,44 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
     setCurrentTime(seekToVal);
   };
 
+  const handleRewind = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!playerRef.current || typeof playerRef.current.getCurrentTime !== 'function' || typeof playerRef.current.seekTo !== 'function') return;
+    const newTime = Math.max(0, playerRef.current.getCurrentTime() - 10);
+    playerRef.current.seekTo(newTime, true);
+    setCurrentTime(newTime);
+  };
+
+  const handleForward = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!playerRef.current || typeof playerRef.current.getCurrentTime !== 'function' || typeof playerRef.current.seekTo !== 'function') return;
+    const newTime = Math.min(duration, playerRef.current.getCurrentTime() + 10);
+    playerRef.current.seekTo(newTime, true);
+    setCurrentTime(newTime);
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (playerRef.current && typeof playerRef.current.setPlaybackRate === 'function') {
+      try {
+        playerRef.current.setPlaybackRate(speed);
+      } catch (err) {
+        console.error("Failed to set playback rate:", err);
+      }
+    }
+  };
+
+  const handleQualityChange = (q: string) => {
+    setQuality(q);
+    if (playerRef.current && typeof playerRef.current.setPlaybackQuality === 'function') {
+      try {
+        playerRef.current.setPlaybackQuality(q);
+      } catch (err) {
+        console.error("Failed to set quality:", err);
+      }
+    }
+  };
+
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!playerRef.current || typeof playerRef.current.setVolume !== 'function') return;
     const volVal = parseInt(e.target.value);
@@ -212,7 +261,8 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
     }
   };
 
-  const handleToggleMute = () => {
+  const handleToggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!playerRef.current) return;
     if (isMuted) {
       if (typeof playerRef.current.unMute === 'function') playerRef.current.unMute();
@@ -224,27 +274,70 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
     }
   };
 
-  const handleToggleFullscreen = () => {
+  const handleToggleFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!containerRef.current) return;
-    if (!isFullscreen) {
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen();
+
+    if (!isFullscreen && !isPseudoFullscreen) {
+      const requestMethod = containerRef.current.requestFullscreen || (containerRef.current as any).webkitRequestFullscreen || (containerRef.current as any).mozRequestFullScreen || (containerRef.current as any).msRequestFullscreen;
+      if (requestMethod) {
+        requestMethod.call(containerRef.current)
+          .then(() => {
+            setIsFullscreen(true);
+          })
+          .catch(() => {
+            setIsPseudoFullscreen(true);
+          });
+      } else {
+        setIsPseudoFullscreen(true);
       }
-      setIsFullscreen(true);
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      if (isFullscreen) {
+        const exitMethod = document.exitFullscreen || (document as any).webkitExitFullscreen || (document as any).mozCancelFullScreen || (document as any).msExitFullscreen;
+        if (exitMethod) {
+          try {
+            exitMethod.call(document);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        setIsFullscreen(false);
       }
-      setIsFullscreen(false);
+      setIsPseudoFullscreen(false);
     }
   };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isNativeFs = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
+      setIsFullscreen(isNativeFs);
+      if (!isNativeFs) {
+        setIsPseudoFullscreen(false);
+      }
     };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPseudoFullscreen(false);
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const formatTime = (time: number) => {
@@ -254,18 +347,24 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  const isExpanded = isFullscreen || isPseudoFullscreen;
+
   return (
     <div 
       ref={containerRef}
-      className="relative aspect-video bg-black rounded-xl overflow-hidden border border-black/10 dark:border-white/10 shadow-2xl flex flex-col group mb-8"
+      className={`bg-black overflow-hidden flex flex-col justify-between group transition-all duration-300 ${
+        isExpanded 
+          ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none' 
+          : 'relative aspect-video rounded-xl border border-black/10 dark:border-white/10 shadow-2xl mb-8'
+      }`}
     >
-      <div className="w-full h-full relative bg-black">
+      <div className="w-full h-full relative bg-black flex-1">
         <iframe 
           ref={iframeRef}
           src={embedUrl}
           title={title}
-          className="w-full h-full pointer-events-none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          className="w-full h-full pointer-events-none absolute inset-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
         />
         
@@ -279,12 +378,7 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
         </div>
       </div>
 
-      <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2">
-        <div className="bg-warning/90 text-crust p-2 py-1 flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest shadow-lg">
-          <Activity size={12} className="animate-pulse" />
-          Live Transmission
-        </div>
-      </div>
+
 
       {isAdmin && (
         <div className="absolute top-4 right-4 z-20">
@@ -300,10 +394,80 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
         </div>
       )}
 
+      {/* Settings Menu popover */}
+      {showSettingsMenu && (
+        <div className="absolute bottom-16 right-4 bg-[#121212]/95 backdrop-blur-xl border border-neutral-800 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-40 text-left min-w-[240px] text-white">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-2 mb-3">
+            <span className="text-[10px] font-black uppercase tracking-wider text-warning">Transmission Config</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSettingsMenu(false);
+              }} 
+              className="text-neutral-400 hover:text-white p-1 rounded"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <p className="text-[9px] uppercase font-black tracking-widest text-[#1db954] mb-1.5">Playback Speed</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[0.5, 1, 1.5, 2].map((s) => (
+                  <button
+                    key={s}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSpeedChange(s);
+                    }}
+                    className={`py-1 rounded text-[10px] font-black border transition-all ${
+                      playbackSpeed === s 
+                        ? 'bg-warning text-crust border-warning' 
+                        : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                    }`}
+                  >
+                    {s === 1 ? 'Normal' : `${s}x`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[9px] uppercase font-black tracking-widest text-[#1db954] mb-1.5">Video Resolution</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { id: 'auto', label: 'Auto' },
+                  { id: 'hd1080', label: '1080p HD' },
+                  { id: 'hd720', label: '720p HD' },
+                  { id: 'medium', label: '480p' },
+                  { id: 'small', label: '360p' }
+                ].map((q) => (
+                  <button
+                    key={q.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQualityChange(q.id);
+                    }}
+                    className={`py-1 rounded text-[10px] font-black border transition-all ${
+                      quality === q.id 
+                        ? 'bg-warning text-crust border-warning' 
+                        : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                    }`}
+                  >
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Elegant Controls overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-neutral-950 via-neutral-900/95 to-transparent p-4 pt-10 z-30 transition-all duration-300 opacity-90 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-neutral-950 via-neutral-900/95 to-transparent p-4 pt-10 z-30 transition-all duration-300 opacity-95 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0">
         
-        <div className="flex items-center gap-3 w-full mb-3">
+        <div className="flex items-center gap-3 w-full mb-3" onClick={(e) => e.stopPropagation()}>
           <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-right">
             {formatTime(currentTime)}
           </span>
@@ -330,7 +494,26 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
               {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
             </button>
 
-            <div className="flex items-center gap-2 group/volume">
+            {/* Rewind & Forward Seek Controls */}
+            <button 
+              onClick={handleRewind}
+              className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1"
+              title="Rewind 10 seconds"
+            >
+              <RotateCcw size={16} />
+              <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">-10s</span>
+            </button>
+
+            <button 
+              onClick={handleForward}
+              className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1"
+              title="Forward 10 seconds"
+            >
+              <RotateCw size={16} />
+              <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">+10s</span>
+            </button>
+
+            <div className="flex items-center gap-2 group/volume" onClick={(e) => e.stopPropagation()}>
               <button 
                 onClick={handleToggleMute}
                 className="text-text-main hover:text-warning transition-colors focus:outline-none"
@@ -348,15 +531,34 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
               />
             </div>
             
-            <span className="text-[9px] font-mono font-black tracking-widest text-[#1db954] uppercase hidden md:inline ml-2">
+            <span className="text-[9px] font-mono font-black tracking-widest text-[#1db954] uppercase hidden lg:inline ml-2">
               FORENCLUE AUDIO/VIDEO TRANSMISSION PROTOCOL
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Resolution/Speed indicator badge */}
+            <div className="hidden sm:flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded px-2 py-0.5 text-[9px] font-mono font-bold text-neutral-400">
+              <span className="text-warning uppercase text-[8px] tracking-wide font-black">{quality === 'auto' ? 'Auto' : quality.replace('hd', '').replace('medium', '480p').replace('small', '360p')}</span>
+              <span className="opacity-25 pb-0.5">|</span>
+              <span>{playbackSpeed}x</span>
+            </div>
+
+            {/* Quality / Speed Configurations Button */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSettingsMenu(!showSettingsMenu);
+              }}
+              className={`text-text-main hover:text-warning transition-colors focus:outline-none p-1.5 rounded-lg ${showSettingsMenu ? 'bg-neutral-900 text-warning border border-neutral-800' : ''}`}
+              title="Configure Transmission"
+            >
+              <Settings size={16} className={showSettingsMenu ? 'animate-spin-slow' : ''} />
+            </button>
+
             <button 
               onClick={handleToggleFullscreen}
-              className="text-text-main hover:text-warning transition-colors focus:outline-none"
+              className="text-text-main hover:text-warning transition-colors focus:outline-none p-1"
               aria-label="Toggle Fullscreen"
             >
               <Maximize size={16} />
@@ -387,6 +589,15 @@ export default function CoursePlayer() {
 
   const [courseStats, setCourseStats] = useState<Record<number, number>>({});
   const [courseOverrides, setCourseOverrides] = useState<any>(null);
+
+  useEffect(() => {
+    if (activeLesson) {
+      const hasQuiz = (activeLesson as any)?.quizQuestions && (activeLesson as any).quizQuestions.length > 0;
+      if (activeTab === 'quiz' && !hasQuiz && !isAdmin) {
+        setActiveTab('about');
+      }
+    }
+  }, [activeLesson, isAdmin, activeTab]);
 
   useEffect(() => {
     let active = true;
@@ -788,12 +999,14 @@ export default function CoursePlayer() {
             >
               Q&A
             </button>
-            <button 
-              onClick={() => setActiveTab('quiz')}
-              className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'quiz' ? 'text-warning' : 'text-text-muted hover:text-text-main'}`}
-            >
-              Lesson Quiz
-            </button>
+            {(((activeLesson as any)?.quizQuestions && (activeLesson as any).quizQuestions.length > 0) || isAdmin) && (
+              <button 
+                onClick={() => setActiveTab('quiz')}
+                className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'quiz' ? 'text-warning' : 'text-text-muted hover:text-text-main'}`}
+              >
+                Lesson Quiz
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -1109,7 +1322,7 @@ export default function CoursePlayer() {
             {/* Tabbed Content Section */}
             <div className="bg-surface/50 border border-black/10 dark:border-white/5 rounded-xl overflow-hidden backdrop-blur-md">
               <div className="flex border-b border-black/10 dark:border-white/5 overflow-x-auto scrollbar-hide snap-x">
-                 {['about', 'notices', 'notes', 'qna', 'files', 'quiz'].map((t) => (
+                 {['about', 'notices', 'notes', 'qna', 'files', 'quiz'].filter(t => t !== 'quiz' || ((activeLesson as any)?.quizQuestions && (activeLesson as any).quizQuestions.length > 0) || isAdmin).map((t) => (
                     <button
                       key={t}
                       onClick={() => setActiveTab(t as any)}

@@ -62,11 +62,12 @@ export function LessonQuiz({ courseId, lessonId, title, questionsOverride }: { c
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Use generic questions for now. In a real app, these would be fetched per lesson.
-  const questions = questionsOverride && questionsOverride.length > 0 ? questionsOverride : GENERIC_QUESTIONS;
+  // Only show questions manually added by the instructor
+  const questions = questionsOverride && questionsOverride.length > 0 ? questionsOverride : [];
   
   // Check if already completed and score is recorded
   useEffect(() => {
+    if (questions.length === 0) return;
     const existingScore = userProfile?.quizScores?.[courseId]?.[lessonId];
     if (existingScore !== undefined) {
       setScore(existingScore);
@@ -74,7 +75,7 @@ export function LessonQuiz({ courseId, lessonId, title, questionsOverride }: { c
     } else {
       resetQuiz();
     }
-  }, [courseId, lessonId, userProfile?.quizScores]);
+  }, [courseId, lessonId, userProfile?.quizScores, questions.length]);
 
   const resetQuiz = () => {
     setCurrentQuestion(0);
@@ -94,7 +95,7 @@ export function LessonQuiz({ courseId, lessonId, title, questionsOverride }: { c
   };
 
   const calculateAndSaveScore = async (finalScore: number) => {
-    if (!user) return;
+    if (!user || questions.length === 0) return;
     setIsSaving(true);
     const path = `users/${user.uid}`;
     try {
@@ -112,7 +113,7 @@ export function LessonQuiz({ courseId, lessonId, title, questionsOverride }: { c
   };
 
   const handleSubmit = async () => {
-    if (selectedAnswer === null) return;
+    if (selectedAnswer === null || questions.length === 0) return;
     
     setIsSubmitted(true);
     
@@ -136,6 +137,20 @@ export function LessonQuiz({ courseId, lessonId, title, questionsOverride }: { c
       }
     }, 2500);
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 bg-surface/30 border border-black/10 dark:border-white/5 rounded-xl text-center">
+        <div className="w-16 h-16 bg-neutral-500/10 border border-neutral-500/30 rounded-full flex items-center justify-center mx-auto text-neutral-400 mb-4">
+          <Info size={28} />
+        </div>
+        <h3 className="text-lg font-heading font-black uppercase text-text-main mb-2">No Quiz Available</h3>
+        <p className="text-text-muted text-sm max-w-sm">
+          No quiz has been added to this lesson yet. Quizzes appear once they are manually assigned by the instructor.
+        </p>
+      </div>
+    );
+  }
 
   if (quizCompleted) {
     const passed = score >= 70;
