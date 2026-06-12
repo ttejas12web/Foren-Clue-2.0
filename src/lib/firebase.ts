@@ -11,6 +11,8 @@ const getRuntimeConfig = () => {
     const hostname = window.location.hostname;
     if (hostname === 'forensicspot.com' || hostname === 'www.forensicspot.com') {
       config.authDomain = 'forensicspot.com';
+    } else if (hostname === 'forenclue.com' || hostname === 'www.forenclue.com') {
+      config.authDomain = 'forenclue.com';
     }
   }
   // Standardize the storage bucket to legacy appspot.com if the modern .firebasestorage.app bucket is not yet active/provisioned

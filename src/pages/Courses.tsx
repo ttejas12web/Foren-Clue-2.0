@@ -19,6 +19,12 @@ declare global {
 
 export default function Courses() {
   const { user, userProfile, loading, signInWithGoogle, isAdmin } = useAuth();
+  const isSpecAdmin = useMemo(() => {
+    return !!(isAdmin && user?.email && (
+      user.email.toLowerCase() === 'mrunmayeebodhe118@gmail.com' ||
+      user.email.toLowerCase() === 'webcreator500@gmail.com'
+    ));
+  }, [isAdmin, user?.email]);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [purchasing, setPurchasing] = useState<number | null>(null);
@@ -161,7 +167,7 @@ export default function Courses() {
         console.error("Failed to query announcements:", error);
       }
 
-      if (user) {
+      if (user && isSpecAdmin) {
         try {
           const qStudents = query(
             collection(db, "users"),
@@ -192,7 +198,7 @@ export default function Courses() {
       setEnrolledStudents([]);
       setCourseAnnouncements([]);
     }
-  }, [selectedCourse, user]);
+  }, [selectedCourse, user, isSpecAdmin]);
 
   const handlePurchase = async (courseId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -531,13 +537,21 @@ export default function Courses() {
         <div className="flex bg-base p-1 rounded-xl border border-black/10 dark:border-white/5 relative z-10 shrink-0">
           <button
             onClick={() => setViewMode('grid')}
-            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-warning text-crust font-black' : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'}`}
+            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300 cursor-pointer ${
+              viewMode === 'grid' 
+                ? 'bg-warning text-crust font-black hover:bg-warning/90' 
+                : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
           >
             Grid Shell
           </button>
           <button
             onClick={() => setViewMode('path')}
-            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${viewMode === 'path' ? 'bg-warning text-crust font-black' : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'}`}
+            className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300 cursor-pointer ${
+              viewMode === 'path' 
+                ? 'bg-warning text-crust font-black hover:bg-warning/90' 
+                : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
           >
             Investigation Roadmap
           </button>
@@ -875,10 +889,12 @@ export default function Courses() {
                         <ShieldCheck size={16} />
                         <span className="text-xs font-bold uppercase tracking-widest">{selectedCourse.level}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-warning/80">
-                        <User size={16} />
-                        <span className="text-xs font-bold uppercase tracking-widest">{enrolledStudents.length} Enrolled</span>
-                      </div>
+                      {isSpecAdmin && (
+                        <div className="flex items-center gap-2 text-warning/80">
+                          <User size={16} />
+                          <span className="text-xs font-bold uppercase tracking-widest">{enrolledStudents.length} Enrolled</span>
+                        </div>
+                      )}
                     </div>
                     <p className="text-text-muted text-sm leading-relaxed mb-8">
                       {selectedCourse.description}
@@ -973,44 +989,46 @@ export default function Courses() {
                       </div>
 
                       {/* Enrolled Investigators Subsection */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-4">
-                          <Users size={18} className="text-warning" />
-                          <h3 className="text-lg font-heading font-black uppercase tracking-wide">Enrolled Investigators ({enrolledStudents.length})</h3>
-                        </div>
+                      {isSpecAdmin && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Users size={18} className="text-warning" />
+                            <h3 className="text-lg font-heading font-black uppercase tracking-wide">Enrolled Investigators ({enrolledStudents.length})</h3>
+                          </div>
 
-                        {enrolledStudents.length > 0 ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pr-1">
-                            {enrolledStudents.map((student, idx) => (
-                              <div key={student.id || idx} className="flex items-center gap-3 p-2 bg-black/10 dark:bg-white/2 rounded border border-black/5 dark:border-white/5 hover:border-warning/20 transition-colors">
-                                {student.photoURL ? (
-                                  <img 
-                                    src={student.photoURL} 
-                                    alt={student.displayName || "Investigator"} 
-                                    className="w-7 h-7 rounded-full border border-warning/20 object-cover"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                ) : (
-                                  <div className="w-7 h-7 rounded-full bg-warning/10 border border-warning/20 flex items-center justify-center text-[10px] font-bold text-warning uppercase">
-                                    {(student.displayName || student.email || "I").substring(0, 2)}
+                          {enrolledStudents.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pr-1">
+                              {enrolledStudents.map((student, idx) => (
+                                <div key={student.id || idx} className="flex items-center gap-3 p-2 bg-black/10 dark:bg-white/2 rounded border border-black/5 dark:border-white/5 hover:border-warning/20 transition-colors">
+                                  {student.photoURL ? (
+                                    <img 
+                                      src={student.photoURL} 
+                                      alt={student.displayName || "Investigator"} 
+                                      className="w-7 h-7 rounded-full border border-warning/20 object-cover"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  ) : (
+                                    <div className="w-7 h-7 rounded-full bg-warning/10 border border-warning/20 flex items-center justify-center text-[10px] font-bold text-warning uppercase">
+                                      {(student.displayName || student.email || "I").substring(0, 2)}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-bold text-text-main truncate uppercase tracking-wider">{student.displayName || 'Anonymous Agent'}</p>
+                                    <p className="text-[9px] text-text-muted truncate">
+                                      {student.universityName || student.email || 'Verified student'}
+                                    </p>
                                   </div>
-                                )}
-                                <div className="min-w-0">
-                                  <p className="text-[11px] font-bold text-text-main truncate uppercase tracking-wider">{student.displayName || 'Anonymous Agent'}</p>
-                                  <p className="text-[9px] text-text-muted truncate">
-                                    {student.universityName || student.email || 'Verified student'}
-                                  </p>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-6 border border-black/10 dark:border-white/5 border-dashed rounded-md flex flex-col items-center justify-center text-center">
-                            <Users size={24} className="text-text-main/15 mb-1.5" />
-                            <p className="text-[10px] text-text-muted italic">Be the first investigator to enroll in this course!</p>
-                          </div>
-                        )}
-                      </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-6 border border-black/10 dark:border-white/5 border-dashed rounded-md flex flex-col items-center justify-center text-center">
+                              <Users size={24} className="text-text-main/15 mb-1.5" />
+                              <p className="text-[10px] text-text-muted italic">Be the first investigator to enroll in this course!</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className="p-3 bg-base/50 border border-black/10 dark:border-white/5 rounded-md border-dashed">
                         <p className="text-[9px] text-text-muted italic leading-relaxed">
@@ -1037,10 +1055,12 @@ export default function Courses() {
                          )}
                       </div>
                       
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted">
-                        <User size={12} className="text-warning" />
-                        <span>{enrolledStudents.length} Enrolled</span>
-                      </div>
+                      {isSpecAdmin && (
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted">
+                          <User size={12} className="text-warning" />
+                          <span>{enrolledStudents.length} Enrolled</span>
+                        </div>
+                      )}
                     </div>
 
                     {selectedCourse.price > 0 ? (

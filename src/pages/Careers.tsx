@@ -905,8 +905,8 @@ export default function Careers() {
                     onClick={() => setActiveTab(track.id)}
                     className={`relative flex items-center gap-3 px-5 py-3.5 border transition-all duration-300 rounded-xl shrink-0 cursor-pointer ${
                       isSelected 
-                        ? 'bg-warning/10 border-warning/60 text-white shadow-md shadow-warning/5' 
-                        : 'bg-surface/60 border-white/5 hover:border-white/10 text-text-muted hover:text-white'
+                        ? 'bg-warning/20 border-warning/60 text-white shadow-md shadow-warning/5 hover:bg-warning/30' 
+                        : 'bg-surface/60 border-white/5 hover:border-white/15 text-text-muted hover:text-white hover:bg-surface/90'
                     }`}
                   >
                     <TrackIcon className={`w-4 h-4 ${isSelected ? 'text-warning' : 'text-text-muted'}`} />

@@ -306,24 +306,24 @@ The ForenClue Curriculum Board
            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
              {[
                {
-                 quote: "The case-based approach completely changed how I understand forensic evidence handling. Highly recommended!",
+                 quote: "The Forensic Careers Handbook and Pathfinder Engine charted my entire career path, helping me structure my electives perfectly.",
                  author: "Forensic Student"
                },
                {
-                 quote: "The interactive 3D simulations are a game-changer for digital forensic education. Incredibly immersive.",
-                 author: "Prof. Sharma, Cyber Lead"
+                 quote: "Working through the declassified Case Studies felt like actual detective work. The depth of evidence review is unmatched.",
+                 author: "Forensic Student"
                },
                {
-                 quote: "ForenClue provides a bridge between academic theory and the rigorous demands of professional investigation.",
-                 author: "Ananya V., Senior Analyst"
+                 quote: "The real-time Course Player combined with the Community doubts hub let me resolve complex toxicological case queries instantly.",
+                 author: "Forensic Student"
                },
                {
-                 quote: "The structured learning path helped me secure my first role in a state forensic lab.",
-                 author: "Rahul K., FS Graduate"
+                 quote: "As an active investigator, using the high-fidelity case blueprints and expert podcast streams keeps my investigative skills incredibly sharp.",
+                 author: "Forensic Professional"
                },
                {
-                 quote: "Detailed case studies offer insights into evidence collection that textbooks simply cannot match.",
-                 author: "Dr. Mehta, Consultant"
+                 quote: "The combination of interactive lesson modules, structured career handbooks, and community peer support has been vital for my lab placement prep.",
+                 author: "Forensic Student"
                }
              ].map((testimonial, i) => (
                <div key={i} className="bg-crust/5 p-6 rounded-lg flex flex-col justify-between">

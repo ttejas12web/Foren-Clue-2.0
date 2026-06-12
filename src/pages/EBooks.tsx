@@ -215,7 +215,9 @@ export default function EBooks() {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 relative",
-                  isActive ? "text-crust bg-warning" : "text-text-muted bg-surface hover:text-text-main border border-black/10 dark:border-white/5 hover:border-black/10 dark:border-white/10"
+                  isActive 
+                    ? "text-crust bg-warning hover:bg-warning/90" 
+                    : "text-text-muted bg-surface hover:text-text-main border border-black/10 dark:border-white/5 hover:border-black/15 dark:hover:border-white/10 hover:bg-surface/80"
                 )}
               >
                 <Icon className={cn("w-4 h-4", isActive ? "text-crust" : "text-text-muted")} />
