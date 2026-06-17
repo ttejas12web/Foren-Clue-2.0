@@ -519,13 +519,13 @@ export default function Profile() {
             ) : (
               <div className="bg-surface/50 border border-dashed border-black/10 dark:border-white/10 p-12 rounded-lg text-center">
                 <BookOpen size={48} className="mx-auto text-text-main/10 mb-4" />
-                <h3 className="text-xl font-heading font-bold text-text-muted mb-2">No Courses Yet</h3>
-                <p className="text-sm text-text-muted max-w-xs mx-auto mb-6">You haven't enrolled in any courses. Explore our catalog to start your forensic journey.</p>
+                <h3 className="text-xl font-heading font-bold text-text-muted mb-2">No Active Cases Yet</h3>
+                <p className="text-sm text-text-muted max-w-xs mx-auto mb-6">You haven't activated any case studies. Explore our database to start your forensic journey.</p>
                 <a 
-                  href="/courses" 
+                  href="/cases" 
                   className="inline-flex items-center gap-2 bg-black/5 dark:bg-white/5 px-6 py-3 border border-black/10 dark:border-white/10 rounded-md text-sm font-bold uppercase tracking-widest hover:bg-warning hover:text-crust transition-all duration-300"
                 >
-                  Browse Courses
+                  Browse Cases
                 </a>
               </div>
             )}
@@ -602,10 +602,10 @@ export default function Profile() {
                     
                     <div className="flex items-center gap-3">
                       <Link 
-                        to={`/courses?id=${course.id}`}
+                        to={`/cases`}
                         className="px-4 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded text-xs font-bold uppercase tracking-widest hover:bg-warning hover:border-warning hover:text-crust transition-all whitespace-nowrap"
                       >
-                        View Course
+                        View Case
                       </Link>
                     </div>
                   </motion.div>

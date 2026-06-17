@@ -12,6 +12,7 @@ import { FloatingPodcastButton } from './components/ui/FloatingPodcastButton';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
 import { PodcastPromoPopup } from './components/ui/PodcastPromoPopup';
+import { AttentionPopup } from './components/ui/AttentionPopup';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -91,9 +92,10 @@ export default function App() {
       <FloatingPodcastButton />
       <GoogleOneTap />
       <PodcastPromoPopup />
+      <AttentionPopup />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/player/:courseId" element={<CoursePlayer />} />
+          <Route path="/player/:courseId" element={<Navigate to="/" replace />} />
           <Route path="*" element={
             <>
               <Navbar />
@@ -102,7 +104,7 @@ export default function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/courses" element={<Courses />} />
+                    <Route path="/courses" element={<Navigate to="/" replace />} />
                     <Route path="/cases" element={<Cases />} />
                     <Route path="/careers" element={<Careers />} />
                     <Route path="/community" element={<Community />} />

@@ -181,8 +181,8 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-8 bg-surface/30 border border-dashed border-black/10 dark:border-white/10 rounded-lg">
                   <p className="text-sm text-text-muted mb-4 uppercase tracking-widest">No active cases</p>
-                  <Link to="/courses" className="text-warning text-sm font-bold uppercase tracking-wide hover:underline">
-                    Browse Courses
+                  <Link to="/cases" className="text-warning text-sm font-bold uppercase tracking-wide hover:underline">
+                    Browse Case Studies
                   </Link>
                 </div>
               )}
@@ -242,7 +242,7 @@ export default function Dashboard() {
                 wishlistedCourses.map(course => (
                   <Link 
                     key={course.id} 
-                    to={`/courses?id=${course.id}`}
+                    to={`/cases`}
                     className="block bg-surface border border-black/10 dark:border-white/5 p-4 rounded-lg group hover:border-warning/30 transition-colors"
                   >
                     <h3 className="font-heading font-bold text-sm text-text-main group-hover:text-warning transition-colors mb-1">{course.title}</h3>

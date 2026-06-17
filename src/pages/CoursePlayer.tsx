@@ -111,6 +111,9 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [quality, setQuality] = useState('auto');
 
+  const [useNativeControls, setUseNativeControls] = useState(false);
+  const [apiConnected, setApiConnected] = useState(false);
+
   // Helper to get YouTube ID
   const getYouTubeId = (url: string) => {
     if (!url) return '';
@@ -124,8 +127,25 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
   };
 
   const videoId = getYouTubeId(videoUrl);
-  // We specify enablejsapi=1, controls=0, modestbranding=1 etc.
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1&origin=${window.location.origin}`;
+  // We specify enablejsapi=1, controls=0/1 based on state, modestbranding=1 etc.
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=${useNativeControls ? '1' : '0'}&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1&origin=${window.location.origin}`;
+
+  useEffect(() => {
+    if (videoId) {
+      setApiConnected(false);
+      setUseNativeControls(false); // Default to custom first, then check connection
+      
+      const timer = setTimeout(() => {
+        // If API has not connected after 3.2 seconds, fallback to native controls automatically to bypass postMessage blockages
+        if (!apiConnected && (!playerRef.current || typeof playerRef.current.getPlayerState !== 'function')) {
+          console.warn("YouTube Player API failed to handshake securely. Fallback to direct stream transmission active.");
+          setUseNativeControls(true);
+        }
+      }, 3200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [videoId, apiConnected]);
 
   useEffect(() => {
     let interval: any;
@@ -146,26 +166,31 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
         playerRef.current = null;
       }
 
-      playerRef.current = new window.YT.Player(iframeRef.current, {
-        events: {
-          onReady: () => {
-            if (!isMounted) return;
-            setDuration(playerRef.current.getDuration() || 0);
-            playerRef.current.setVolume(volume);
-            if (typeof playerRef.current.setPlaybackRate === 'function') {
-              playerRef.current.setPlaybackRate(playbackSpeed);
-            }
-          },
-          onStateChange: (event: any) => {
-            if (!isMounted) return;
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              setIsPlaying(true);
-            } else {
-              setIsPlaying(false);
+      try {
+        playerRef.current = new window.YT.Player(iframeRef.current, {
+          events: {
+            onReady: () => {
+              if (!isMounted) return;
+              setApiConnected(true);
+              setDuration(playerRef.current.getDuration() || 0);
+              playerRef.current.setVolume(volume);
+              if (typeof playerRef.current.setPlaybackRate === 'function') {
+                playerRef.current.setPlaybackRate(playbackSpeed);
+              }
+            },
+            onStateChange: (event: any) => {
+              if (!isMounted) return;
+              if (event.data === window.YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
+              } else {
+                setIsPlaying(false);
+              }
             }
           }
-        }
-      });
+        });
+      } catch (err) {
+        console.error("Error creating YT Player inside sandbox", err);
+      }
 
       interval = setInterval(() => {
         if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
@@ -194,7 +219,11 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
   }, [videoId]);
 
   const handlePlayPause = () => {
-    if (!playerRef.current || typeof playerRef.current.playVideo !== 'function') return;
+    if (!playerRef.current || typeof playerRef.current.playVideo !== 'function') {
+      // Fallback: If custom controls click fails, auto-toggle native controls
+      setUseNativeControls(true);
+      return;
+    }
     if (isPlaying) {
       playerRef.current.pauseVideo();
     } else {
@@ -363,22 +392,43 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
           ref={iframeRef}
           src={embedUrl}
           title={title}
-          className="w-full h-full pointer-events-none absolute inset-0"
+          className={`w-full h-full absolute inset-0 transition-opacity duration-300 ${
+            useNativeControls ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
         />
         
-        <div 
-          onClick={handlePlayPause}
-          className="absolute inset-0 cursor-pointer flex items-center justify-center z-10 bg-black/0 active:bg-black/10 transition-colors"
-        >
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-md p-4 rounded-full text-warning scale-90 group-hover:scale-100 duration-200">
-            {isPlaying ? <Pause size={28} /> : <Play size={28} fill="currentColor" />}
+        {!useNativeControls && (
+          <div 
+            onClick={handlePlayPause}
+            className="absolute inset-0 cursor-pointer flex items-center justify-center z-10 bg-black/0 active:bg-black/10 transition-colors"
+          >
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-md p-4 rounded-full text-warning scale-90 group-hover:scale-100 duration-200">
+              {isPlaying ? <Pause size={28} /> : <Play size={28} fill="currentColor" />}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-
+      {/* Satellite Connectivity / Transmission Protocol Pill */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            setUseNativeControls(!useNativeControls);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all duration-300 text-[9px] font-black uppercase tracking-wider backdrop-blur-md cursor-pointer select-none ${
+            useNativeControls 
+              ? 'bg-[#1db954]/20 text-[#1db954] border-[#1db954]/50 hover:bg-[#1db954]/30' 
+              : 'bg-black/80 hover:bg-black/95 text-text-muted hover:text-white border-white/10'
+          }`}
+          title={useNativeControls ? "Use Forenclue Custom Interface" : "Switch to Direct Stream Feed"}
+        >
+          <Activity size={10} className={useNativeControls ? 'animate-pulse' : ''} />
+          <span>{useNativeControls ? "DIRECT LINK" : "CUSTOM HUD"}</span>
+        </button>
+      </div>
 
       {isAdmin && (
         <div className="absolute top-4 right-4 z-20">
@@ -465,108 +515,110 @@ function ForenclueVideoPlayer({ videoUrl, title, isAdmin, onEditVideoLink }: { v
       )}
 
       {/* Elegant Controls overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-neutral-950 via-neutral-900/95 to-transparent p-4 pt-10 z-30 transition-all duration-300 opacity-95 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0">
-        
-        <div className="flex items-center gap-3 w-full mb-3" onClick={(e) => e.stopPropagation()}>
-          <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-right">
-            {formatTime(currentTime)}
-          </span>
-          <input 
-            type="range"
-            min={0}
-            max={duration || 100}
-            value={currentTime}
-            onChange={handleSeek}
-            className="flex-1 accent-warning bg-neutral-800 rounded-lg appearance-none h-1 cursor-pointer focus:outline-none"
-          />
-          <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-left">
-            {formatTime(duration)}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={handlePlayPause}
-              className="text-text-main hover:text-warning transition-colors focus:outline-none"
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-            </button>
-
-            {/* Rewind & Forward Seek Controls */}
-            <button 
-              onClick={handleRewind}
-              className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1"
-              title="Rewind 10 seconds"
-            >
-              <RotateCcw size={16} />
-              <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">-10s</span>
-            </button>
-
-            <button 
-              onClick={handleForward}
-              className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1"
-              title="Forward 10 seconds"
-            >
-              <RotateCw size={16} />
-              <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">+10s</span>
-            </button>
-
-            <div className="flex items-center gap-2 group/volume" onClick={(e) => e.stopPropagation()}>
-              <button 
-                onClick={handleToggleMute}
-                className="text-text-main hover:text-warning transition-colors focus:outline-none"
-                aria-label={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-              <input 
-                type="range"
-                min={0}
-                max={100}
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="w-16 accent-warning bg-neutral-800 rounded-lg appearance-none h-0.5 cursor-pointer focus:outline-none"
-              />
-            </div>
-            
-            <span className="text-[9px] font-mono font-black tracking-widest text-[#1db954] uppercase hidden lg:inline ml-2">
-              FORENCLUE AUDIO/VIDEO TRANSMISSION PROTOCOL
+      {!useNativeControls && (
+        <div className="absolute bottom-0 left-0 right-0 bg-neutral-950/90 backdrop-blur-md p-3 sm:p-4 border-t border-white/5 z-30 transition-all duration-300 opacity-100 lg:opacity-0 lg:translate-y-2 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 flex flex-col justify-end">
+          
+          <div className="flex items-center gap-3 w-full mb-3" onClick={(e) => e.stopPropagation()}>
+            <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-right">
+              {formatTime(currentTime)}
+            </span>
+            <input 
+              type="range"
+              min={0}
+              max={duration || 100}
+              value={currentTime}
+              onChange={handleSeek}
+              className="flex-1 accent-warning bg-neutral-800 rounded-lg appearance-none h-1 cursor-pointer focus:outline-none"
+            />
+            <span className="text-[10px] font-sans font-medium text-text-muted select-none w-10 text-left">
+              {formatTime(duration)}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Resolution/Speed indicator badge */}
-            <div className="hidden sm:flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded px-2 py-0.5 text-[9px] font-mono font-bold text-neutral-400">
-              <span className="text-warning uppercase text-[8px] tracking-wide font-black">{quality === 'auto' ? 'Auto' : quality.replace('hd', '').replace('medium', '480p').replace('small', '360p')}</span>
-              <span className="opacity-25 pb-0.5">|</span>
-              <span>{playbackSpeed}x</span>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={handlePlayPause}
+                className="text-text-main hover:text-warning transition-colors focus:outline-none cursor-pointer"
+                aria-label={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+              </button>
+
+              {/* Rewind & Forward Seek Controls */}
+              <button 
+                onClick={handleRewind}
+                className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                title="Rewind 10 seconds"
+              >
+                <RotateCcw size={16} />
+                <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">-10s</span>
+              </button>
+
+              <button 
+                onClick={handleForward}
+                className="text-text-main hover:text-warning transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                title="Forward 10 seconds"
+              >
+                <RotateCw size={16} />
+                <span className="text-[9px] font-black tracking-tighter text-text-muted uppercase hidden sm:inline">+10s</span>
+              </button>
+
+              <div className="flex items-center gap-2 group/volume scale-90 sm:scale-100" onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={handleToggleMute}
+                  className="text-text-main hover:text-warning transition-colors focus:outline-none cursor-pointer"
+                  aria-label={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                </button>
+                <input 
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-12 sm:w-16 accent-warning bg-neutral-800 rounded-lg appearance-none h-0.5 cursor-pointer focus:outline-none"
+                />
+              </div>
+              
+              <span className="text-[9px] font-mono font-black tracking-widest text-[#1db954] uppercase hidden lg:inline ml-2">
+                FORENCLUE AUDIO/VIDEO TRANSMISSION PROTOCOL
+              </span>
             </div>
 
-            {/* Quality / Speed Configurations Button */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSettingsMenu(!showSettingsMenu);
-              }}
-              className={`text-text-main hover:text-warning transition-colors focus:outline-none p-1.5 rounded-lg ${showSettingsMenu ? 'bg-neutral-900 text-warning border border-neutral-800' : ''}`}
-              title="Configure Transmission"
-            >
-              <Settings size={16} className={showSettingsMenu ? 'animate-spin-slow' : ''} />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Resolution/Speed indicator badge */}
+              <div className="hidden sm:flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded px-2 py-0.5 text-[9px] font-mono font-bold text-neutral-400">
+                <span className="text-warning uppercase text-[8px] tracking-wide font-black">{quality === 'auto' ? 'Auto' : quality.replace('hd', '').replace('medium', '480p').replace('small', '360p')}</span>
+                <span className="opacity-25 pb-0.5">|</span>
+                <span>{playbackSpeed}x</span>
+              </div>
 
-            <button 
-              onClick={handleToggleFullscreen}
-              className="text-text-main hover:text-warning transition-colors focus:outline-none p-1"
-              aria-label="Toggle Fullscreen"
-            >
-              <Maximize size={16} />
-            </button>
+              {/* Quality / Speed Configurations Button */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSettingsMenu(!showSettingsMenu);
+                }}
+                className={`text-text-main hover:text-warning transition-colors focus:outline-none p-1.5 rounded-lg cursor-pointer ${showSettingsMenu ? 'bg-neutral-900 text-warning border border-neutral-800' : ''}`}
+                title="Configure Transmission"
+              >
+                <Settings size={16} className={showSettingsMenu ? 'animate-spin-slow' : ''} />
+              </button>
+
+              <button 
+                onClick={handleToggleFullscreen}
+                className="text-text-main hover:text-warning transition-colors focus:outline-none p-1 cursor-pointer"
+                aria-label="Toggle Fullscreen"
+              >
+                <Maximize size={16} />
+              </button>
+            </div>
           </div>
-        </div>
 
-      </div>
+        </div>
+      )}
     </div>
   );
 }

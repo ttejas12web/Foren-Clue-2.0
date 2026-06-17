@@ -151,7 +151,7 @@ The ForenClue Curriculum Board
             
             <motion.div style={{ translateZ: 40 }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <MotionLink 
-                to="/courses"
+                to="/cases"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-8 py-4 bg-warning text-crust font-black uppercase tracking-wider rounded-none relative group overflow-hidden transition-all shadow-xl shadow-warning/20"
@@ -196,7 +196,7 @@ The ForenClue Curriculum Board
                    <EditableText id="home_about_par1" defaultText="ForenClue is a next-generation forensic education platform designed to bridge the gap between theoretical learning and real-world forensic science applications." isTextArea />
                  </p>
                  <p className="text-text-muted text-lg leading-relaxed border-l-4 border-warning pl-4">
-                   <EditableText id="home_about_par2" defaultText="We provide structured courses, case studies, and career pathways tailored for aspiring forensic professionals." isTextArea />
+                   <EditableText id="home_about_par2" defaultText="We provide structured e-books, case studies, and career pathways tailored for aspiring forensic professionals." isTextArea />
                  </p>
               </div>
             </div>
@@ -204,7 +204,7 @@ The ForenClue Curriculum Board
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { icon: Search, title: "Case-Based", desc: "Real crime case breakdowns" },
-                { icon: BookOpen, title: "Structured", desc: "Courses Beginner → Advanced" },
+                { icon: BookOpen, title: "E-Library", desc: "Expert books & materials" },
                 { icon: Users, title: "Career Path", desc: "Skills roadmap & guidance" },
                 { icon: ShieldAlert, title: "Certified", desc: "Recognized certification programs" }
               ].map((feature, i) => (
@@ -314,7 +314,7 @@ The ForenClue Curriculum Board
                  author: "Forensic Student"
                },
                {
-                 quote: "The real-time Course Player combined with the Community doubts hub let me resolve complex toxicological case queries instantly.",
+                 quote: "The real-time Case Analyzer combined with the Community doubts hub let me resolve complex toxicological case queries instantly.",
                  author: "Forensic Student"
                },
                {
@@ -322,7 +322,7 @@ The ForenClue Curriculum Board
                  author: "Forensic Professional"
                },
                {
-                 quote: "The combination of interactive lesson modules, structured career handbooks, and community peer support has been vital for my lab placement prep.",
+                 quote: "The combination of interactive case files, structured career handbooks, and community peer support has been vital for my lab placement prep.",
                  author: "Forensic Student"
                }
              ].map((testimonial, i) => (

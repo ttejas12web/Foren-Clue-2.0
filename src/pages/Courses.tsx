@@ -890,10 +890,15 @@ export default function Courses() {
                         <span className="text-xs font-bold uppercase tracking-widest">{selectedCourse.level}</span>
                       </div>
                       {isSpecAdmin && (
-                        <div className="flex items-center gap-2 text-warning/80">
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-center gap-2 text-warning/80"
+                        >
                           <User size={16} />
                           <span className="text-xs font-bold uppercase tracking-widest">{enrolledStudents.length} Enrolled</span>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                     <p className="text-text-muted text-sm leading-relaxed mb-8">
@@ -990,7 +995,11 @@ export default function Courses() {
 
                       {/* Enrolled Investigators Subsection */}
                       {isSpecAdmin && (
-                        <div>
+                        <motion.div
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        >
                           <div className="flex items-center gap-2 mb-4">
                             <Users size={18} className="text-warning" />
                             <h3 className="text-lg font-heading font-black uppercase tracking-wide">Enrolled Investigators ({enrolledStudents.length})</h3>
@@ -1027,7 +1036,7 @@ export default function Courses() {
                               <p className="text-[10px] text-text-muted italic">Be the first investigator to enroll in this course!</p>
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       )}
 
                       <div className="p-3 bg-base/50 border border-black/10 dark:border-white/5 rounded-md border-dashed">
@@ -1056,10 +1065,15 @@ export default function Courses() {
                       </div>
                       
                       {isSpecAdmin && (
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted">
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted"
+                        >
                           <User size={12} className="text-warning" />
                           <span>{enrolledStudents.length} Enrolled</span>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
 
