@@ -1,536 +1,542 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, FileText, HelpCircle, Archive, Search, Download, ExternalLink, Eye, Upload, Share2, Check } from 'lucide-react';
+import { 
+  BookOpen, 
+  FileText, 
+  HelpCircle, 
+  Archive, 
+  Search, 
+  Download, 
+  Eye, 
+  Plus, 
+  ExternalLink,
+  Sparkles,
+  ArrowRight,
+  SlidersHorizontal,
+  ChevronRight
+} from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { PdfViewerModal } from '@/components/ui/PdfViewerModal';
 import { UploadResourceModal } from '@/components/UploadResourceModal';
-import { ResilientImage, localFileStore } from '@/lib/localFileStore';
 
-// Mock Data for demonstration
-const resources = {
-  books: [
-    { id: 1, title: 'Principles of Forensic Medicine', author: 'Apurba Nandy', year: 2021, category: 'Medicine', type: 'PDF', size: '15MB' },
-    { id: 2, title: 'Forensic Science: Fundamentals and Investigations', author: 'Anthony J. Bertino', year: 2020, category: 'Fundamentals', type: 'PDF', size: '22MB' },
-    { id: 3, title: 'Criminal Investigation', author: 'Charles R. Swanson', year: 2018, category: 'Investigation', type: 'EPUB', size: '10MB' },
-    { id: 4, title: 'Digital Forensics and Cyber Crime', author: 'Pavel Gladyshev', year: 2022, category: 'Cyber', type: 'PDF', size: '18MB' },
-    { id: 5, title: 'Fundamentals of Forensic DNA Typing', author: 'John M. Butler', year: 2009, category: 'DNA', type: 'PDF', size: '12MB' },
-  ],
-  notes: [
-    { id: 101, title: 'Toxicology Quick Revision', author: 'Dr. Smith', uploaded: '2 Weeks ago', category: 'Toxicology', type: 'PDF', size: '2MB' },
-    { id: 102, title: 'Fingerprint Patterns Summary', author: 'Prof. Davis', uploaded: '1 Month ago', category: 'Dactyloscopy', type: 'PDF', size: '4MB' },
-    { id: 103, title: 'Ballistics Formula Sheet', author: 'Institute of Ballistics', uploaded: '3 Months ago', category: 'Ballistics', type: 'PDF', size: '1MB' },
-  ],
-  papers: [
-    { id: 201, title: 'UGC NET Forensic Science 2023', year: 2023, category: 'UGC NET', type: 'PDF', size: '5MB' },
-    { id: 202, title: 'UGC NET Forensic Science 2022', year: 2022, category: 'UGC NET', type: 'PDF', size: '5.2MB' },
-    { id: 203, title: 'FACT Exam Previous Year (2021)', year: 2021, category: 'FACT', type: 'PDF', size: '4.5MB' },
-    { id: 204, title: 'CUET PG Forensic Science Sample', year: 2024, category: 'CUET PG', type: 'PDF', size: '3MB' },
-  ],
-  other: [
-    { id: 301, title: 'Forensic Lab Manual', type: 'PDF', size: '8MB', desc: 'Standard operating procedures for laboratory.' },
-    { id: 302, title: 'Crime Scene Investigation Kit Checklist', type: 'DOCX', size: '1MB', desc: 'Comprehensive list of equipments.' },
-    { id: 303, title: 'Glossary of Forensic Terms', type: 'PDF', size: '2MB', desc: 'A to Z forensic dictionary.' },
-  ]
-};
+// Static book cover asset (same as original/fallback)
+const bookCoverUrl = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEive7NdnBis_kLLqaN2d8q37014tEMd2ftmqFkeCIiLjxkG2sDfip5VQldxh9izJC-KTsD4ZfXnILFWEOG2jmJkwdKww8-jqW-2jAqpTsv4AOE47MkqpHHibGcBN4GhPqN3OIF1xxIbs0KQLRgxfk2XJRsdlQyY_JqqRnajm2-pB1xoiZN4BnkdtDc9ICU/s1500/1779707899.png';
 
-const tabs = [
-  { id: 'books', label: 'Reference Books', icon: BookOpen },
-  { id: 'notes', label: 'Notes', icon: FileText },
-  { id: 'papers', label: 'Question Papers', icon: HelpCircle },
-  { id: 'other', label: 'Other Stuff', icon: Archive },
+interface ForensicResource {
+  id: string;
+  title: string;
+  author: string;
+  year: number | string;
+  category: string;
+  tabCategory: 'books' | 'notes' | 'papers' | 'other';
+  type: string;
+  size: string;
+  desc: string;
+  pdfUrl?: string;
+  image?: string;
+  coverImage?: string;
+  rating?: number;
+  downloads?: number;
+}
+
+// Premium forensic academic collection (fallback & defaults)
+const defaultResources: ForensicResource[] = [
+  { 
+    id: 'reddy', 
+    title: 'Concise Forensic Medicine & Toxicology', 
+    author: 'Dr. K. S. Narayan Reddy', 
+    year: 2015, 
+    category: 'Forensic Medicine & Pathology', 
+    tabCategory: 'books',
+    type: 'PDF', 
+    size: '28MB', 
+    desc: 'The authoritative, de facto medical manual detailing legal inquests, dactylography pattern identification, postmortem changes, mechanical injuries, and clinical toxicological protocols.',
+    rating: 4.9,
+    downloads: 1420,
+    image: bookCoverUrl
+  },
+  { 
+    id: 'nandy', 
+    title: 'Principles of Forensic Medicine', 
+    author: 'Apurba Nandy', 
+    year: 2021, 
+    category: 'Forensic Medicine & Pathology', 
+    tabCategory: 'books',
+    type: 'PDF', 
+    size: '15MB',
+    desc: 'Critical guidelines for identifying postmortem artifacts, medical laws, ethics, and physical injury classifications for medical practitioners.',
+    rating: 4.8,
+    downloads: 890
+  },
+  { 
+    id: 'bertino', 
+    title: 'Forensic Science: Fundamentals and Investigations', 
+    author: 'Anthony J. Bertino', 
+    year: 2020, 
+    category: 'General', 
+    tabCategory: 'books',
+    type: 'PDF', 
+    size: '22MB',
+    desc: 'A modern academic survey covering crime scene investigation foundations, hair/fiber analysis, human skeleton models, and ballistics.',
+    rating: 4.7,
+    downloads: 640
+  },
+  { 
+    id: 'swanson', 
+    title: 'Criminal Investigation', 
+    author: 'Charles R. Swanson', 
+    year: 2018, 
+    category: 'Crime Scene Investigation', 
+    tabCategory: 'books',
+    type: 'EPUB', 
+    size: '10MB',
+    desc: 'Tactical study of physical evidence tracking, eyewitness interview systems, scene documentation, and criminal profiling logic.',
+    rating: 4.6,
+    downloads: 410
+  },
+  { 
+    id: 'note-toxicology', 
+    title: 'Toxicology Quick Revision Notes', 
+    author: 'Dr. Amit Sharma', 
+    year: 2024, 
+    category: 'Toxicology & Pharmacology', 
+    tabCategory: 'notes',
+    type: 'PDF', 
+    size: '2MB', 
+    desc: 'High-yield revision summaries covering corrosive classifications, chelating therapy (EDTA, B.A.L.), organic irritants, and poison timelines.', 
+    rating: 4.9,
+    downloads: 1250
+  },
+  { 
+    id: 'note-fingerprints', 
+    title: 'Fingerprint Patterns & Poroscopy Guide', 
+    author: 'Prof. Davis Pathak', 
+    year: 2023, 
+    category: 'Fingerprinting & Dactyloscopy', 
+    tabCategory: 'notes',
+    type: 'PDF', 
+    size: '4MB', 
+    desc: 'A condensed guide analyzing Galton ridges, latent fingerprint development reagents, and microscopic pore frequency calculations.', 
+    rating: 4.8,
+    downloads: 940
+  },
+  { 
+    id: 'paper-ugc-2023', 
+    title: 'UGC NET Forensic Science 2023 Solved Paper II', 
+    author: 'ForenClue Academy', 
+    year: 2023, 
+    category: 'Question Papers', 
+    tabCategory: 'papers',
+    type: 'PDF', 
+    size: '5MB', 
+    desc: 'Solved UGC National Eligibility Test fully solved solutions with thorough reasoning for analytical chemical and biological sections.', 
+    rating: 4.9,
+    downloads: 2100
+  },
+  { 
+    id: 'paper-fact-2021', 
+    title: 'FACT Exam Solved Questionnaire (2021)', 
+    author: 'ForenClue Team', 
+    year: 2021, 
+    category: 'Question Papers', 
+    tabCategory: 'papers',
+    type: 'PDF', 
+    size: '4.5MB', 
+    desc: 'Forensic Aptitude and Caliber Test solved questions and syllabus blueprints for entry-level analyst eligibility exam criteria.', 
+    rating: 4.7,
+    downloads: 1150
+  },
+  { 
+    id: 'research-decomposition', 
+    title: 'Microbial Succession Models on Soil Postmortem Degradation', 
+    author: 'Dr. Jane Vance', 
+    year: 2022, 
+    category: 'DNA & Serology', 
+    tabCategory: 'other',
+    type: 'PDF', 
+    size: '7.8MB', 
+    desc: 'An advanced research paper detailing chemical soil profile shifts and bacterial successions for estimating postmortem intervals.', 
+    rating: 4.8,
+    downloads: 320
+  },
+  { 
+    id: 'case-asphyxia', 
+    title: 'Medicolegal Autopsy Findings of Homicidal Asphyxia Case Files', 
+    author: 'Dr. R. K. Saxena', 
+    year: 2021, 
+    category: 'Forensic Medicine & Pathology', 
+    tabCategory: 'other',
+    type: 'PDF', 
+    size: '6.4MB', 
+    desc: 'Expert study files highlighting suicidal hangings versus homicidal strangulations based on cervical trauma.', 
+    rating: 4.9,
+    downloads: 710
+  },
+  { 
+    id: 'manual-toxicology', 
+    title: 'Standard Toxicological Extraction Protocols Manual', 
+    author: 'Academic Council', 
+    year: 2023, 
+    category: 'Toxicology & Pharmacology', 
+    tabCategory: 'other',
+    type: 'PDF', 
+    size: '8.2MB', 
+    desc: 'Step-by-step chemical isolation protocols for acid/basic toxins from visceral tissues using chromatographic isolation methods.', 
+    rating: 4.8,
+    downloads: 1540
+  }
+];
+
+const forensicCategories = [
+  'All',
+  'General',
+  'DNA & Serology',
+  'Fingerprinting & Dactyloscopy',
+  'Digital Forensics & Cyber',
+  'Ballistics & Firearms',
+  'Crime Scene Investigation',
+  'Toxicology & Pharmacology',
+  'Forensic Medicine & Pathology',
+  'Question Papers'
 ];
 
 export default function EBooks() {
-  const [activeTab, setActiveTab] = useState('books');
+  const [activeTab, setActiveTab] = useState<'books' | 'notes' | 'papers' | 'other'>('books');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dbEBooks, setDbEBooks] = useState<any[]>([]);
-  const [selectedPdfResource, setSelectedPdfResource] = useState<any | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [dbEBooks, setDbEBooks] = useState<ForensicResource[]>([]);
+  const [selectedResource, setSelectedResource] = useState<ForensicResource | null>(null);
 
+  // Sync / Real-time fetch from Firestore
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'ebooks'), (snapshot) => {
-      const list: any[] = [];
+    const unsubscribe = onSnapshot(collection(db, 'ebooks'), (snapshot) => {
+      const list: ForensicResource[] = [];
       snapshot.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      list.sort((a, b) => {
-        const timeA = (a.createdAt as any)?.seconds || 0;
-        const timeB = (b.createdAt as any)?.seconds || 0;
-        return timeB - timeA;
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: d.title || 'Untitled Reference',
+          author: d.author || 'Forensic Expert',
+          year: d.year || 2024,
+          category: d.category || 'General',
+          tabCategory: (d.tabCategory as any) || 'books',
+          type: d.type || 'PDF',
+          size: d.size || '5MB',
+          desc: d.desc || 'Forensic reference documentation.',
+          pdfUrl: d.pdfUrl || '',
+          image: d.image || d.coverImage || '',
+          rating: d.rating || 4.5,
+          downloads: d.downloads || 0
+        });
       });
       setDbEBooks(list);
     }, (error) => {
-      console.warn("Could not load dynamic eBooks:", error);
+      console.warn("Could not retrieve real-time eBooks from Firestore, using static repository:", error);
     });
-    return () => unsub();
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const bookId = params.get('id');
-    if (!bookId) return;
+  // Merge database items with our standard fallback collection
+  const combinedCatalog = [...dbEBooks, ...defaultResources];
 
-    if (dbEBooks.length > 0) {
-      const foundDynamic = dbEBooks.find((b) => String(b.id) === bookId);
-      if (foundDynamic) {
-        setSelectedPdfResource(foundDynamic);
-        if (foundDynamic.tabCategory) {
-          setActiveTab(foundDynamic.tabCategory);
-        }
-        return;
-      }
+  // Filters
+  const filteredCatalog = combinedCatalog.filter((item) => {
+    if (item.tabCategory !== activeTab) return false;
+    
+    if (selectedCategory !== 'All' && item.category !== selectedCategory) return false;
+
+    if (searchQuery) {
+      const queryStr = searchQuery.toLowerCase();
+      const titleMatch = (item.title || '').toLowerCase().includes(queryStr);
+      const authorMatch = (item.author || '').toLowerCase().includes(queryStr);
+      const descMatch = (item.desc || '').toLowerCase().includes(queryStr);
+      if (!titleMatch && !authorMatch && !descMatch) return false;
     }
 
-    const allStatic = [
-      ...resources.books,
-      ...resources.notes,
-      ...resources.papers,
-      ...resources.other
-    ];
-    const foundStatic = allStatic.find((b) => String(b.id) === bookId);
-    if (foundStatic) {
-      setSelectedPdfResource(foundStatic);
-      const isBook = resources.books.some(b => String(b.id) === bookId);
-      const isNote = resources.notes.some(n => String(n.id) === bookId);
-      const isPaper = resources.papers.some(p => String(p.id) === bookId);
-      if (isBook) setActiveTab('books');
-      else if (isNote) setActiveTab('notes');
-      else if (isPaper) setActiveTab('papers');
-      else setActiveTab('other');
-    }
-  }, [dbEBooks]);
+    return true;
+  });
 
-  const handleCloseModal = () => {
-    setSelectedPdfResource(null);
+  const handleDownload = (item: ForensicResource) => {
     try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('id');
-      window.history.replaceState({}, '', url.pathname + url.search);
-    } catch (err) {
-      console.warn("Failed to rewrite navigation history context gracefully:", err);
+      const link = document.createElement('a');
+      link.href = item.pdfUrl || bookCoverUrl;
+      link.setAttribute('download', `${item.title}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (_) {
+      window.open(item.pdfUrl || bookCoverUrl, '_blank');
     }
   };
 
-  const mergedBooks = [
-    ...dbEBooks.filter(item => item.tabCategory === 'books' || !item.tabCategory),
-    ...resources.books,
+  const tabs = [
+    { id: 'books' as const, name: 'Reference Books', icon: BookOpen },
+    { id: 'notes' as const, name: 'Notes', icon: FileText },
+    { id: 'papers' as const, name: 'Question Papers', icon: HelpCircle },
+    { id: 'other' as const, name: 'Other Manuals', icon: Archive }
   ];
-
-  const mergedNotes = [
-    ...dbEBooks.filter(item => item.tabCategory === 'notes'),
-    ...resources.notes,
-  ];
-
-  const mergedPapers = [
-    ...dbEBooks.filter(item => item.tabCategory === 'papers'),
-    ...resources.papers,
-  ];
-
-  const mergedOther = [
-    ...dbEBooks.filter(item => item.tabCategory === 'other'),
-    ...resources.other,
-  ];
-
-  // Function to filter items based on search query
-  const getFilteredItems = (items: any[]) => {
-    if (!searchQuery) return items;
-    const lowerQuery = searchQuery.toLowerCase();
-    return items.filter(item => 
-      (item.title || '').toLowerCase().includes(lowerQuery) || 
-      (item.author && item.author.toLowerCase().includes(lowerQuery)) ||
-      (item.category && item.category.toLowerCase().includes(lowerQuery))
-    );
-  };
 
   return (
-    <div className="pt-24 pb-16 min-h-screen bg-base relative overflow-hidden">
+    <div className="pt-8 pb-20 min-h-screen bg-base relative overflow-hidden text-text-main font-sans">
       <SEO 
-        title="Forensic Science E-Library and Previous Year Exams Papers"
-        description="Access structural academic notebooks, recommended books, past UGC NET Forensic Science question sheets, Toxicology revision cards, and CSID checklists."
-        keywords="forensic exam prep, study UGC net forensics, forensic previous year paper, forensic library pdf, toxicology summary card"
+        title="Academic eLibrary - Reference Textbook Vault | ForenClue"
+        description="Access standard academic forensic medicine textbooks, handwritten toxicology notes, national eligibility solved papers, and standard extraction protocols."
+        keywords="forensic library, forenclue, forensic textbooks, toxicological revision keys, UGC NET papers"
         canonicalPath="/ebooks"
       />
-      {/* Background decoration */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-surface z-0 border-b border-black/10 dark:border-white/5">
-         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:32px_32px]"></div>
-         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-base"></div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col items-center mb-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center justify-center p-3 bg-warning/10 rounded-2xl mb-6">
-              <BookOpen className="w-8 h-8 text-warning" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4 text-text-main uppercase tracking-tight">
-              E-<span className="text-warning">Library</span> & Resources
+      {/* Grid Overlay */}
+      <div className="absolute top-0 left-0 w-full h-[600px] z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.06] bg-grid-black/[0.1] dark:bg-grid-white/[0.1] bg-[size:30px_30px]" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        
+
+
+        {/* --- HEADER BLOCK --- */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-black/10 dark:border-white/5">
+          <div className="space-y-2 text-left">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-text-main uppercase">
+              Digital <span className="text-warning">eLibrary</span>
             </h1>
-            <p className="text-lg text-text-muted max-w-2xl mx-auto mb-6">
-              A comprehensive digital library for forensic students. Access reference books, lecture notes, previous year question papers, and more.
+            <p className="text-sm text-text-muted max-w-xl">
+              Academic manuals, handwritten notes, previous exam keys, and toxicological analysis sheets organized dynamically under academic criteria.
             </p>
+          </div>
+
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsUploadOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-warning text-crust hover:bg-warning/95 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-lg shadow-warning/10 cursor-pointer active:scale-98"
+              className="flex items-center gap-2 px-4 py-2.5 bg-warning text-crust hover:bg-warning/90 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
             >
-              <Upload className="w-4.5 h-4.5" />
-              Upload Study Resource
+              <Plus size={14} />
+              Contribute Resource
             </button>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Global Search */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="max-w-xl mx-auto mb-12 relative"
-        >
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-text-muted" />
+        {/* --- FILTER CONTROL BAR --- */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 bg-surface border border-black/10 dark:border-white/5 rounded-2xl mb-8">
+          
+          {/* Search bar */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-text-muted" />
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search symptoms, Galton pattern structures..."
+              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs text-text-main placeholder-text-muted/50 focus:outline-none focus:border-warning/50 focus:ring-1 focus:ring-warning/50 transition-all"
+            />
           </div>
-          <input
-            type="text"
-            className="w-full bg-surface border border-black/10 dark:border-white/10 rounded-xl py-4 pl-12 pr-4 text-text-main placeholder-text-muted/50 focus:outline-none focus:border-warning/50 focus:ring-1 focus:ring-warning/50 transition-all font-mono"
-            placeholder="Search books, notes, or topics..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </motion.div>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+          {/* Category Dropdown */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 text-text-muted text-[10px] font-mono uppercase tracking-wider">
+              <SlidersHorizontal size={12} />
+              <span>Category:</span>
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-base border border-black/10 dark:border-white/10 text-xs text-text-main px-3 py-2.5 rounded-xl focus:outline-none focus:border-warning/50"
+            >
+              {forensicCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat === 'All' ? 'All Forensic Disciplines' : cat}</option>
+              ))}
+            </select>
+          </div>
+
+        </div>
+
+        {/* --- TAB CONTROL ROW --- */}
+        <div className="flex border-b border-black/10 dark:border-white/10 mb-8 gap-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <button 
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setSearchQuery('');
+                }}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 relative",
-                  isActive 
-                    ? "text-crust bg-warning hover:bg-warning/90" 
-                    : "text-text-muted bg-surface hover:text-text-main border border-black/10 dark:border-white/5 hover:border-black/15 dark:hover:border-white/10 hover:bg-surface/80"
+                  "pb-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all relative flex items-center gap-2 cursor-pointer",
+                  isActive ? 'text-warning' : 'text-text-muted hover:text-text-main'
                 )}
               >
-                <Icon className={cn("w-4 h-4", isActive ? "text-crust" : "text-text-muted")} />
-                {tab.label}
+                <Icon size={14} className={isActive ? 'text-warning' : 'text-text-muted'} />
+                <span>{tab.name}</span>
+                {isActive && (
+                  <motion.div layoutId="elibTabUnderline" className="absolute bottom-0 left-0 right-0 h-[2px] bg-warning" />
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Content Area */}
-        <div className="mt-8">
-          <AnimatePresence mode="wait">
-            {activeTab === 'books' && (
-              <motion.div
-                key="books"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {getFilteredItems(mergedBooks).length > 0 ? (
-                  getFilteredItems(mergedBooks).map((book) => (
-                    <ResourceCard key={book.id} item={book} icon={BookOpen} onView={setSelectedPdfResource} />
-                  ))
-                ) : (
-                  <EmptyState />
-                )}
-              </motion.div>
+        {/* --- CATALOG GRID --- */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab + selectedCategory + searchQuery}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+          >
+            {filteredCatalog.length === 0 ? (
+              <div className="text-center py-16 bg-surface/50 border border-dashed border-black/10 dark:border-white/5 rounded-2xl">
+                <BookOpen size={40} className="text-text-muted/40 mx-auto mb-3" />
+                <h3 className="text-sm font-bold uppercase tracking-wider mb-1">No Library Records</h3>
+                <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                  We found no documents matching your search or category parameter in this section. Try clearing filters.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                  }}
+                  className="mt-4 text-xs font-bold text-warning uppercase hover:underline"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCatalog.map((item) => (
+                  <ResourceCard 
+                    key={item.id} 
+                    item={item} 
+                    onOpen={() => setSelectedResource(item)}
+                    onDownload={() => handleDownload(item)}
+                  />
+                ))}
+              </div>
             )}
-
-            {activeTab === 'notes' && (
-              <motion.div
-                key="notes"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {getFilteredItems(mergedNotes).length > 0 ? (
-                  getFilteredItems(mergedNotes).map((note) => (
-                    <ResourceCard key={note.id} item={note} icon={FileText} onView={setSelectedPdfResource} />
-                  ))
-                ) : (
-                  <EmptyState />
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === 'papers' && (
-              <motion.div
-                key="papers"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {getFilteredItems(mergedPapers).length > 0 ? (
-                  getFilteredItems(mergedPapers).map((paper) => (
-                    <ResourceCard key={paper.id} item={paper} icon={HelpCircle} onView={setSelectedPdfResource} />
-                  ))
-                ) : (
-                  <EmptyState />
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === 'other' && (
-              <motion.div
-                key="other"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-6"
-              >
-                {getFilteredItems(mergedOther).length > 0 ? (
-                  getFilteredItems(mergedOther).map((item) => (
-                    <ResourceCard key={item.id} item={item} icon={Archive} onView={setSelectedPdfResource} />
-                  ))
-                ) : (
-                  <EmptyState />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+          </motion.div>
+        </AnimatePresence>
 
       </div>
 
-      <PdfViewerModal 
-        isOpen={!!selectedPdfResource} 
-        resource={selectedPdfResource || {}} 
-        onClose={handleCloseModal} 
-      />
-
+      {/* --- MODALS --- */}
       <UploadResourceModal 
-        isOpen={isUploadOpen} 
-        onClose={() => setIsUploadOpen(false)} 
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
       />
-    </div>
-  );
-}
 
-function ResourceCard({ item, icon: Icon, onView }: { item: any, icon: any, onView: (item: any) => void }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}/${item.id}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: item.title || 'ForenClue eLibrary',
-          text: `Read "${item.title || 'this study guide'}" on ForenClue.`,
-          url: shareUrl,
-        });
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          copyToClipboard(shareUrl);
-        }
-      }
-    } else {
-      copyToClipboard(shareUrl);
-    }
-  };
-
-  const copyToClipboard = (url: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(err => {
-      console.warn("Clipboard access failed:", err);
-    });
-  };
-
-  const handleDownload = async () => {
-    if (item.pdfUrl) {
-      if (item.pdfUrl.startsWith('localdb://')) {
-        try {
-          const blob = await localFileStore.getFile(item.pdfUrl);
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${(item.title || 'StudyGuide').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            return;
-          }
-        } catch (err) {
-          console.error("Local file retrieval failed for download:", err);
-        }
-      } else if (item.pdfUrl.startsWith('/') || item.pdfUrl.startsWith(window.location.origin) || !item.pdfUrl.includes('://')) {
-        try {
-          const res = await fetch(item.pdfUrl);
-          if (res.ok) {
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${(item.title || 'StudyGuide').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            return;
-          }
-        } catch (err) {
-          console.error("Same-origin fetch failed for download:", err);
-        }
-      }
-      window.open(item.pdfUrl, '_blank');
-      return;
-    }
-
-    // Dynamic, high-fidelity local compiler for all items
-    const title = item.title || 'Forensic_Science_Guide';
-    const author = item.author || 'ForenClue Team';
-    const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_');
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${title}</title>
-  <style>
-    body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #fafafa; }
-    .header { border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 30px; }
-    h1 { color: #0f172a; margin-bottom: 5px; }
-    .meta { color: #64748b; font-size: 0.9em; margin-bottom: 20px; }
-    .content-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 30px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
-    h2 { color: #0284c7; }
-    p { margin-bottom: 1.5em; }
-    .badge { display: inline-block; padding: 4px 10px; background: #e0f2fe; color: #0369a1; font-weight: bold; border-radius: 4px; font-size: 0.8em; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <span class="badge">Study Dossier</span>
-    <h1>${title}</h1>
-    <div class="meta">Subject Category: ${item.category || 'Forensic Study'} | Volume Type: ${item.type || 'Academic Copy'} | Author: ${author}</div>
-  </div>
-  <div class="content-box">
-    <h2>Academic Resource Summary</h2>
-    <p>This academic guide is compiled and authenticated by ForenClue instructors. It includes research papers, practice checklists, and revision summaries designed to elevate student preparation cycles.</p>
-    <p><strong>Resource Details:</strong></p>
-    <ul>
-      <li><strong>Year of publication:</strong> ${item.year || 'Current Academic Cycle'}</li>
-      <li><strong>Item classification size:</strong> ${item.size || 'Compressed'}</li>
-      <li><strong>Summary:</strong> ${item.desc || 'Comprehensive diagnostic study notes.'}</li>
-    </ul>
-    <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 30px 0;"/>
-    <p style="font-size: 0.85em; color: #64748b; line-height: 2;">
-      * To gain full access to the interactive chapters, reading themes (Dark, Sepia), and active keyword searches, please open this file inside the interactive ForenClue eLibrary Viewer by clicking the "Read Document" action on our site.
-    </p>
-  </div>
-</body>
-</html>`;
-
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${cleanFileName}_StudyGuide.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-xl p-6 hover:border-warning/30 transition-colors group flex flex-col h-full">
-      {/* Book Image Cover section */}
-      {(item.image || item.coverImage) && (
-        <div className="h-44 w-full relative overflow-hidden bg-black/10 dark:bg-white/5 rounded-lg mb-4 flex items-center justify-center p-2 border border-black/5 dark:border-white/5">
-          <ResilientImage 
-            src={item.image || item.coverImage} 
-            alt={item.title} 
-            className="max-h-full object-contain rounded shadow-lg group-hover:scale-105 transition-transform duration-500" 
-          />
-        </div>
+      {selectedResource && (
+        <PdfViewerModal 
+          isOpen={!!selectedResource}
+          onClose={() => setSelectedResource(null)}
+          resource={selectedResource}
+          startMaximized={true}
+        />
       )}
 
-      <div className="flex items-start justify-between mb-4">
-        <div className="p-3 bg-black/5 dark:bg-white/5 rounded-lg text-text-main group-hover:text-warning group-hover:bg-warning/10 transition-colors">
-          <Icon className="w-6 h-6" />
-        </div>
-        <div className="flex items-center gap-2">
-          {item.type && (
-            <span className="text-[10px] font-mono px-2 py-1 bg-black/5 dark:bg-white/5 text-text-muted rounded flex items-center gap-1">
-              {item.type}
-            </span>
-          )}
-          {item.size && (
-            <span className="text-[10px] font-mono px-2 py-1 bg-black/5 dark:bg-white/5 text-text-muted rounded flex items-center gap-1">
-              {item.size}
-            </span>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex-grow">
-        <h3 className="text-lg font-bold text-text-main mb-2 leading-tight group-hover:text-warning transition-colors line-clamp-2">
-          {item.title}
-        </h3>
-        
-        <div className="space-y-1 mb-4 text-sm">
-          {item.author && <p className="text-text-muted">By: <span className="text-text-main/80 font-medium">{item.author}</span></p>}
-          {item.year && <p className="text-text-muted">Year: <span className="text-text-main/80 font-medium">{item.year}</span></p>}
-          {item.uploaded && <p className="text-text-muted">Uploaded: <span className="text-text-main/80 font-medium">{item.uploaded}</span></p>}
-          {item.category && <p className="text-text-muted">Category: <span className="text-warning/80 font-semibold">{item.category}</span></p>}
-          {item.desc && <p className="text-text-muted leading-relaxed line-clamp-3">{item.desc}</p>}
-        </div>
-      </div>
-
-      <div className="pt-4 border-t border-black/10 dark:border-white/5 flex gap-2 mt-auto">
-        <button 
-          onClick={() => onView(item)}
-          className="flex-grow flex items-center justify-center gap-2 py-2.5 bg-warning text-crust hover:bg-warning/95 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-98 cursor-pointer"
-        >
-          <Eye className="w-4 h-4" />
-          View
-        </button>
-        <button 
-          onClick={handleShare}
-          className={cn(
-            "px-3.5 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold uppercase",
-            copied 
-              ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20" 
-              : "bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-text-muted hover:text-text-main border border-transparent"
-          )}
-          title="Share Link"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
-        </button>
-      </div>
     </div>
   );
 }
 
-function EmptyState() {
+// Subcomponent: Resource Card
+interface ResourceCardProps {
+  item: ForensicResource;
+  onOpen: () => void;
+  onDownload: () => void;
+}
+
+function ResourceCard({ item, onOpen, onDownload }: ResourceCardProps) {
   return (
-    <div className="col-span-full py-16 flex flex-col items-center justify-center text-center">
-      <div className="w-16 h-16 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center mb-4">
-        <Search className="w-8 h-8 text-text-muted" />
+    <motion.div 
+      whileHover={{ y: -4 }}
+      className="bg-surface border border-black/15 dark:border-white/10 hover:border-warning/30 hover:shadow-md rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 relative overflow-hidden group text-left"
+    >
+      <div className="absolute top-0 right-0 w-24 h-24 bg-warning/[0.01] rounded-full blur-xl pointer-events-none" />
+
+      <div className="space-y-4">
+        {/* Book Spine Portrait or Accent Banner */}
+        <div 
+          onClick={onOpen}
+          className="aspect-[5/3] w-full rounded-xl bg-gradient-to-br from-[#0e1726] to-[#040812] border border-black/10 dark:border-white/5 relative overflow-hidden flex items-center justify-center p-4 shadow-inner cursor-pointer group-hover:border-warning/10"
+        >
+          {/* Subtle visual grid texture */}
+          <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:16px_16px]" />
+          
+          {item.image || item.coverImage ? (
+            <img 
+              src={item.image || item.coverImage} 
+              alt={item.title} 
+              referrerPolicy="no-referrer"
+              className="h-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] group-hover:scale-[1.03] transition-transform duration-300"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-between h-full w-full py-2">
+              <span className="text-[9px] font-mono text-warning/40 uppercase tracking-widest">{item.type}</span>
+              <BookOpen size={24} className="text-warning/30 my-2 group-hover:scale-110 transition-transform text-center" />
+              <div className="text-center">
+                <span className="block text-[10px] font-bold text-slate-100 uppercase tracking-wide truncate max-w-[180px]">{item.title}</span>
+                <span className="block text-[8px] font-mono text-text-muted mt-0.5 truncate max-w-[180px]">{item.author}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Text information */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-mono bg-warning/10 border border-warning/15 text-warning px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+              {item.category}
+            </span>
+            <span className="text-[9px] font-mono text-text-muted">
+              {item.year}
+            </span>
+          </div>
+
+          <h3 
+            onClick={onOpen}
+            className="text-sm font-extrabold text-text-main leading-snug cursor-pointer hover:text-warning transition-colors uppercase line-clamp-1"
+            title={item.title}
+          >
+            {item.title}
+          </h3>
+
+          <p className="text-[11px] text-text-muted line-clamp-2 leading-relaxed h-[34px]">
+            {item.desc}
+          </p>
+        </div>
       </div>
-      <h3 className="text-xl font-bold text-text-main mb-2">No resources found</h3>
-      <p className="text-text-muted">We couldn't find any items matching your search criteria.</p>
-    </div>
+
+      {/* Action Row */}
+      <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-3">
+        <div className="text-[9px] font-mono text-text-muted uppercase">
+          Size: <span className="font-bold text-text-main">{item.size}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Download */}
+          <button 
+            onClick={onDownload}
+            className="p-2 text-text-muted hover:text-warning hover:bg-warning/5 border border-black/5 dark:border-white/5 rounded-lg transition-all cursor-pointer"
+            title="Download PDF"
+          >
+            <Download size={13} />
+          </button>
+          
+          {/* Open Reader */}
+          <button 
+            onClick={onOpen}
+            className="flex items-center gap-1 py-1.5 px-3 bg-surface border border-black/10 dark:border-white/15 rounded-lg text-[10px] font-bold uppercase tracking-wider text-text-main group-hover:border-warning/40 transition-colors cursor-pointer"
+          >
+            <span>Read</span>
+            <ArrowRight size={11} className="text-warning transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+      </div>
+
+    </motion.div>
   );
 }

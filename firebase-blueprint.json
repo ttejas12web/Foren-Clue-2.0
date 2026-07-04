@@ -180,9 +180,30 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["courseId", "lessonId", "content", "authorId", "createdAt"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Verification data for issued certificates by Forenclue",
+      "type": "object",
+      "properties": {
+        "certificateNo": { "type": "string" },
+        "fullName": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "certificateType": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "pdfUrl": { "type": "string" },
+        "additionalDetails": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["certificateNo", "fullName", "courseTitle", "issueDate", "createdAt"]
     }
   },
   "firestore": {
+    "/certificates/{certificateId}": {
+      "schema": "Certificate",
+      "description": "Publicly verifiable certificates issued by Forenclue"
+    },
     "/podcastEpisodes/{episodeId}": {
       "schema": "PodcastEpisode",
       "description": "Admin dynamically publishable podcast episodes"

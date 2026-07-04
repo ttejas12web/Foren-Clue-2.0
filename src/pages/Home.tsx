@@ -310,7 +310,7 @@ The ForenClue Curriculum Board
                  author: "Forensic Student"
                },
                {
-                 quote: "Working through the declassified Case Studies felt like actual detective work. The depth of evidence review is unmatched.",
+                 quote: "Working through the reference Case Studies felt like actual investigative work. The depth of evidence review is unmatched.",
                  author: "Forensic Student"
                },
                {

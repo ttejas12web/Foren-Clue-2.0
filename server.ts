@@ -169,7 +169,6 @@ async function startServer() {
               uploadedToFirebase = true;
               break;
             } catch (err: any) {
-              console.warn(`[Firebase Storage Admin upload] Attempt failed for bucket ${bucketName}:`, err.message || err);
               lastErr = err;
             }
           }
@@ -178,7 +177,7 @@ async function startServer() {
             throw lastErr;
           }
         } catch (storageErr: any) {
-          console.warn("[Firebase Storage Admin upload failed (consolidated), falling to server disk]:", storageErr.message || storageErr);
+          // Fall back gracefully to local storage
         }
 
         // Always save to server disk as fail-safe backup
@@ -285,7 +284,6 @@ async function startServer() {
             uploadedToFirebase = true;
             break;
           } catch (err: any) {
-            console.warn(`[Firebase Storage Admin upload] Attempt failed for bucket ${bucketName}:`, err.message || err);
             lastErr = err;
           }
         }
@@ -294,7 +292,7 @@ async function startServer() {
           throw lastErr;
         }
       } catch (storageErr) {
-        console.warn("[Firebase Storage Admin upload failed, falling back to server disk write]:", storageErr);
+        // Fall back gracefully to local storage
       }
 
       // Always write to server disk as duplicate cache/failsafe

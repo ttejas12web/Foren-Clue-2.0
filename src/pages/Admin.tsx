@@ -6,7 +6,7 @@ import {
   Lock, Mail, Key, LayoutGrid, BookOpen, Plus, Trash2, 
   Settings, CheckCircle2, AlertCircle, FileText, Upload, 
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
-  Globe, Edit3, MessageSquare, Radio
+  Globe, Edit3, MessageSquare, Radio, Award
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
@@ -23,8 +23,8 @@ export default function Admin() {
   const [authError, setAuthError] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
 
-   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast'>('overview');
+   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates'>('overview');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
@@ -112,6 +112,28 @@ export default function Admin() {
   const [textKey, setTextKey] = useState('');
   const [textVal, setTextVal] = useState('');
 
+  // Certificate states
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [certificateLoading, setCertificateLoading] = useState(false);
+  const [editingCertificateId, setEditingCertificateId] = useState<string | null>(null);
+  const [newCertificate, setNewCertificate] = useState({
+    certificateNo: '',
+    fullName: '',
+    courseTitle: '',
+    certificateType: 'Internship Completion',
+    issueDate: new Date().toISOString().split('T')[0],
+    imageUrl: '',
+    pdfUrl: '',
+    additionalDetails: ''
+  });
+
+  const [isUploadingCertImage, setIsUploadingCertImage] = useState(false);
+  const [isUploadingCertPdf, setIsUploadingCertPdf] = useState(false);
+  const [certImageErrorText, setCertImageErrorText] = useState('');
+  const [certImageSuccessText, setCertImageSuccessText] = useState('');
+  const [certPdfErrorText, setCertPdfErrorText] = useState('');
+  const [certPdfSuccessText, setCertPdfSuccessText] = useState('');
+
   // Notifications
   const [successMsg, setSuccessMsg] = useState('');
   const [errMsg, setErrMsg] = useState('');
@@ -123,6 +145,7 @@ export default function Admin() {
     setCourseLoading(true);
     setEbookLoading(true);
     setPodcastLoading(true);
+    setCertificateLoading(true);
 
     // 1. Courses
     try {
@@ -199,6 +222,26 @@ export default function Admin() {
       handleFirestoreError(e, OperationType.LIST, 'podcastEpisodes');
     } finally {
       setPodcastLoading(false);
+    }
+
+    // 6. Certificates
+    try {
+      const certSnap = await getDocs(collection(db, 'certificates'));
+      const certList: any[] = [];
+      certSnap.forEach(docSnap => {
+        certList.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      // Sort certificates by createdAt descending if possible
+      certList.sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dbVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dbVal - da;
+      });
+      setCertificates(certList);
+    } catch (e) {
+      console.error("Error fetching certificates collection:", e);
+    } finally {
+      setCertificateLoading(false);
     }
   };
 
@@ -510,6 +553,130 @@ export default function Admin() {
       fetchCollections();
     } catch(e: any) {
       setErrMsg(`Failed to delete case: ${e.message}`);
+    }
+  };
+
+  // Create or Update Certificate
+  const handleCreateCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMsg('');
+    setErrMsg('');
+
+    if (!newCertificate.certificateNo || !newCertificate.fullName || !newCertificate.courseTitle) {
+      setErrMsg('Please enter a certificate number, full name, and course title.');
+      return;
+    }
+
+    try {
+      const normalizedNo = newCertificate.certificateNo.toUpperCase().trim();
+      const safeDocId = normalizedNo.replace(/\//g, '_');
+      const certificatePayload = {
+        certificateNo: normalizedNo,
+        fullName: newCertificate.fullName.trim(),
+        courseTitle: newCertificate.courseTitle.trim(),
+        certificateType: newCertificate.certificateType,
+        issueDate: newCertificate.issueDate,
+        imageUrl: newCertificate.imageUrl || '',
+        pdfUrl: newCertificate.pdfUrl || '',
+        additionalDetails: newCertificate.additionalDetails || '',
+        createdAt: new Date().toISOString()
+      };
+
+      // Create or update document in certificates collection using a safe ID without slashes
+      await setDoc(doc(db, 'certificates', safeDocId), certificatePayload);
+
+      setSuccessMsg(editingCertificateId ? 'Certificate successfully updated!' : `Certificate "${normalizedNo}" issued and registered!`);
+      setEditingCertificateId(null);
+      setNewCertificate({
+        certificateNo: '',
+        fullName: '',
+        courseTitle: '',
+        certificateType: 'Internship Completion',
+        issueDate: new Date().toISOString().split('T')[0],
+        imageUrl: '',
+        pdfUrl: '',
+        additionalDetails: ''
+      });
+      fetchCollections();
+    } catch (err: any) {
+      console.error(err);
+      setErrMsg(`Failed to submit certificate: ${err.message}`);
+    }
+  };
+
+  // Delete Certificate
+  const handleDeleteCertificate = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this certificate? This action cannot be undone.")) return;
+    try {
+      await deleteDoc(doc(db, 'certificates', id));
+      setSuccessMsg("Certificate successfully deleted.");
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Delete failed: ${err.message}`);
+    }
+  };
+
+  // Upload Certificate Visual Image Copy
+  const handleCertImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCertImageErrorText('');
+    setCertImageSuccessText('');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        setCertImageErrorText('Please select a valid image file.');
+        return;
+      }
+      setIsUploadingCertImage(true);
+      setCertImageSuccessText('Uploading certificate image copy...');
+      try {
+        const cleanName = `certificates/images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadResult = await uploadFileResilient(file, cleanName, (msg) => setCertImageSuccessText(msg));
+        setNewCertificate(prev => ({
+          ...prev,
+          imageUrl: uploadResult.url
+        }));
+        setCertImageSuccessText(uploadResult.isFallback
+          ? `Certificate image saved offline successfully! (${file.name})`
+          : `Certificate image uploaded successfully: ${file.name}`
+        );
+      } catch (err: any) {
+        console.error(err);
+        setCertImageErrorText(`Upload failed: ${err.message || err}`);
+      } finally {
+        setIsUploadingCertImage(false);
+      }
+    }
+  };
+
+  // Upload Certificate PDF copy
+  const handleCertPdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCertPdfErrorText('');
+    setCertPdfSuccessText('');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+        setCertPdfErrorText('Please select a valid PDF file.');
+        return;
+      }
+      setIsUploadingCertPdf(true);
+      setCertPdfSuccessText('Uploading certificate PDF copy...');
+      try {
+        const cleanName = `certificates/pdfs/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadResult = await uploadFileResilient(file, cleanName, (msg) => setCertPdfSuccessText(msg));
+        setNewCertificate(prev => ({
+          ...prev,
+          pdfUrl: uploadResult.url
+        }));
+        setCertPdfSuccessText(uploadResult.isFallback
+          ? `Certificate PDF saved offline successfully! (${file.name})`
+          : `Certificate PDF uploaded successfully: ${file.name}`
+        );
+      } catch (err: any) {
+        console.error(err);
+        setCertPdfErrorText(`Upload failed: ${err.message || err}`);
+      } finally {
+        setIsUploadingCertPdf(false);
+      }
     }
   };
 
@@ -877,6 +1044,12 @@ export default function Admin() {
                 >
                   <MessageSquare size={16} /> Community Doubts
                 </button>
+                <button 
+                  onClick={() => setActiveTab('certificates')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'certificates' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <Award size={16} /> Certificates Manager
+                </button>
               </div>
 
               {/* Active Control Panel Canvas */}
@@ -887,7 +1060,7 @@ export default function Admin() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
                       <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Workspace Analytics</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                         <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Dynamic Courses</span>
                           <span className="text-3xl font-heading font-black text-warning">{courses.length}</span>
@@ -904,17 +1077,21 @@ export default function Admin() {
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Customised Copy Keys</span>
                           <span className="text-3xl font-heading font-black text-warning">{copiedTexts.length}</span>
                         </div>
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center col-span-2 sm:col-span-1">
+                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Certificates Issued</span>
+                          <span className="text-3xl font-heading font-black text-warning">{certificates.length}</span>
+                        </div>
                       </div>
                     </div>
 
                     <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
                       <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Quick Shortcuts</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div 
                           onClick={() => setActiveTab('courses')}
                           className="p-4 bg-base hover:bg-black/10 dark:hover:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl cursor-pointer transition-colors"
                         >
-                          <h3 className="font-bold text-sm text-warning mb-2 uppercase">Create Investigation Course</h3>
+                          <h3 className="font-bold text-sm text-warning mb-2 uppercase">Create Course Dossier</h3>
                           <p className="text-xs text-text-muted leading-relaxed">Submit syllabus, lectures, pricing tags, and noticeboards dynamically into Firestore.</p>
                         </div>
                         <div 
@@ -923,6 +1100,13 @@ export default function Admin() {
                         >
                           <h3 className="font-bold text-sm text-warning mb-2 uppercase">Upload Podcast Episode</h3>
                           <p className="text-xs text-text-muted leading-relaxed">Publish new MP3 audio channels, dynamic titles, and podcast series covers directly.</p>
+                        </div>
+                        <div 
+                          onClick={() => setActiveTab('certificates')}
+                          className="p-4 bg-base hover:bg-black/10 dark:hover:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl cursor-pointer transition-colors"
+                        >
+                          <h3 className="font-bold text-sm text-warning mb-2 uppercase">Issue Verified Certificate</h3>
+                          <p className="text-xs text-text-muted leading-relaxed">Register authentic Forenclue certificates with secure, verifiable verification codes.</p>
                         </div>
                       </div>
                     </div>
@@ -1782,6 +1966,284 @@ export default function Admin() {
                               >
                                 <Trash2 size={14} />
                               </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 5. CERTIFICATES VERIFICATION SYSTEM */}
+                {activeTab === 'certificates' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-6">
+                        {editingCertificateId ? 'Modify Certificate Record' : 'Issue Verified Certificate'}
+                      </h2>
+                      <form onSubmit={handleCreateCertificate} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Unique Certificate No. *</label>
+                            <input 
+                              type="text" 
+                              value={newCertificate.certificateNo} 
+                              onChange={e => setNewCertificate({...newCertificate, certificateNo: e.target.value})} 
+                              placeholder="e.g. FC-1025-AB" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors uppercase"
+                              required
+                              disabled={!!editingCertificateId}
+                            />
+                            {editingCertificateId && <span className="text-[10px] text-text-muted font-mono mt-1 block">Certificate numbers cannot be altered after registration.</span>}
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Recipient Full Name *</label>
+                            <input 
+                              type="text" 
+                              value={newCertificate.fullName} 
+                              onChange={e => setNewCertificate({...newCertificate, fullName: e.target.value})} 
+                              placeholder="e.g. Ayush Gaikwad" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Course or Internship Title *</label>
+                            <input 
+                              type="text" 
+                              value={newCertificate.courseTitle} 
+                              onChange={e => setNewCertificate({...newCertificate, courseTitle: e.target.value})} 
+                              placeholder="e.g. Advanced Cybersecurity Audit" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Certificate Type</label>
+                            <select 
+                              value={newCertificate.certificateType} 
+                              onChange={e => setNewCertificate({...newCertificate, certificateType: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            >
+                              <option value="Internship Completion">Internship Completion</option>
+                              <option value="Course Completion">Course Completion</option>
+                              <option value="Merit Certificate">Merit Certificate</option>
+                              <option value="Professional Excellence">Professional Excellence</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Issue Date *</label>
+                            <input 
+                              type="date" 
+                              value={newCertificate.issueDate} 
+                              onChange={e => setNewCertificate({...newCertificate, issueDate: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Image Attachment */}
+                          <div className="bg-base/30 border border-black/10 dark:border-white/5 rounded-2xl p-4">
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Visual Attachment (Image URL or Upload)</label>
+                            <div className="space-y-2">
+                              <input 
+                                type="text" 
+                                value={newCertificate.imageUrl} 
+                                onChange={e => setNewCertificate({...newCertificate, imageUrl: e.target.value})} 
+                                placeholder="e.g. https://domain.com/cert.png" 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                              <div className="flex items-center gap-2">
+                                <label className="flex-1 flex items-center justify-center gap-2 bg-warning/10 hover:bg-warning/15 border border-warning/20 hover:border-warning/30 text-warning px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors">
+                                  <Upload size={13} />
+                                  <span>{isUploadingCertImage ? 'Uploading Image...' : 'Upload Image Copy'}</span>
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleCertImageUpload} 
+                                    className="hidden" 
+                                    disabled={isUploadingCertImage}
+                                  />
+                                </label>
+                                {newCertificate.imageUrl && (
+                                  <ResilientImage src={newCertificate.imageUrl} alt="Preview" className="w-8 h-8 rounded object-cover border border-black/10 dark:border-white/10" />
+                                )}
+                              </div>
+                              {certImageSuccessText && (
+                                <p className="text-[10px] font-mono text-green-500 mt-1.5 bg-green-500/5 px-2 py-1 rounded border border-green-500/10">{certImageSuccessText}</p>
+                              )}
+                              {certImageErrorText && (
+                                <p className="text-[10px] font-mono text-red-500 mt-1.5 bg-red-500/5 px-2 py-1 rounded border border-red-500/10">{certImageErrorText}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* PDF Attachment */}
+                          <div className="bg-base/30 border border-black/10 dark:border-white/5 rounded-2xl p-4">
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Official Document (PDF URL or Upload)</label>
+                            <div className="space-y-2">
+                              <input 
+                                type="text" 
+                                value={newCertificate.pdfUrl} 
+                                onChange={e => setNewCertificate({...newCertificate, pdfUrl: e.target.value})} 
+                                placeholder="e.g. https://domain.com/cert.pdf" 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                              <div className="flex items-center gap-2">
+                                <label className="flex-1 flex items-center justify-center gap-2 bg-warning/10 hover:bg-warning/15 border border-warning/20 hover:border-warning/30 text-warning px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors">
+                                  <FileText size={13} />
+                                  <span>{isUploadingCertPdf ? 'Uploading PDF...' : 'Upload PDF Copy'}</span>
+                                  <input 
+                                    type="file" 
+                                    accept="application/pdf" 
+                                    onChange={handleCertPdfUpload} 
+                                    className="hidden" 
+                                    disabled={isUploadingCertPdf}
+                                  />
+                                </label>
+                                {newCertificate.pdfUrl && (
+                                  <div className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1.5 rounded-xl border border-emerald-500/20 truncate max-w-[150px]">
+                                    PDF Ready
+                                  </div>
+                                )}
+                              </div>
+                              {certPdfSuccessText && (
+                                <p className="text-[10px] font-mono text-green-500 mt-1.5 bg-green-500/5 px-2 py-1 rounded border border-green-500/10">{certPdfSuccessText}</p>
+                              )}
+                              {certPdfErrorText && (
+                                <p className="text-[10px] font-mono text-red-500 mt-1.5 bg-red-500/5 px-2 py-1 rounded border border-red-500/10">{certPdfErrorText}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Additional Certificate Details</label>
+                          <textarea 
+                            value={newCertificate.additionalDetails} 
+                            onChange={e => setNewCertificate({...newCertificate, additionalDetails: e.target.value})} 
+                            rows={3}
+                            placeholder="Add secondary information e.g. Special Roles, Score: 95%, Duration: 3 Months, Grade A+..." 
+                            className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-sans outline-none text-text-main focus:border-warning/50 transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-2">
+                          {editingCertificateId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCertificateId(null);
+                                setNewCertificate({
+                                  certificateNo: '',
+                                  fullName: '',
+                                  courseTitle: '',
+                                  certificateType: 'Internship Completion',
+                                  issueDate: new Date().toISOString().split('T')[0],
+                                  imageUrl: '',
+                                  pdfUrl: '',
+                                  additionalDetails: ''
+                                });
+                              }}
+                              className="px-4 py-2 border border-black/10 dark:border-white/10 text-xs font-bold uppercase rounded-xl transition hover:bg-surface"
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={isUploadingCertImage || isUploadingCertPdf}
+                            className="px-6 py-2.5 bg-warning text-crust hover:bg-warning/90 disabled:opacity-50 font-black rounded-xl text-xs uppercase tracking-widest transition flex items-center gap-2"
+                          >
+                            {isUploadingCertImage || isUploadingCertPdf ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin" />
+                                <span>Uploading assets...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Award size={13} />
+                                <span>{editingCertificateId ? 'Update Certificate' : 'Issue Certificate'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-6">Issued Credentials Index</h2>
+                      
+                      {certificateLoading ? (
+                        <div className="flex justify-center items-center py-10 font-mono text-xs text-text-muted gap-2">
+                          <Loader2 size={16} className="animate-spin text-warning" /> Loading certificates...
+                        </div>
+                      ) : certificates.length === 0 ? (
+                        <div className="text-center py-12 text-xs text-text-muted font-mono border border-dashed border-black/10 dark:border-white/5 rounded-xl">
+                          No certificates registered in the database yet.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {certificates.map((cert) => (
+                            <div 
+                              key={cert.id}
+                              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-base border border-black/5 dark:border-white/5 rounded-xl gap-4 hover:border-warning/20 transition-all group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-warning/10 text-warning rounded-full flex items-center justify-center border border-warning/20">
+                                  <Award size={20} />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-sm text-text-main group-hover:text-warning transition-colors uppercase">
+                                    {cert.fullName}
+                                  </h3>
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-text-muted font-mono mt-1">
+                                    <span className="text-warning font-bold">{cert.id}</span>
+                                    <span>•</span>
+                                    <span>{cert.certificateType}</span>
+                                    <span>•</span>
+                                    <span>Issued: {cert.issueDate}</span>
+                                  </div>
+                                  <p className="text-xs text-text-muted line-clamp-1 mt-1 max-w-sm sm:max-w-md lg:max-w-xl">
+                                    {cert.courseTitle} {cert.additionalDetails ? `(${cert.additionalDetails})` : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 self-end sm:self-auto">
+                                <button
+                                  onClick={() => {
+                                    setEditingCertificateId(cert.id);
+                                    setNewCertificate({
+                                      certificateNo: cert.certificateNo || cert.id,
+                                      fullName: cert.fullName || '',
+                                      courseTitle: cert.courseTitle || '',
+                                      certificateType: cert.certificateType || 'Internship Completion',
+                                      issueDate: cert.issueDate || '',
+                                      imageUrl: cert.imageUrl || '',
+                                      pdfUrl: cert.pdfUrl || '',
+                                      additionalDetails: cert.additionalDetails || ''
+                                    });
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="p-2 border border-blue-500/10 hover:border-blue-500/30 text-blue-400 bg-blue-400/5 hover:bg-blue-400/10 rounded-lg transition-all"
+                                  title="Edit Certificate"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteCertificate(cert.id)}
+                                  className="p-2 border border-red-500/10 hover:border-red-500/30 text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg transition-all"
+                                  title="Delete Certificate"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>

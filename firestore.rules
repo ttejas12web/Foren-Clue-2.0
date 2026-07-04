@@ -162,6 +162,18 @@ service cloud.firestore {
         && data.audioUrl is string && data.audioUrl.size() <= 2000;
     }
 
+    function isValidCertificate(data) {
+      return data.keys().hasAll(['certificateNo', 'fullName', 'courseTitle', 'issueDate', 'createdAt'])
+        && data.certificateNo is string && data.certificateNo.size() <= 100
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.courseTitle is string && data.courseTitle.size() <= 300
+        && data.issueDate is string && data.issueDate.size() <= 100
+        && (!('certificateType' in data) || data.certificateType is string && data.certificateType.size() <= 200)
+        && (!('imageUrl' in data) || data.imageUrl is string && data.imageUrl.size() <= 2000)
+        && (!('pdfUrl' in data) || data.pdfUrl is string && data.pdfUrl.size() <= 2000)
+        && (!('additionalDetails' in data) || data.additionalDetails is string && data.additionalDetails.size() <= 5000);
+    }
+
     // --- Cases ---
     match /cases/{caseId} {
       allow read: if true;
@@ -201,6 +213,13 @@ service cloud.firestore {
     match /websiteTexts/{textId} {
       allow read: if true;
       allow create, update: if isAdminEmail() && isValidWebsiteText(incoming());
+      allow delete: if isAdminEmail();
+    }
+
+    // --- Certificates ---
+    match /certificates/{certificateId} {
+      allow read: if true;
+      allow create, update: if isAdminEmail() && isValidCertificate(incoming());
       allow delete: if isAdminEmail();
     }
 

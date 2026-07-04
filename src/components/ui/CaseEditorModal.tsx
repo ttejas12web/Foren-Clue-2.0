@@ -190,7 +190,7 @@ export function CaseEditorModal({ onClose, caseToEdit, userEmail }: CaseEditorMo
 
       if (caseToEdit?.id && !caseToEdit.id.startsWith('hardcoded_')) {
         // Update existing document
-        setStatusMessage("Updating declassified case study document...");
+        setStatusMessage("Updating investigative case study document...");
         await setDoc(doc(db, 'cases', caseToEdit.id), caseData, { merge: true });
       } else {
         // Create new document

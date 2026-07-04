@@ -333,9 +333,9 @@ export default function Cases() {
   return (
     <div className="min-h-screen bg-base py-24 pb-32">
       <SEO 
-        title="Solved Cases & Declassified Investigative Dossiers"
-        description="Study declassified real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."
-        keywords="solved forensic cases, crime case studies, dactyloscopy case dossiers, criminalistics research archive"
+        title="Solved Cases & Investigative Case Studies"
+        description="Study real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."
+        keywords="solved forensic cases, crime case studies, dactyloscopy case studies, criminalistics research archive"
         canonicalPath="/cases"
         image={selectedCase?.image}
       />
@@ -1185,7 +1185,7 @@ export default function Cases() {
                   
                   {/* Twitter / X */}
                   <a 
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Investigating this fascinating declassified forensic case study: "' + sharingCase.title + '" on ForenClue. Check it out!')}&url=${encodeURIComponent('https://forenclue.in/cases?case=' + sharingCase.id)}`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Investigating this fascinating forensic case study: "' + sharingCase.title + '" on ForenClue. Check it out!')}&url=${encodeURIComponent('https://forenclue.in/cases?case=' + sharingCase.id)}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2.5 bg-[#1da1f2]/10 border border-[#1da1f2]/20 hover:bg-[#1da1f2]/20 text-[#1da1f2] rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"

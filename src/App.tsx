@@ -11,8 +11,6 @@ import { ScrollToTop } from './components/layout/ScrollToTop';
 import { FloatingPodcastButton } from './components/ui/FloatingPodcastButton';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
-import { PodcastPromoPopup } from './components/ui/PodcastPromoPopup';
-import { AttentionPopup } from './components/ui/AttentionPopup';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -33,6 +31,7 @@ const CoursePlayer = lazy(() => import('./pages/CoursePlayer'));
 const MyDoubts = lazy(() => import('./pages/MyDoubts'));
 const Login = lazy(() => import('./pages/Login'));
 const Admin = lazy(() => import('./pages/Admin'));
+const CertificateVerification = lazy(() => import('./pages/CertificateVerification'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -49,7 +48,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -91,8 +90,6 @@ export default function App() {
       <ScrollToTop />
       <FloatingPodcastButton />
       <GoogleOneTap />
-      <PodcastPromoPopup />
-      <AttentionPopup />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/player/:courseId" element={<Navigate to="/" replace />} />
@@ -116,6 +113,7 @@ export default function App() {
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/podcast" element={<Podcast />} />
+                    <Route path="/certificate" element={<CertificateVerification />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

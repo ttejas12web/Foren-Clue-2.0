@@ -31,6 +31,43 @@ function getSimulatedDocumentContent(resource: any) {
   const title = resource.title || '';
   const category = (resource.category || '').toLowerCase();
   
+  if (resource.id === 'reddy') {
+    return {
+      chapters: [
+        {
+          id: 'ch1',
+          title: 'Chapter 1: Legal Procedure',
+          pages: [
+            `CONCISE FORENSIC MEDICINE & TOXICOLOGY\n=========================================\n\nChapter I: Legal Procedure\n\n1. Definition:\n- Forensic (legal) medicine deals with the application of medical knowledge to aid in the administration of justice. It deals with medical aspects of law, such as assault, murder, sexual offences, poisoning, etc.\n- Medical jurisprudence deals with legal responsibilities of the doctor, i.e., with legal aspects of the practice of medicine, such as medical negligence, consent, professional misconduct, duties of doctors, etc.\n\n2. Inquest:\nAn inquest is an enquiry or investigation into the cause of death (S.174, Cr.P.C). It is conducted in cases of unnatural and suspicious deaths, such as suicide, murder, accident, etc.\n- Police Inquest: Conducted throughout India by the officer-in-charge of a police station (panchanama) in the presence of two witnesses (panchas).\n- Magistrate's Inquest: Conducted by an Executive Magistrate in cases of death in prison, police custody, police firing, dowry death, exhumation, or death in a psychiatric hospital.`,
+            `3. Medical Evidence:\nEvidence means all legal-scientific means which help to prove or disassemble any matter in question.\n- Direct Evidence: Evidence of a fact which is actually in issue (e.g., a prescription or a consent form).\n- Indirect or Circumstantial: Evidence of a fact which is not actually in issue, but which is derived from the circumstances.\n- Hearsay Evidence: Any statement made by any person other than the witness giving evidence in Court.\n\n4. Dying Declaration:\nIt is a written or oral statement of a person, who is dying due to some unlawful act, relating to the cause of his death.\n- Recorded preferably by a Magistrate. The doctor must certify that the person is conscious and his mental faculties are normal.\n- Oath is NOT administered, because it is believed that a dying person will only tell the truth.\n\n5. Chain of Custody of Evidence:\nA crucial method to verify the actual possession of an object/specimen from the time it was first identified until it is offered into evidence in the Court room. Each specimen must be labeled, signed, and documented continuously.`
+          ]
+        },
+        {
+          id: 'ch2',
+          title: 'Chapter 2: Medical Law and Ethics',
+          pages: [
+            `Chapter II: Medical Law and Ethics\n==================================\n\n1. Ethics and Etiquette:\n- Medical ethics deals with moral principles which guide members of the medical profession in their dealings with each other, their patients, and the State.\n- Medical etiquette deals with the conventional laws of courtesy observed between members of the medical profession.\n- Hippocratic Oath: Modernized version is the Declaration of Geneva (1948).\n\n2. Professional Negligence (Malpraxis):\nThe absence of reasonable care and skill, or willful negligence of a medical practitioner, in the treatment of a patient which causes bodily injury or death.\n- Liability (Civil): Patient sues for compensation. Requires proving:\n  1. Duty of care existed.\n  2. Dereliction (failure of standard care).\n  3. Direct causation (proximate cause of injury).\n  4. Damage resulted.\n- Res Ipsa Loquitur: "The thing speaks for itself" (e.g., leaving a swab in the abdomen). In such cases, medical evidence is not necessary to prove negligence.`,
+            `3. Consent in Medical Practice:\nConsent means voluntary agreement, compliance, or permission.\n- Express Consent: Specifically stated by the patient (verbal or written).\n- Implied Consent: Implied by the patient's actions (e.g., holding out the arm for an injection, attending a clinic).\n- Informed Consent: Implies an understanding by the patient of the nature of his condition, proposed treatment, alternatives, and associated risks.\n\n4. Professional Secrecy:\nAn implied contract between doctor and patient to keep secret all that he comes to know concerning the patient in the course of his professional work.\n- Privileged Communication: A bona fide statement made up on any subject matter by a doctor to a concerned authority due to a duty to protect the community or State interests (e.g., cook suffering from infectious disease, bus driver suffering from epilepsy).`
+          ]
+        },
+        {
+          id: 'ch3',
+          title: 'Chapter 3: Identification',
+          pages: [
+            `Chapter III: Identification\n==========================\n\n1. Definition & Corpus Delicti:\n- Identification is the recognition of an individual based on certain physical characters which are unique to that individual.\n- Corpus Delicti: "Body of offence" / essence of crime. Means the elements of any criminal offence (e.g., murder). Includes the dead body, weapon fragments, clothing, etc.\n\n2. Dactylography (Fingerprint System / Galton System):\nImpressions of patterns formed by papillary or epidermal ridges of the fingertips. Patterns are distinctive, permanent, and not inherited.\n- Loops: 60 to 70% of population.\n- Whorls: 25 to 35% of population.\n- Arches: 6 to 7% of population.\n- Composite: 1 to 2% of population.\n- Poroscopy: Study of microscopic sweat pores on the ridges.\n\n3. Determination of Sex from Bones (Accuracy):\n- Entire skeleton: 100%\n- Pelvis alone: 95% (Greater sciatic notch is the ideal feature for female determination)\n- Skull alone: 90%\n- Pelvis + Skull: 98%\n- Long bones alone: 80%`
+          ]
+        },
+        {
+          id: 'ch4_ch6',
+          title: 'Chapters 4 - 6: Autopsy, Death & Postmortem Changes',
+          pages: [
+            `Chapters IV & V: Autopsy & Thanatology\n=====================================\n\n1. Medicolegal Autopsy:\nConduct only in mortuary (except spot autopsies), requires formal requisition, must be complete. I-shaped incision from chin to symphysis pubis is standard.\n- Preservation: Stomach contents, 30 cm small intestine, half kg liver, half of each kidney, 30 ml blood, 30 ml urine. Saturated saline is the standard preservative (never use formalin for viscera).\n\n2. Brain Death & Somatic Death:\n- Somatic Death: Complete and irreversible stoppage of tripod of life (circulation, respiration, brain function).\n- Brain Death: Deep unconsciousness, flat EEG, no reflexes, or bilateral dilated pupils for 24 hours.\n\n3. Postmortem Interval (Estimation):\n- Algor Mortis (Cooling): Sigmoid pattern. Heat loss is roughly 0.4°C to 0.6°C per hour in tropical climates.\n- Postmortem Lividity (Hypostasis): Gravitational pooling of blood in dependent parts. Visible in 1-4 hours, fully developed/fixed in 6-12 hours.\n- Rigor Mortis (Stiffening): Commences in 1-2 hours in India, complete in 2-4 hours. Lasts 18-36 hours in summer, 24-48 hours in winter. Starts in eyelids, jaw, propagates downward (proximo-distal progression).`
+          ]
+        }
+      ]
+    };
+  }
+
   if (category.includes('medicine') || title.includes('Medicine') || title.includes('Pathology')) {
     return {
       chapters: [
@@ -224,9 +261,21 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
             script.async = true;
-            script.onload = () => {
-              const pdfjs = (window as any).pdfjsLib;
-              pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            script.onload = async () => {
+              try {
+                const pdfjs = (window as any).pdfjsLib;
+                // Fetch the worker code and load as Blob URL to bypass Same-Origin Policy for Web Workers in cross-origin frames
+                const workerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const workerResponse = await fetch(workerUrl);
+                const workerCode = await workerResponse.text();
+                const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+                const workerBlobUrl = URL.createObjectURL(workerBlob);
+                pdfjs.GlobalWorkerOptions.workerSrc = workerBlobUrl;
+              } catch (workerErr) {
+                console.warn('Could not load PDF.js worker via Blob URL, falling back to direct CDN worker URL:', workerErr);
+                const pdfjs = (window as any).pdfjsLib;
+                pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              }
               resolve();
             };
             script.onerror = () => reject(new Error('Failed to load PDF engine.'));
@@ -237,7 +286,19 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
         if (!active) return;
 
         const pdfjsLib = (window as any).pdfjsLib;
-        const loadingTask = pdfjsLib.getDocument(resolvedPdfUrl);
+        let loadingTask;
+        try {
+          // Fetch PDF binary first to handle blob/local URLs and credential flows with maximum compatibility
+          const response = await fetch(resolvedPdfUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+        } catch (fetchErr) {
+          console.warn("Direct fetch of PDF binary failed, trying standard URL loader:", fetchErr);
+          loadingTask = pdfjsLib.getDocument(resolvedPdfUrl);
+        }
         const pdf = await loadingTask.promise;
 
         if (!active) return;
@@ -246,7 +307,7 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
         setPdfPage(1); // Auto reset to first page upon parsing new document
         setPdfLoading(false);
       } catch (err: any) {
-        console.error('Error loading PDF with PDF-JS engine:', err);
+        console.warn('Note: PDF-JS direct canvas engine fell back to browser helper:', err);
         if (active) {
           setPdfError(err.message || 'Could not parse PDF content.');
           setPdfLoading(false);
@@ -315,7 +376,7 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
         renderTask = page.render(renderContext);
         await renderTask.promise;
       } catch (err: any) {
-        console.error('Canvas render error in PDF-JS layout:', err);
+        console.warn('Canvas render info in PDF-JS layout:', err);
       }
     };
 
@@ -884,7 +945,21 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
                     </div>
                   ) : pdfError ? (
                     /* Fall back to standard browser iframe if PDF.js engine is blocked */
-                    <div className="flex-grow flex flex-col relative w-full h-full min-h-[400px]">
+                    <div className="flex-grow flex flex-col relative w-full h-full min-h-[400px] gap-2">
+                      <div className="bg-warning/10 border border-warning/20 p-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-text-main gap-3">
+                        <div className="flex items-center gap-2">
+                          <Info className="w-4 h-4 text-warning shrink-0 animate-pulse" />
+                          <span>Direct canvas rendering is unavailable due to browser security or CORS policies. You can read the document below or open it in a new window.</span>
+                        </div>
+                        <a 
+                          href={resolvedPdfUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="px-3 py-1.5 bg-warning text-crust font-black rounded-lg uppercase tracking-wider hover:bg-warning/90 transition-all text-[10px] text-center w-full sm:w-auto"
+                        >
+                          Open in New Tab
+                        </a>
+                      </div>
                       <iframe
                         key={`${pdfPage}-${pdfZoom}-${resolvedPdfUrl}`}
                         src={`${resolvedPdfUrl}#page=${pdfPage || 1}&zoom=${pdfZoom}`}
