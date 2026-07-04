@@ -2049,19 +2049,19 @@ export default function Admin() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Image Attachment */}
                           <div className="bg-base/30 border border-black/10 dark:border-white/5 rounded-2xl p-4">
-                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Visual Attachment (Image URL or Upload)</label>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Certificate Image Link (URL)</label>
                             <div className="space-y-2">
                               <input 
                                 type="text" 
                                 value={newCertificate.imageUrl} 
                                 onChange={e => setNewCertificate({...newCertificate, imageUrl: e.target.value})} 
-                                placeholder="e.g. https://domain.com/cert.png" 
+                                placeholder="e.g. https://forenclue.com/certificates/sample-image.png" 
                                 className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
                               />
                               <div className="flex items-center gap-2">
                                 <label className="flex-1 flex items-center justify-center gap-2 bg-warning/10 hover:bg-warning/15 border border-warning/20 hover:border-warning/30 text-warning px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors">
                                   <Upload size={13} />
-                                  <span>{isUploadingCertImage ? 'Uploading Image...' : 'Upload Image Copy'}</span>
+                                  <span>{isUploadingCertImage ? 'Uploading Image...' : 'Upload Image to generate link'}</span>
                                   <input 
                                     type="file" 
                                     accept="image/*" 
@@ -2074,6 +2074,9 @@ export default function Admin() {
                                   <ResilientImage src={newCertificate.imageUrl} alt="Preview" className="w-8 h-8 rounded object-cover border border-black/10 dark:border-white/10" />
                                 )}
                               </div>
+                              <p className="text-[9px] text-text-muted font-mono leading-relaxed">
+                                Enter a direct web link to the certificate image, or upload a local file to host it on our servers.
+                              </p>
                               {certImageSuccessText && (
                                 <p className="text-[10px] font-mono text-green-500 mt-1.5 bg-green-500/5 px-2 py-1 rounded border border-green-500/10">{certImageSuccessText}</p>
                               )}

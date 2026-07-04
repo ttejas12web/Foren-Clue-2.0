@@ -280,111 +280,135 @@ export default function CertificateVerification() {
                   </div>
                 </div>
 
-                {/* Digital Certificate Replica Frame */}
-                <div className="bg-surface border-4 border-double border-warning/20 rounded-2xl p-8 sm:p-12 relative shadow-2xl overflow-hidden bg-gradient-to-br from-surface to-surface/80">
-                  {/* Subtle vector watermark decor inside certificate */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-warning/[0.02] dark:text-warning/[0.015] select-none pointer-events-none scale-150">
-                    <Award size={400} />
-                  </div>
+                {/* Certificate Display Container */}
+                {certificate.imageUrl ? (
+                  <div className="space-y-8">
+                    {/* 1. Image Preview Panel */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+                      <div className="border-b border-black/10 dark:border-white/5 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileCheck size={18} className="text-warning" />
+                          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-text-main">
+                            Digital Certificate Preview
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest font-black">
+                          Verified Copy
+                        </span>
+                      </div>
 
-                  {/* Corner ornaments */}
-                  <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-warning/30"></div>
-                  <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-warning/30"></div>
-                  <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-warning/30"></div>
-                  <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-warning/30"></div>
-
-                  {/* Certificate Content */}
-                  <div className="text-center relative z-10 space-y-8">
-                    {/* Brand header */}
-                    <div>
-                      <span className="text-xl sm:text-2xl font-black tracking-tight text-text-main">ForenClue</span>
-                      <span className="text-[10px] text-text-muted uppercase tracking-[0.25em] block mt-1">RESEARCH & INVESTIGATIVE FORENSICS</span>
+                      <div className="overflow-hidden rounded-xl border border-black/10 dark:border-white/10 bg-base relative group">
+                        <img 
+                          src={certificate.imageUrl} 
+                          alt="Verified Certificate Copy"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-auto object-contain max-h-[600px] mx-auto"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <span className="text-xs uppercase font-mono tracking-widest text-warning font-black bg-warning/10 px-3 py-1 rounded-full border border-warning/20">
-                        {certificate.certificateType || 'Certificate of Excellence'}
-                      </span>
-                      <p className="text-xs text-text-muted uppercase tracking-widest pt-3">
-                        This is to certify that the authentic credential was issued to
-                      </p>
-                    </div>
+                    {/* 2. Certificate Credentials Below It */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+                      <div className="border-b border-black/10 dark:border-white/5 pb-4 flex items-center gap-2">
+                        <Award size={18} className="text-warning" />
+                        <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-text-main">
+                          Official Credential Details
+                        </h3>
+                      </div>
 
-                    {/* Recipient Name */}
-                    <div className="py-2 border-b border-warning/20 max-w-lg mx-auto">
-                      <h2 className="text-2xl sm:text-4xl font-heading font-extrabold text-warning italic tracking-wide">
-                        {certificate.fullName}
-                      </h2>
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Recipient Full Name</span>
+                          <p className="text-sm font-bold text-text-main">{certificate.fullName}</p>
+                        </div>
 
-                    <div className="space-y-4 max-w-xl mx-auto">
-                      <p className="text-sm text-text-muted leading-relaxed">
-                        for successfully completing the coursework, assessment, or professional internship requirements in
-                      </p>
-                      <h3 className="text-lg sm:text-xl font-bold uppercase tracking-tight text-text-main">
-                        {certificate.courseTitle}
-                      </h3>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Credential Type</span>
+                          <span className="inline-block text-[10px] font-bold text-warning bg-warning/10 px-2.5 py-1 rounded-lg border border-warning/20 uppercase tracking-wider">
+                            {certificate.certificateType || 'Certificate of Excellence'}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1 md:col-span-2">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Course Title / Specialization</span>
+                          <p className="text-sm font-bold text-text-main leading-relaxed">{certificate.courseTitle}</p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Issue Date</span>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-text-main">
+                            <Calendar size={14} className="text-warning" />
+                            <span>{certificate.issueDate}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Credential Code</span>
+                          <p className="text-xs font-mono font-bold text-text-main uppercase tracking-wider">{certificate.certificateNo}</p>
+                        </div>
+                      </div>
+
                       {certificate.additionalDetails && (
-                        <p className="text-xs text-text-muted/80 bg-base/50 p-4 border border-black/5 dark:border-white/5 rounded-xl text-left leading-relaxed max-w-lg mx-auto">
-                          {certificate.additionalDetails}
-                        </p>
+                        <div className="bg-base/40 border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-1.5">
+                          <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Additional Details & Accomplishments</span>
+                          <p className="text-xs text-text-muted leading-relaxed whitespace-pre-line">{certificate.additionalDetails}</p>
+                        </div>
                       )}
                     </div>
-
-                    {/* Certificate Footer / Signatures */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8 border-t border-black/5 dark:border-white/5 max-w-2xl mx-auto">
-                      <div className="space-y-1 text-center sm:text-left">
-                        <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest block">Verification ID</span>
-                        <span className="text-xs font-bold font-mono text-text-main uppercase tracking-wider">{certificate.certificateNo}</span>
+                  </div>
+                ) : (
+                  /* Fallback when no imageUrl is present - just show the details panel */
+                  <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+                    <div className="border-b border-black/10 dark:border-white/5 pb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Award size={18} className="text-warning" />
+                        <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-text-main">
+                          Official Verification Record
+                        </h3>
                       </div>
-                      
-                      <div className="space-y-1 text-center sm:text-right">
-                        <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest block">Issue Date</span>
-                        <div className="flex items-center justify-center sm:justify-end gap-1 text-xs font-bold text-text-main">
-                          <Calendar size={13} className="text-warning" />
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest font-black">
+                        Active
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Recipient Full Name</span>
+                        <p className="text-sm font-bold text-text-main">{certificate.fullName}</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Credential Type</span>
+                        <span className="inline-block text-[10px] font-bold text-warning bg-warning/10 px-2.5 py-1 rounded-lg border border-warning/20 uppercase tracking-wider">
+                          {certificate.certificateType || 'Certificate of Excellence'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 md:col-span-2">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Course Title / Specialization</span>
+                        <p className="text-sm font-bold text-text-main leading-relaxed">{certificate.courseTitle}</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Issue Date</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-text-main">
+                          <Calendar size={14} className="text-warning" />
                           <span>{certificate.issueDate}</span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Seal / Emblem */}
-                    <div className="flex justify-center pt-4">
-                      <div className="relative">
-                        <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-full flex items-center justify-center text-warning animate-pulse">
-                          <Award size={28} />
-                        </div>
-                        <div className="absolute inset-0 border-2 border-dashed border-warning/30 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Credential Code</span>
+                        <p className="text-xs font-mono font-bold text-text-main uppercase tracking-wider">{certificate.certificateNo}</p>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Visual Attachment Image display if present */}
-                {certificate.imageUrl && (
-                  <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 sm:p-8 shadow-xl">
-                    <h3 className="text-md font-bold mb-4 flex items-center gap-2">
-                      <FileCheck size={18} className="text-warning" />
-                      <span>Official Certificate Attachment</span>
-                    </h3>
-                    <div className="overflow-hidden rounded-xl border border-black/10 dark:border-white/10 bg-base relative group">
-                      <img 
-                        src={certificate.imageUrl} 
-                        alt="Verified Certificate Visual Copy"
-                        referrerPolicy="no-referrer"
-                        className="w-full h-auto object-contain max-h-[600px]"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <a 
-                          href={certificate.imageUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="px-4 py-2 bg-warning text-crust font-black rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg"
-                        >
-                          <ExternalLink size={14} />
-                          <span>View Full Size Copy</span>
-                        </a>
+                    {certificate.additionalDetails && (
+                      <div className="bg-base/40 border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-1.5">
+                        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider block">Additional Details & Accomplishments</span>
+                        <p className="text-xs text-text-muted leading-relaxed whitespace-pre-line">{certificate.additionalDetails}</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </motion.div>
