@@ -2032,6 +2032,7 @@ export default function Admin() {
                               <option value="Course Completion">Course Completion</option>
                               <option value="Merit Certificate">Merit Certificate</option>
                               <option value="Professional Excellence">Professional Excellence</option>
+                              <option value="Certificate Of Participation">Certificate Of Participation</option>
                             </select>
                           </div>
                           <div>

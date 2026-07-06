@@ -139,6 +139,13 @@ export default function About() {
         <h1 className="text-4xl md:text-5xl font-heading font-black mb-12 uppercase tracking-tight text-center">
           About <span className="text-warning">ForenClue</span>
         </h1>
+
+        <div className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden rounded-xl">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
+          <p className="text-base text-text-muted leading-relaxed relative z-10">
+            Founded in 2025, ForenClue is a dedicated Forensic Science and Cybersecurity EdTech platform, officially registered under MSME Udyam, Government of India. We are committed to empowering students, educators, researchers, and professionals through practical learning, expert-led content, real-world case studies, research resources, and industry-focused skill development. By bridging the gap between academic knowledge and real-world investigation practices, ForenClue aims to nurture the next generation of skilled forensic and cybersecurity professionals equipped to meet the evolving challenges of the digital and investigative landscape.
+          </p>
+        </div>
         
         <div className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>

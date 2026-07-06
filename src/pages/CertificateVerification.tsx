@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { SEO } from '@/components/layout/SEO';
 
 interface CertificateData {
   certificateNo: string;
@@ -84,6 +85,17 @@ export default function CertificateVerification() {
 
   return (
     <div className="min-h-[85vh] bg-base pb-24 relative overflow-hidden text-text-main">
+      <SEO 
+        title={certificate ? `Verify Certificate: ${certificate.fullName}` : "Official Certificate Verification"}
+        description={certificate 
+          ? `Official verification record of ${certificate.fullName} for completing '${certificate.courseTitle}' (${certificate.certificateType || 'Certification'}). Authenticity verified by ForenClue.`
+          : "Verify the authenticity of ForenClue certificates, credentials, and forensic course completions using our secure, official verification system."
+        }
+        keywords={certificate 
+          ? `verify certificate, ${certificate.fullName}, ${certificate.courseTitle}, forensic science, cybersecurity certification, forenclue, credential verification`
+          : "certificate verification, verify credentials, forensic science certificates, authentic forenclue certificates, MSME registered forensic certification"
+        }
+      />
       {/* Decorative ambient gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[30rem] z-0 opacity-30 pointer-events-none">
         <div className="absolute top-[-10%] left-[10%] w-[35rem] h-[35rem] rounded-full bg-warning/10 blur-[120px]"></div>

@@ -300,5 +300,13 @@ service cloud.firestore {
         allow delete: if isSignedIn() && (existing().authorId == request.auth.uid || isAdminEmail());
       }
     }
+
+    // Webinar Registrations Rule
+    match /webinar_registrations/{registrationId} {
+      allow get: if true;
+      allow create: if true; // anyone can sign up/register
+      allow list: if isAdminEmail() || (isSignedIn() && (resource.data.email == request.auth.token.email || resource.data.userId == request.auth.uid));
+      allow update, delete: if isAdminEmail();
+    }
   }
 }

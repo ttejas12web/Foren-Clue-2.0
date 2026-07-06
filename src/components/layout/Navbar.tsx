@@ -13,6 +13,7 @@ const navLinks = [
   { name: 'Careers', path: '/careers' },
   { name: 'Services', path: '/services' },
   { name: 'E-Library', path: '/ebooks' },
+  { name: 'Webinars', path: '/webinar' },
   { name: 'Certificate', path: '/certificate' },
   { name: 'About Us', path: '/about' },
 ];

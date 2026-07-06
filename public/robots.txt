@@ -13,6 +13,9 @@ Allow: /ebooks
 Allow: /contact
 Allow: /privacy
 Allow: /terms
+Allow: /webinar
+Allow: /podcast
+Allow: /certificate
 
 # Disallow private user/admin zones to save crawl budget
 Disallow: /dashboard
