@@ -73,8 +73,22 @@ export default function PrivacyPolicy() {
         </section>
 
         <section className="bg-surface p-8 border border-black/10 dark:border-white/10 relative overflow-hidden">
+          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">5. DMCA & Copyright Protection</h2>
+          <div className="space-y-4 relative z-10">
+            <p>
+              ForenClue is actively protected by DMCA.com to safeguard our custom forensic material and ensure a safe, legal environment for all learners:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-text-main">
+              <li><strong>Copyright Infringement:</strong> We respect the intellectual property rights of others. If you believe that any content hosted on our platform infringes your copyright, you may submit a formal notification under the Digital Millennium Copyright Act (DMCA).</li>
+              <li><strong>Notice Handling:</strong> All received DMCA takedown requests and associated legal correspondence are processed securely. Your privacy is maintained to the highest standard during this resolution, unless direct legal handovers or compliance mandates require disclosure.</li>
+              <li><strong>Compliance Verification:</strong> Our active protection badge and status can be verified publicly via the secure DMCA status link displayed in the footer of our platform.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="bg-surface p-8 border border-black/10 dark:border-white/10 relative overflow-hidden">
            <div className="absolute bottom-0 left-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
-          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">5. Contact Us</h2>
+          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">6. Contact Us</h2>
           <div className="space-y-4 relative z-10">
             <p>
               If you have any questions, concerns, or requests relating to privacy constraints within ForenClue, including the handling of community interactions, forensic case studies, or related educational features, please refer to our <a href="/contact" className="text-warning hover:underline">Contact Page</a> or submit a query directly within the community parameters.

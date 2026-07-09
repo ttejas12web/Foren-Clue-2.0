@@ -87,7 +87,25 @@ export function Footer() {
         </div>
 
         <div className="border-t border-black/10 dark:border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted">
-          <p>&copy; {new Date().getFullYear()} ForenClue. All rights reserved.</p>
+          <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+            <p>&copy; {new Date().getFullYear()} ForenClue. All rights reserved.</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] opacity-40 hidden md:inline">|</span>
+              <a 
+                href="//www.dmca.com/Protection/Status.aspx?ID=cf5061f2-85e0-4a93-981a-645cfa86336c" 
+                title="DMCA.com Protection Status" 
+                className="dmca-badge inline-block transition-opacity duration-200 hover:opacity-80"
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <img 
+                  src="https://images.dmca.com/Badges/DMCA_logo-grn-btn120w.png?ID=cf5061f2-85e0-4a93-981a-645cfa86336c" 
+                  alt="DMCA.com Protection Status" 
+                  className="h-7 w-auto"
+                />
+              </a>
+            </div>
+          </div>
           <div className="flex gap-4">
             <Link className="border-b border-transparent hover:border-text-muted hover:text-text-main transition-all" to="/privacy">Privacy Policy</Link>
             <Link className="border-b border-transparent hover:border-text-muted hover:text-text-main transition-all" to="/terms">Terms of Service</Link>

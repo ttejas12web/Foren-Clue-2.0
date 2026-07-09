@@ -61,7 +61,7 @@ export default function TermsOfService() {
           <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">4. Intellectual Property Rights</h2>
           <div className="space-y-4 relative z-10">
             <p>
-              All materials provided on ForenClue, including but not limited to course content, videos, text, graphics, logos, images, and software, are the property of ForenClue or its content suppliers and are protected by international copyright laws. 
+              All materials provided on ForenClue, including but not limited to course content, videos, text, graphics, logos, images, and software, are the property of ForenClue or its content suppliers and are protected by international copyright and DMCA laws.
             </p>
             <p>
               You may not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store, or transmit any of the material on our Site without express written consent.
@@ -70,8 +70,30 @@ export default function TermsOfService() {
         </section>
 
         <section className="bg-surface p-8 border border-black/10 dark:border-white/10 relative overflow-hidden">
+          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">5. DMCA Policy & Copyright Agent</h2>
+          <div className="space-y-4 relative z-10">
+            <p>
+              ForenClue is registered with DMCA.com and maintains a strict policy regarding the protection of copyright ownership:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-text-main">
+              <li><strong>DMCA Takedown Notice:</strong> If you believe any materials on our platform infringe upon your copyright, please submit a written notice to us at our legal contact endpoint. Your notice must contain:
+                <ul className="list-circle pl-6 mt-1 space-y-1 text-text-muted text-sm">
+                  <li>An electronic or physical signature of the person authorized to act on behalf of the owner of the copyright interest.</li>
+                  <li>A description of the copyrighted work that you claim has been infringed.</li>
+                  <li>The exact URL or description of where the material is located on ForenClue.</li>
+                  <li>Your address, telephone number, and email address.</li>
+                  <li>A statement by you that you have a good faith belief that the disputed use is not authorized by the copyright owner, its agent, or the law.</li>
+                </ul>
+              </li>
+              <li><strong>Counter-Notification:</strong> If you believe your content was wrongly removed due to a mistake or misidentification, you have the right to submit a counter-notification to reinstate the material.</li>
+              <li><strong>Repeat Infringer Policy:</strong> ForenClue reserves the right to terminate the accounts of users who are determined to be repeat infringers of copyright or other intellectual property laws.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="bg-surface p-8 border border-black/10 dark:border-white/10 relative overflow-hidden">
            <div className="absolute bottom-0 left-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
-          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">5. Limitation of Liability</h2>
+          <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">6. Limitation of Liability</h2>
           <div className="space-y-4 relative z-10">
             <p>
               ForenClue operates as an educational platform. The knowledge gained here is for educational and theoretical purposes. We are not liable for how you apply this knowledge in real-world professional, legal, or personal situations. Always adhere to your local laws and professional ethical guidelines when conducting any form of investigation.
