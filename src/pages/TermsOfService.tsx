@@ -73,7 +73,7 @@ export default function TermsOfService() {
           <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest relative z-10">5. DMCA Policy & Copyright Agent</h2>
           <div className="space-y-4 relative z-10">
             <p>
-              ForenClue is registered with DMCA.com and maintains a strict policy regarding the protection of copyright ownership:
+              ForenClue is registered with DMCA.com and maintains a strict policy regarding the protection of copyright ownership. You can verify our active protection status at the <a href="https://www.dmca.com/r/8eqg90g" target="_blank" rel="noopener noreferrer" className="text-warning hover:underline">ForenClue DMCA Status Page</a>:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-text-main">
               <li><strong>DMCA Takedown Notice:</strong> If you believe any materials on our platform infringe upon your copyright, please submit a written notice to us at our legal contact endpoint. Your notice must contain:

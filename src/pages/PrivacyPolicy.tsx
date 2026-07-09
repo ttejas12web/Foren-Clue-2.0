@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 space-y-2 text-text-main">
               <li><strong>Copyright Infringement:</strong> We respect the intellectual property rights of others. If you believe that any content hosted on our platform infringes your copyright, you may submit a formal notification under the Digital Millennium Copyright Act (DMCA).</li>
               <li><strong>Notice Handling:</strong> All received DMCA takedown requests and associated legal correspondence are processed securely. Your privacy is maintained to the highest standard during this resolution, unless direct legal handovers or compliance mandates require disclosure.</li>
-              <li><strong>Compliance Verification:</strong> Our active protection badge and status can be verified publicly via the secure DMCA status link displayed in the footer of our platform.</li>
+              <li><strong>Compliance Verification:</strong> Our active protection badge and status can be verified publicly via the secure <a href="https://www.dmca.com/r/8eqg90g" target="_blank" rel="noopener noreferrer" className="text-warning hover:underline">DMCA Protection Status Page</a>.</li>
             </ul>
           </div>
         </section>

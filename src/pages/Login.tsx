@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/contexts/AuthContext';
 import DnaVisualizer from '../components/DnaVisualizer';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { SEO } from '@/components/layout/SEO';
 import { 
   ShieldCheck, 
   Fingerprint, 
@@ -130,6 +131,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-base py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden flex items-center justify-center">
+      <SEO 
+        title="Sign In / Sign Up | Investigator Portal" 
+        description="Access the ForenClue Investigator Dashboard to view courses, certifications, case studies, and join the community." 
+        noindex={true} 
+      />
       {/* Dynamic scan line forensic grid background */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #00f0ff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
       <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] bg-warning/5 rounded-full blur-[140px] pointer-events-none opacity-30" />

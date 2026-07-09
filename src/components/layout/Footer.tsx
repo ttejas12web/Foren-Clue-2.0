@@ -92,7 +92,7 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <span className="text-[10px] opacity-40 hidden md:inline">|</span>
               <a 
-                href="//www.dmca.com/Protection/Status.aspx?ID=cf5061f2-85e0-4a93-981a-645cfa86336c" 
+                href="https://www.dmca.com/r/8eqg90g" 
                 title="DMCA.com Protection Status" 
                 className="dmca-badge inline-block transition-opacity duration-200 hover:opacity-80"
                 target="_blank" 
