@@ -237,7 +237,22 @@ export default function Admin() {
         const dbVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dbVal - da;
       });
-      setCertificates(certList);
+      // Deduplicate certificates by certificateNo to prevent double counting or listing
+      const uniqueCertList: any[] = [];
+      const seenNos = new Set<string>();
+      certList.forEach(cert => {
+        const certNo = cert.certificateNo || cert.id || '';
+        const normalized = certNo.toUpperCase().trim().replace(/[\s\-_/]/g, '');
+        if (normalized) {
+          if (!seenNos.has(normalized)) {
+            seenNos.add(normalized);
+            uniqueCertList.push(cert);
+          }
+        } else {
+          uniqueCertList.push(cert);
+        }
+      });
+      setCertificates(uniqueCertList);
     } catch (e) {
       console.error("Error fetching certificates collection:", e);
     } finally {

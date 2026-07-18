@@ -436,7 +436,7 @@ async function startServer() {
       
       let title = 'ForenClue | Forensic EdTech Mastery';
       let summary = "ForenClue - India's premier forensic science edtech platform. Master forensic analysis, cybersecurity, and investigations.";
-      let image = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s372/4b5616a4-6069-44a7-ba52-88f965165067.png';
+      let image = '/forenclue_og_banner.jpg';
       
       const fullUrl = `https://${req.get('host')}${req.originalUrl}`;
 
@@ -479,6 +479,50 @@ async function startServer() {
                console.warn("Could not load dynamic constants fallback", e);
              }
            }
+        }
+        else if (req.path === '/about') {
+          title = 'About Our Mission & Team | ForenClue';
+          summary = 'Meet the expert leaders, academic counselors, and founders behind ForenClue. Discover our mission to transform forensic science edtech and cybersecurity training.';
+        }
+        else if (req.path === '/careers') {
+          title = 'Careers & Internships | ForenClue';
+          summary = 'Join the ForenClue team. Explore career opportunities, hands-on forensic science internships, research roles, and advisory board positions.';
+        }
+        else if (req.path === '/services') {
+          title = 'Professional Forensic Services | ForenClue';
+          summary = 'Inquire about corporate and personal forensic investigation services. Professional consultancy in cyber forensics, criminal analysis, and verification studies.';
+        }
+        else if (req.path === '/ebooks') {
+          title = 'ForenClue E-Library & Handbooks';
+          summary = 'Browse verified scientific forensic handbooks, physical crime scene protocols, and digital study reference manuals in the ForenClue secure E-Library.';
+        }
+        else if (req.path === '/podcast') {
+          title = 'Forensic Talk Podcast | ForenClue';
+          summary = 'Listen to ForenClue Forensic Talk. Dynamic, deep-dive discussions with veteran crime scene experts, cybersecurity directors, and legal counselors.';
+        }
+        else if (req.path === '/webinar') {
+          title = 'Live Forensic Science Masterclasses & Webinars';
+          summary = 'Register for upcoming high-impact live webinars hosted by top forensic experts. Learn digital investigations, trace evidence analytics, and earn certification.';
+        }
+        else if (req.path === '/community') {
+          title = 'ForenClue Forensic Community Hub';
+          summary = "Engage in India's premier forensic science and research peer community. Share academic doubts, deliberate active case logs, and network with forensic analysts.";
+        }
+        else if (req.path === '/contact') {
+          title = 'Contact Forensic Experts | ForenClue Support';
+          summary = 'Get in touch with ForenClue administrative directors, student support coordinators, or business partnership divisions for your educational queries.';
+        }
+        else if (req.path === '/certificate') {
+          title = 'Instant Certificate Verification Portal | ForenClue';
+          summary = 'Instantly authenticate and verify official academic credentials, masterclass badges, and course completion certificates issued by the ForenClue Board.';
+        }
+        else if (req.path === '/privacy') {
+          title = 'Privacy Policy | ForenClue';
+          summary = 'Understand how ForenClue collects, stores, and protects student data, examination records, and transaction security.';
+        }
+        else if (req.path === '/terms') {
+          title = 'Terms of Service | ForenClue';
+          summary = 'Review user terms, educational guidelines, certificate code of conduct, and enrollment conditions for ForenClue.';
         }
       } catch (dbError) {
         console.error("Error fetching preview metadata:", dbError);

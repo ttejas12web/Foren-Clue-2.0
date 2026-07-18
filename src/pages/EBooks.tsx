@@ -8,7 +8,6 @@ import {
   Search, 
   Download, 
   Eye, 
-  Plus, 
   ExternalLink,
   Sparkles,
   ArrowRight,
@@ -20,7 +19,6 @@ import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { PdfViewerModal } from '@/components/ui/PdfViewerModal';
-import { UploadResourceModal } from '@/components/UploadResourceModal';
 
 // Static book cover asset (same as original/fallback)
 const bookCoverUrl = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEive7NdnBis_kLLqaN2d8q37014tEMd2ftmqFkeCIiLjxkG2sDfip5VQldxh9izJC-KTsD4ZfXnILFWEOG2jmJkwdKww8-jqW-2jAqpTsv4AOE47MkqpHHibGcBN4GhPqN3OIF1xxIbs0KQLRgxfk2XJRsdlQyY_JqqRnajm2-pB1xoiZN4BnkdtDc9ICU/s1500/1779707899.png';
@@ -207,7 +205,6 @@ export default function EBooks() {
   const [activeTab, setActiveTab] = useState<'books' | 'notes' | 'papers' | 'other'>('books');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [dbEBooks, setDbEBooks] = useState<ForensicResource[]>([]);
   const [selectedResource, setSelectedResource] = useState<ForensicResource | null>(null);
 
@@ -306,16 +303,6 @@ export default function EBooks() {
             <p className="text-sm text-text-muted max-w-xl">
               Academic manuals, handwritten notes, previous exam keys, and toxicological analysis sheets organized dynamically under academic criteria.
             </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsUploadOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-warning text-crust hover:bg-warning/90 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              <Plus size={14} />
-              Contribute Resource
-            </button>
           </div>
         </div>
 
@@ -424,11 +411,6 @@ export default function EBooks() {
       </div>
 
       {/* --- MODALS --- */}
-      <UploadResourceModal 
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-      />
-
       {selectedResource && (
         <PdfViewerModal 
           isOpen={!!selectedResource}
@@ -460,8 +442,8 @@ function ResourceCard({ item, onOpen, onDownload }: ResourceCardProps) {
       <div className="space-y-4">
         {/* Book Spine Portrait or Accent Banner */}
         <div 
-          onClick={onOpen}
-          className="aspect-[5/3] w-full rounded-xl bg-gradient-to-br from-[#0e1726] to-[#040812] border border-black/10 dark:border-white/5 relative overflow-hidden flex items-center justify-center p-4 shadow-inner cursor-pointer group-hover:border-warning/10"
+          onClick={onDownload}
+          className="aspect-[5/3] w-full rounded-xl bg-gradient-to-br from-[#0e1726] to-[#040812] border border-black/10 dark:border-white/5 relative overflow-hidden flex items-center justify-center p-4 shadow-inner cursor-pointer group-hover:border-warning/20"
         >
           {/* Subtle visual grid texture */}
           <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:16px_16px]" />
@@ -485,6 +467,15 @@ function ResourceCard({ item, onOpen, onDownload }: ResourceCardProps) {
           )}
         </div>
 
+        {/* Direct Download Button placed just below the cover page */}
+        <button
+          onClick={onDownload}
+          className="w-full py-2.5 px-4 bg-warning hover:bg-warning/90 active:scale-[0.98] text-crust text-xs font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg cursor-pointer"
+        >
+          <Download size={14} />
+          <span>Download Reference File</span>
+        </button>
+
         {/* Text information */}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -497,7 +488,7 @@ function ResourceCard({ item, onOpen, onDownload }: ResourceCardProps) {
           </div>
 
           <h3 
-            onClick={onOpen}
+            onClick={onDownload}
             className="text-sm font-extrabold text-text-main leading-snug cursor-pointer hover:text-warning transition-colors uppercase line-clamp-1"
             title={item.title}
           >
@@ -510,30 +501,14 @@ function ResourceCard({ item, onOpen, onDownload }: ResourceCardProps) {
         </div>
       </div>
 
-      {/* Action Row */}
+      {/* Action Row containing file size and format specification */}
       <div className="mt-5 pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-3">
         <div className="text-[9px] font-mono text-text-muted uppercase">
           Size: <span className="font-bold text-text-main">{item.size}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Download */}
-          <button 
-            onClick={onDownload}
-            className="p-2 text-text-muted hover:text-warning hover:bg-warning/5 border border-black/5 dark:border-white/5 rounded-lg transition-all cursor-pointer"
-            title="Download PDF"
-          >
-            <Download size={13} />
-          </button>
-          
-          {/* Open Reader */}
-          <button 
-            onClick={onOpen}
-            className="flex items-center gap-1 py-1.5 px-3 bg-surface border border-black/10 dark:border-white/15 rounded-lg text-[10px] font-bold uppercase tracking-wider text-text-main group-hover:border-warning/40 transition-colors cursor-pointer"
-          >
-            <span>Read</span>
-            <ArrowRight size={11} className="text-warning transition-transform group-hover:translate-x-0.5" />
-          </button>
+        <div className="text-[9px] font-mono text-text-muted uppercase">
+          Format: <span className="font-bold text-warning">{item.type}</span>
         </div>
       </div>
 

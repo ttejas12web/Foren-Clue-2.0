@@ -7,7 +7,7 @@ export default function Contact() {
       <SEO 
         title="Contact Forensic Education Support & Advisory"
         description="Reach out to ForenClue. Send your queries regarding forensic science certifications, institute partnerships, customized training, or handbook pre-orders."
-        keywords="contact forenclue, forensic support portal, contact forensic advisory team, mumbai forensic institute"
+        keywords="contact forenclue, forensic support portal, contact forensic advisory team, pune forensic institute"
         canonicalPath="/contact"
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -31,7 +31,7 @@ export default function Contact() {
               <div className="p-4 bg-warning/10 text-warning rounded-full"><MapPin size={24} /></div>
               <div>
                 <p className="text-sm text-text-muted mb-1">Location</p>
-                <p className="font-medium text-lg">Navi Mumbai, India</p>
+                <p className="font-medium text-lg">Pune, Maharashtra, India</p>
               </div>
             </div>
           </div>

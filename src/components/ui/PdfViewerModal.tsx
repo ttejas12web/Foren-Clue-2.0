@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, ZoomIn, ZoomOut, Search, ChevronLeft, ChevronRight, 
   Download, FileText, Sun, Moon, Eye, Printer, BookOpen, 
-  Check, Info, FileDown, CheckCircle2, Maximize2, Minimize2
+  Check, Info, FileDown, CheckCircle2, Maximize2, Minimize2, Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveFileUrl, localFileStore } from '@/lib/localFileStore';
@@ -174,6 +174,22 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
   const [pdfZoom, setPdfZoom] = useState<string>('page-fit');
   const [isMaximized, setIsMaximized] = useState<boolean>(startMaximized);
 
+  const [currentSpread, setCurrentSpread] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev' | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePageIndex, setMobilePageIndex] = useState(0);
+  const [useGoogleDocs, setUseGoogleDocs] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setIsMaximized(startMaximized);
@@ -310,6 +326,7 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
         console.warn('Note: PDF-JS direct canvas engine fell back to browser helper:', err);
         if (active) {
           setPdfError(err.message || 'Could not parse PDF content.');
+          setUseGoogleDocs(true);
           setPdfLoading(false);
         }
       }
@@ -667,6 +684,295 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
     printWindow.document.close();
   };
 
+  // Flatten chapters and pages for continuous reading flow in 3D-book mode
+  const flatPages = useMemo(() => {
+    return docData.chapters.flatMap((ch, chIdx) =>
+      ch.pages.map((pg, pgIdx) => ({
+        chapterIdx: chIdx,
+        chapterTitle: ch.title,
+        pageIdx: pgIdx,
+        text: pg,
+      }))
+    );
+  }, [docData]);
+
+  const totalPagesCount = 1 + 1 + flatPages.length + 1; // cover + toc + content + back cover
+  const totalSpreadsCount = Math.ceil((totalPagesCount - 1) / 2) + 1;
+
+  const pages3D = useMemo(() => {
+    return [
+      { type: 'cover' as const, isBack: false },
+      { type: 'toc' as const },
+      ...flatPages.map((pg, idx) => ({ type: 'content' as const, ...pg, pageNum: idx + 1 })),
+      { type: 'cover' as const, isBack: true }
+    ];
+  }, [flatPages]);
+
+  // Sync 3D Book Spread from selectedChapter and currentPage
+  useEffect(() => {
+    const k = flatPages.findIndex(pg => pg.chapterIdx === selectedChapter && pg.pageIdx === currentPage);
+    if (k >= 0) {
+      const S = k === 0 ? 1 : Math.floor((k - 1) / 2) + 2;
+      setCurrentSpread(S);
+      setMobilePageIndex(k + 2); // cover is 0, toc is 1, content starts at 2
+    }
+  }, [selectedChapter, currentPage, flatPages]);
+
+  const syncStateFromFlatIdx = (flatIdx: number) => {
+    if (flatIdx >= 0 && flatIdx < flatPages.length) {
+      const pg = flatPages[flatIdx];
+      setSelectedChapter(pg.chapterIdx);
+      setCurrentPage(pg.pageIdx);
+    }
+  };
+
+  const handleNext3D = () => {
+    if (isFlipping) return;
+    
+    if (isMobile) {
+      if (mobilePageIndex < totalPagesCount - 1) {
+        setIsFlipping(true);
+        setFlipDirection('next');
+        setTimeout(() => {
+          setMobilePageIndex(prev => {
+            const nextIdx = prev + 1;
+            syncStateFromFlatIdx(nextIdx - 2);
+            return nextIdx;
+          });
+          setIsFlipping(false);
+          setFlipDirection(null);
+        }, 600);
+      }
+    } else {
+      if (currentSpread < totalSpreadsCount - 1) {
+        setIsFlipping(true);
+        setFlipDirection('next');
+        setTimeout(() => {
+          setCurrentSpread(prev => {
+            const nextSpread = prev + 1;
+            const firstContentPageIdx = (nextSpread * 2) - 3;
+            syncStateFromFlatIdx(firstContentPageIdx);
+            return nextSpread;
+          });
+          setIsFlipping(false);
+          setFlipDirection(null);
+        }, 600);
+      }
+    }
+  };
+
+  const handlePrev3D = () => {
+    if (isFlipping) return;
+
+    if (isMobile) {
+      if (mobilePageIndex > 0) {
+        setIsFlipping(true);
+        setFlipDirection('prev');
+        setTimeout(() => {
+          setMobilePageIndex(prev => {
+            const prevIdx = prev - 1;
+            syncStateFromFlatIdx(prevIdx - 2);
+            return prevIdx;
+          });
+          setIsFlipping(false);
+          setFlipDirection(null);
+        }, 600);
+      }
+    } else {
+      if (currentSpread > 0) {
+        setIsFlipping(true);
+        setFlipDirection('prev');
+        setTimeout(() => {
+          setCurrentSpread(prev => {
+            const prevSpread = prev - 1;
+            const firstContentPageIdx = (prevSpread * 2) - 3;
+            syncStateFromFlatIdx(firstContentPageIdx);
+            return prevSpread;
+          });
+          setIsFlipping(false);
+          setFlipDirection(null);
+        }, 600);
+      }
+    }
+  };
+
+  // Rendering Helper for 3D Front & Back Covers
+  const renderCoverPage = (isBack = false) => {
+    const isDark = theme === 'dark';
+    const isSepia = theme === 'sepia';
+    
+    const bgClass = isDark 
+      ? 'bg-gradient-to-br from-[#0c152b] via-[#101b38] to-[#080d1a]' 
+      : isSepia 
+        ? 'bg-gradient-to-br from-[#3e2713] via-[#2d1c0e] to-[#1c1209]' 
+        : 'bg-gradient-to-br from-[#5c0f13] via-[#4a0c0f] to-[#33080a]'; // Crimson for Light
+    
+    const borderClass = isDark 
+      ? 'border-[#2d4373]/40' 
+      : isSepia 
+        ? 'border-[#e4d4b2]/20' 
+        : 'border-[#f2ca52]/50';
+
+    const textClass = isDark 
+      ? 'text-[#f2ca52]' 
+      : isSepia 
+        ? 'text-[#e4d4b2]' 
+        : 'text-[#f2ca52]';
+
+    return (
+      <div className={cn("w-full h-full flex flex-col justify-between p-6 sm:p-8 relative overflow-hidden select-none border-4 double rounded-2xl shadow-2xl", bgClass, borderClass)}>
+        <div className={cn("absolute inset-2 border border-dashed rounded-lg opacity-30 pointer-events-none", borderClass)} />
+        <div className="absolute top-0 right-0 w-[30px] h-full bg-gradient-to-l from-black/30 to-transparent opacity-40 pointer-events-none" />
+
+        {!isBack ? (
+          <>
+            <div className="text-center space-y-2 mt-4 z-10">
+              <span className={cn("text-[8px] font-mono tracking-widest uppercase block opacity-80", textClass)}>
+                ForenClue Academic Library
+              </span>
+              <div className="w-10 h-0.5 bg-current mx-auto opacity-40" />
+            </div>
+
+            <div className="text-center my-auto space-y-4 z-10 px-2">
+              <h1 className={cn("text-lg sm:text-xl font-black tracking-tight uppercase leading-tight font-serif", textClass)}>
+                {resource.title}
+              </h1>
+              <p className="text-[10px] text-white/75 italic font-sans max-w-sm mx-auto line-clamp-3">
+                {resource.desc || "A comprehensive professional study manual for advanced forensic aspirants."}
+              </p>
+            </div>
+
+            <div className="text-center space-y-1 mb-4 z-10">
+              <div className="text-xs font-bold text-white/90 uppercase tracking-wider">
+                By {resource.author || "Mrunmayee Bodhe"}
+              </div>
+              <div className="text-[9px] font-mono text-white/40">
+                ForenClue Publishing House &bull; Est. 2024
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center space-y-2 mt-4 z-10">
+              <span className={cn("text-[8px] font-mono tracking-widest uppercase block opacity-80", textClass)}>
+                End of Document
+              </span>
+              <div className="w-10 h-0.5 bg-current mx-auto opacity-40" />
+            </div>
+
+            <div className="text-center my-auto space-y-3 z-10">
+              <div className="w-12 h-12 border border-warning/30 rounded-full flex items-center justify-center mx-auto mb-2 bg-warning/5">
+                <Check className="w-6 h-6 text-warning" />
+              </div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                ForenClue Academy Certified
+              </h2>
+              <p className="text-[9px] text-white/60 font-mono max-w-xs mx-auto leading-relaxed">
+                This academic handbook has been vetted by the ForenClue Editorial Council for national level entrance exams including UGC NET & FACT.
+              </p>
+            </div>
+
+            <div className="text-center space-y-1 mb-4 z-10">
+              <p className="text-[9px] font-mono text-white/30">
+                All Rights Reserved &copy; {resource.year || 2024}
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Rendering Helper for Table of Contents Page
+  const renderTOCPage = () => {
+    return (
+      <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 select-none">
+        <div>
+          <div className="border-b border-black/10 dark:border-white/10 pb-3 mb-5">
+            <h2 className="text-base font-black uppercase tracking-wider text-warning font-serif flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4 text-warning" /> Table of Contents
+            </h2>
+            <p className="text-[9px] text-text-muted mt-0.5 font-mono uppercase tracking-widest">
+              Jump directly to sections
+            </p>
+          </div>
+
+          <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+            {docData.chapters.map((ch, idx) => {
+              const startIdx = flatPages.findIndex(pg => pg.chapterIdx === idx);
+              const displayPageNum = startIdx >= 0 ? startIdx + 1 : 1;
+
+              return (
+                <button
+                  key={ch.id}
+                  onClick={() => {
+                    const S = startIdx === 0 ? 1 : Math.floor((startIdx - 1) / 2) + 2;
+                    setCurrentSpread(S);
+                    setMobilePageIndex(startIdx + 2);
+                  }}
+                  className="w-full text-left group/toc-item flex items-center justify-between text-xs py-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg px-2 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[9px] text-warning font-bold">
+                      0{idx + 1}
+                    </span>
+                    <span className="font-bold text-text-main group-hover/toc-item:text-warning transition-colors pr-2">
+                      {ch.title}
+                    </span>
+                  </div>
+                  <div className="flex-grow border-b border-dotted border-black/20 dark:border-white/20 mx-2 group-hover/toc-item:border-warning/50" />
+                  <span className="font-mono text-[9px] text-text-muted font-bold">
+                    p. {displayPageNum}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-black/10 dark:border-white/10 pt-3 flex items-center gap-2 text-[9px] text-text-muted/80 leading-relaxed font-mono">
+          <Info className="w-3.5 h-3.5 shrink-0 text-warning" />
+          <span>Click any chapter to trigger a physical 3D page-turn directly to the topic page.</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Rendering Helper for Content Pages
+  const renderContentPage = (pageData: any, side: 'left' | 'right') => {
+    if (!pageData) return <div className="w-full h-full" />;
+
+    const displayPageNum = pageData.pageNum || (flatPages.findIndex(pg => pg.chapterIdx === pageData.chapterIdx && pg.pageIdx === pageData.pageIdx) + 1);
+
+    return (
+      <div className="w-full h-full flex flex-col justify-between p-6 sm:p-8 relative">
+        <div className={cn(
+          "absolute top-0 h-full w-[20px] pointer-events-none opacity-40 dark:opacity-60",
+          side === 'left' 
+            ? "right-0 bg-gradient-to-l from-black/20 to-transparent" 
+            : "left-0 bg-gradient-to-r from-black/20 to-transparent"
+        )} />
+
+        <div className="border-b border-black/10 dark:border-white/10 pb-2 flex justify-between items-center text-[8px] font-mono tracking-wider text-text-muted uppercase shrink-0">
+          <span className="font-bold text-warning truncate max-w-[160px]">{pageData.chapterTitle}</span>
+          <span className="opacity-60">ForenClue eLibrary</span>
+        </div>
+
+        <div className="flex-1 my-4 text-[11px] sm:text-[12px] leading-relaxed font-sans whitespace-pre-wrap overflow-y-auto pr-1">
+          {highlightSearchMatches(pageData.text, searchWord)}
+        </div>
+
+        <div className={cn(
+          "border-t border-black/10 dark:border-white/10 pt-2 flex justify-between items-center text-[8px] font-mono text-text-muted/70 shrink-0",
+          side === 'right' ? "flex-row-reverse" : ""
+        )}>
+          <span className="font-bold text-text-main">Page {displayPageNum}</span>
+          <span className="opacity-50 font-medium">Authorized Academic Copy</span>
+        </div>
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -814,7 +1120,7 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
                         viewMode === 'summary' ? "bg-warning text-crust shadow" : "text-text-muted hover:text-text-main"
                       )}
                     >
-                      <BookOpen className="w-3.5 h-3.5" /> eLibrary Study Guide
+                      <BookOpen className="w-3.5 h-3.5" /> 📖 Interactive 3D Flipbook
                     </button>
                   </div>
                 </div>
@@ -946,23 +1252,31 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
                   ) : pdfError ? (
                     /* Fall back to standard browser iframe if PDF.js engine is blocked */
                     <div className="flex-grow flex flex-col relative w-full h-full min-h-[400px] gap-2">
-                      <div className="bg-warning/10 border border-warning/20 p-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-text-main gap-3">
+                      <div className="bg-surface/60 border border-[#f2ca52]/20 p-3 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-text-main gap-3">
                         <div className="flex items-center gap-2">
-                          <Info className="w-4 h-4 text-warning shrink-0 animate-pulse" />
-                          <span>Direct canvas rendering is unavailable due to browser security or CORS policies. You can read the document below or open it in a new window.</span>
+                          <Globe className="w-4 h-4 text-warning shrink-0" />
+                          <span>Secure Cloud Reader optimized. For native full-resolution layout, open the document directly.</span>
                         </div>
-                        <a 
-                          href={resolvedPdfUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="px-3 py-1.5 bg-warning text-crust font-black rounded-lg uppercase tracking-wider hover:bg-warning/90 transition-all text-[10px] text-center w-full sm:w-auto"
-                        >
-                          Open in New Tab
-                        </a>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <button
+                            onClick={() => setViewMode('summary')}
+                            className="px-3.5 py-1.5 bg-warning/20 hover:bg-warning/30 border border-warning/30 text-warning font-extrabold rounded-xl uppercase tracking-wider transition-all text-[10px] text-center w-full sm:w-auto cursor-pointer"
+                          >
+                            📖 View 3D Flipbook
+                          </button>
+                          <a 
+                            href={resolvedPdfUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="px-3.5 py-1.5 bg-warning text-crust font-black rounded-xl uppercase tracking-wider hover:bg-warning/90 transition-all text-[10px] text-center w-full sm:w-auto"
+                          >
+                            Open in New Tab
+                          </a>
+                        </div>
                       </div>
                       <iframe
                         key={`${pdfPage}-${pdfZoom}-${resolvedPdfUrl}`}
-                        src={`${resolvedPdfUrl}#page=${pdfPage || 1}&zoom=${pdfZoom}`}
+                        src={resolvedPdfUrl.startsWith('blob:') ? resolvedPdfUrl : `https://docs.google.com/viewer?url=${encodeURIComponent(resolvedPdfUrl)}&embedded=true`}
                         className="w-full h-full flex-grow border-0 rounded-xl bg-white"
                         title={resource.title}
                       />
@@ -1028,28 +1342,8 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
                       </select>
                     </div>
 
-                    {/* Zoom Controls & Print options */}
+                    {/* Print options */}
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 border-r border-black/10 dark:border-white/5 pr-3">
-                        <button 
-                          onClick={() => setZoom(prev => Math.max(0.75, prev - 0.15))}
-                          className="p-1.5 hover:bg-black/10 dark:hover:bg-white/15 rounded-lg text-text-muted hover:text-text-main transition-colors cursor-pointer"
-                          title="Zoom Out"
-                        >
-                          <ZoomOut className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs font-mono font-bold text-text-muted min-w-[36px] text-center">
-                          {Math.round(zoom * 100)}%
-                        </span>
-                        <button 
-                          onClick={() => setZoom(prev => Math.min(1.5, prev + 0.15))}
-                          className="p-1.5 hover:bg-black/10 dark:hover:bg-white/15 rounded-lg text-text-muted hover:text-text-main transition-colors cursor-pointer"
-                          title="Zoom In"
-                        >
-                          <ZoomIn className="w-4 h-4" />
-                        </button>
-                      </div>
-
                       <button 
                         onClick={handlePrint}
                         className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-main transition-colors cursor-pointer"
@@ -1061,75 +1355,196 @@ export function PdfViewerModal({ isOpen, onClose, resource, startMaximized = fal
                     </div>
                   </div>
 
-                  {/* The Realistic Printable/Renderable document page block */}
-                  <div className="flex-1 overflow-auto flex items-center justify-center p-3 relative min-h-0 bg-black/15 dark:bg-black/40 rounded-2xl border border-black/10 dark:border-white/5">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={`${selectedChapter}-${currentPage}`}
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 0.15 }}
-                        style={{
-                          transform: `scale(${zoom})`,
-                          transformOrigin: 'center center'
-                        }}
-                        className={cn(
-                          "w-full max-w-[620px] aspect-[1/1.4] p-8 sm:p-12 shadow-2xl rounded-xl border flex flex-col justify-between transition-all duration-300 relative select-text overflow-y-auto max-h-full",
-                          theme === 'light' && "bg-[#ffffff] text-[#0f172a] border-[#e2e8f0]",
-                          theme === 'sepia' && "bg-[#f4ecd8] text-[#4a3319] border-[#e4d4b2]",
-                          theme === 'dark' && "bg-[#0b1329] text-[#e2e8f0] border-white/5"
-                        )}
+                  {/* The Realistic 3D Flipping Book view wrapper */}
+                  <div className="flex-grow flex flex-col items-center justify-center p-3 sm:p-6 relative min-h-0 bg-base/40 rounded-3xl border border-black/5 dark:border-white/5 shadow-inner overflow-hidden">
+                    
+                    {/* Interactive 3D Book Area */}
+                    <div className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative min-h-[360px]">
+                      
+                      {/* Page turning controls overlays */}
+                      <button
+                        onClick={handlePrev3D}
+                        disabled={(isMobile ? mobilePageIndex === 0 : currentSpread === 0) || isFlipping}
+                        className="absolute left-1 sm:left-4 z-40 p-2 sm:p-3 bg-surface/80 hover:bg-surface border border-black/10 dark:border-white/10 rounded-full text-text-main shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+                        aria-label="Turn page left"
                       >
-                        {/* Corner laboratory style grids or aesthetic lines for academic rigor */}
-                        <div className="absolute top-2 left-2 text-[8px] font-mono text-text-muted/20">ForenClue-Doc-[{resource.id}]</div>
-                        <div className="absolute top-2 right-2 text-[8px] font-mono text-text-muted/40">Lab Copy • SECURE</div>
+                        <ChevronLeft className="w-5 h-5 text-warning" />
+                      </button>
 
-                        {/* Paper Top margin header */}
-                        <div className="border-b border-black/5 dark:border-white/5 pb-3 flex justify-between items-center bg-transparent shrink-0">
-                          <span className="text-[10px] font-bold tracking-widest uppercase text-warning opacity-80 font-mono">
-                            {docData.chapters[selectedChapter].title}
-                          </span>
-                          <span className="text-[9px] font-mono text-text-muted/60">
-                            Page {currentPage + 1}/{activePages.length}
-                          </span>
+                      <button
+                        onClick={handleNext3D}
+                        disabled={(isMobile ? mobilePageIndex === totalPagesCount - 1 : currentSpread === totalSpreadsCount - 1) || isFlipping}
+                        className="absolute right-1 sm:right-4 z-40 p-2 sm:p-3 bg-surface/80 hover:bg-surface border border-black/10 dark:border-white/10 rounded-full text-text-main shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+                        aria-label="Turn page right"
+                      >
+                        <ChevronRight className="w-5 h-5 text-warning" />
+                      </button>
+
+                      {/* Actual Book Content Box */}
+                      <div className="w-full max-w-4xl flex items-center justify-center relative select-none">
+                        
+                        {/* Book Container with Perspective */}
+                        <div className={cn(
+                          "relative w-full transition-all duration-500",
+                          isMobile ? "max-w-[340px] aspect-[1/1.4]" : "max-w-[780px] aspect-[1.4/1]"
+                        )}>
+                          
+                          {/* Realistic physical shadow under the book */}
+                          <div className="absolute -inset-1 sm:-inset-2 bg-black/30 dark:bg-black/65 blur-2xl rounded-3xl pointer-events-none" />
+
+                          <AnimatePresence mode="wait">
+                            {isMobile ? (
+                              /* Mobile Single Page View */
+                              <motion.div
+                                key={`mobile-page-${mobilePageIndex}`}
+                                initial={{ opacity: 0, x: flipDirection === 'next' ? 60 : -60, rotateY: flipDirection === 'next' ? -15 : 15 }}
+                                animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                                exit={{ opacity: 0, x: flipDirection === 'next' ? -60 : 60, rotateY: flipDirection === 'next' ? 15 : -15 }}
+                                transition={{ duration: 0.35, ease: "easeInOut" }}
+                                style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
+                                className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative"
+                              >
+                                {/* Paper shade effect */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-black/5 pointer-events-none z-10" />
+                                {mobilePageIndex === 0 ? renderCoverPage(false) :
+                                 mobilePageIndex === 1 ? (
+                                   <div className={cn("w-full h-full p-6 sm:p-8 overflow-y-auto", 
+                                     theme === 'light' ? 'bg-white text-text-main' : theme === 'sepia' ? 'bg-[#f4ecd8] text-[#4a3319]' : 'bg-[#0b1329] text-[#e2e8f0]'
+                                   )}>
+                                     {renderTOCPage()}
+                                   </div>
+                                 ) :
+                                 mobilePageIndex === totalPagesCount - 1 ? renderCoverPage(true) : (
+                                   <div className={cn("w-full h-full", 
+                                     theme === 'light' ? 'bg-white text-text-main' : theme === 'sepia' ? 'bg-[#f4ecd8] text-[#4a3319]' : 'bg-[#0b1329] text-[#e2e8f0]'
+                                   )}>
+                                     {renderContentPage(pages3D[mobilePageIndex], 'right')}
+                                   </div>
+                                 )}
+                              </motion.div>
+                            ) : (
+                              /* Desktop Double Page Spread View */
+                              <div className="w-full h-full flex relative select-text">
+                                
+                                {/* Physical stacked pages border effect to simulate thickness */}
+                                <div className="absolute top-1 bottom-1 -left-1 w-1 bg-zinc-400/30 rounded-l shadow" />
+                                <div className="absolute top-1 bottom-1 -right-1 w-1 bg-zinc-400/30 rounded-r shadow" />
+                                
+                                {/* Spine Center Joint Gutter */}
+                                <div className="absolute left-1/2 top-0 bottom-0 w-[12px] -translate-x-1/2 bg-gradient-to-r from-black/25 via-black/10 to-black/25 z-30 pointer-events-none" />
+
+                                {/* Table Spine Metallic Strip */}
+                                <div className="absolute left-1/2 top-0 bottom-0 w-[4px] -translate-x-1/2 bg-zinc-800/40 dark:bg-zinc-900/50 z-30 pointer-events-none" />
+
+                                {currentSpread === 0 ? (
+                                  /* Front Cover - Centered */
+                                  <div className="w-1/2 mx-auto h-full relative shadow-2xl z-20">
+                                    {renderCoverPage(false)}
+                                  </div>
+                                ) : currentSpread === totalSpreadsCount - 1 ? (
+                                  /* Back Cover - Centered */
+                                  <div className="w-1/2 mx-auto h-full relative shadow-2xl z-20">
+                                    {renderCoverPage(true)}
+                                  </div>
+                                ) : (
+                                  /* Standard Open Double Spread */
+                                  <>
+                                    {/* Left Hand Page */}
+                                    <div className={cn(
+                                      "w-1/2 h-full rounded-l-2xl shadow-xl relative overflow-hidden transition-all duration-300",
+                                      theme === 'light' && "bg-[#ffffff] text-[#0f172a] border-r border-[#e2e8f0]",
+                                      theme === 'sepia' && "bg-[#f4ecd8] text-[#4a3319] border-r border-[#e4d4b2]",
+                                      theme === 'dark' && "bg-[#0b1329] text-[#e2e8f0] border-r border-white/5"
+                                    )}>
+                                      {pages3D[currentSpread * 2 - 1]?.type === 'toc' ? renderTOCPage() : renderContentPage(pages3D[currentSpread * 2 - 1], 'left')}
+                                    </div>
+
+                                    {/* Right Hand Page */}
+                                    <div className={cn(
+                                      "w-1/2 h-full rounded-r-2xl shadow-xl relative overflow-hidden transition-all duration-300",
+                                      theme === 'light' && "bg-[#ffffff] text-[#0f172a] border-l border-[#e2e8f0]",
+                                      theme === 'sepia' && "bg-[#f4ecd8] text-[#4a3319] border-l border-[#e4d4b2]",
+                                      theme === 'dark' && "bg-[#0b1329] text-[#e2e8f0] border-l border-white/5"
+                                    )}>
+                                      {pages3D[currentSpread * 2] ? (
+                                        pages3D[currentSpread * 2].type === 'cover' && (pages3D[currentSpread * 2] as any).isBack ? renderCoverPage(true) :
+                                        renderContentPage(pages3D[currentSpread * 2], 'right')
+                                      ) : (
+                                        <div className="w-full h-full bg-[#f4f4f5] dark:bg-[#090d16]" />
+                                      )}
+                                    </div>
+
+                                    {/* Page Turn Overlay */}
+                                    {isFlipping && (
+                                      <motion.div
+                                        initial={{ rotateY: flipDirection === 'next' ? 0 : -180, zIndex: 45 }}
+                                        animate={{ rotateY: flipDirection === 'next' ? -180 : 0 }}
+                                        transition={{ duration: 0.55, ease: "easeInOut" }}
+                                        style={{ 
+                                          transformStyle: 'preserve-3d', 
+                                          perspective: 1200,
+                                          left: '50%',
+                                          transformOrigin: 'left center'
+                                        }}
+                                        className={cn(
+                                          "absolute top-0 w-1/2 h-full shadow-2xl pointer-events-none rounded-r-2xl overflow-hidden border-l border-black/15",
+                                          theme === 'light' && "bg-white text-text-main border-black/5",
+                                          theme === 'sepia' && "bg-[#f4ecd8] text-[#4a3319] border-black/5",
+                                          theme === 'dark' && "bg-[#0b1329] text-[#e2e8f0] border-white/5"
+                                        )}
+                                      >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-black/10 pointer-events-none" />
+                                        {flipDirection === 'next' ? (
+                                          renderContentPage(pages3D[currentSpread * 2], 'right')
+                                        ) : (
+                                          renderContentPage(pages3D[currentSpread * 2 - 1], 'left')
+                                        )}
+                                      </motion.div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </AnimatePresence>
+
                         </div>
+                      </div>
 
-                        {/* Actual page body text block */}
-                        <div className="flex-1 my-6 text-[11px] sm:text-[13px] leading-relaxed font-mono whitespace-pre-wrap flex flex-col gap-4 overflow-y-auto pr-1">
-                          {highlightSearchMatches(activePages[currentPage], searchWord)}
-                        </div>
-
-                        {/* Paper Bottom footer */}
-                        <div className="border-t border-black/5 dark:border-white/5 pt-3 flex justify-between items-center text-[9px] text-text-muted/65 font-mono shrink-0">
-                          <span>ForenClue E-Library Verification Platform</span>
-                          <span>{currentPage + 1 === activePages.length && selectedChapter + 1 === docData.chapters.length ? "End of File" : "Draft Reading"}</span>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Navigation in footer: Prev / Next page */}
-                  <div className="flex items-center justify-between mt-4 shrink-0 px-2">
-                    <button 
-                      onClick={prevPage}
-                      disabled={selectedChapter === 0 && currentPage === 0}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-xs font-bold text-text-main transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Previous
-                    </button>
-
-                    <div className="text-xs font-semibold text-text-muted">
-                      Chapter {selectedChapter + 1} of {docData.chapters.length} &bull; Page {currentPage + 1}/{activePages.length}
                     </div>
 
-                    <button 
-                      onClick={nextPage}
-                      disabled={selectedChapter === docData.chapters.length - 1 && currentPage === activePages.length - 1}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-xs font-bold text-text-main transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                    >
-                      Next <ChevronRight className="w-4 h-4" />
-                    </button>
+                    {/* Tactile navigation page index bar */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between w-full mt-4 gap-2.5 px-3 select-none">
+                      <div className="text-[10px] font-mono text-text-muted bg-surface border border-black/10 dark:border-white/10 rounded-lg px-2.5 py-1 flex items-center gap-1">
+                        <span className="font-bold text-warning uppercase">Spread Style:</span>
+                        <span>{isMobile ? "Single Handy Page" : "3D Dual-Page Spreads"}</span>
+                      </div>
+
+                      <div className="text-xs font-bold text-text-main font-mono">
+                        {isMobile ? (
+                          <span>Page {mobilePageIndex + 1} of {totalPagesCount}</span>
+                        ) : (
+                          <span>Spread {currentSpread + 1} of {totalSpreadsCount}</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={handlePrev3D}
+                          disabled={(isMobile ? mobilePageIndex === 0 : currentSpread === 0) || isFlipping}
+                          className="px-3.5 py-1.5 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-[10px] font-extrabold uppercase tracking-widest text-text-muted hover:text-text-main transition-colors disabled:opacity-40 cursor-pointer"
+                        >
+                          Prev
+                        </button>
+                        <button
+                          onClick={handleNext3D}
+                          disabled={(isMobile ? mobilePageIndex === totalPagesCount - 1 : currentSpread === totalSpreadsCount - 1) || isFlipping}
+                          className="px-3.5 py-1.5 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-[10px] font-extrabold uppercase tracking-widest text-text-muted hover:text-text-main transition-colors disabled:opacity-40 cursor-pointer"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </>
               )}
