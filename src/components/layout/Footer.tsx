@@ -4,7 +4,7 @@ import { Logo } from '@/components/ui/Logo';
 
 export function Footer() {
   return (
-    <footer className="bg-crust border-t border-black/10 dark:border-white/10 pt-16 pb-8">
+    <footer className="print:hidden bg-crust border-t border-black/10 dark:border-white/10 pt-16 pb-8">
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         

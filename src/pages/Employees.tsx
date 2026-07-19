@@ -129,7 +129,7 @@ export default function Employees() {
   };
 
   return (
-    <div className="min-h-[85vh] bg-base pb-24 relative overflow-hidden text-text-main print:bg-white print:pb-0 print:text-black">
+    <div className="min-h-[85vh] bg-base pb-24 relative overflow-hidden text-text-main print:bg-white print:pb-0">
       <SEO 
         title={employee ? `Verify Employee: ${employee.fullName}` : "Official Employee Verification"}
         description={employee 
@@ -339,7 +339,7 @@ export default function Employees() {
 
                       {/* 3D Wrapper */}
                       <div 
-                        className="w-full max-w-[420px] h-[580px] cursor-pointer print:h-auto select-none"
+                        className="w-full max-w-[420px] h-[580px] cursor-pointer select-none print:max-w-none print:w-auto print:h-auto print:flex print:flex-col print:items-center print:gap-8"
                         onClick={() => setIsFlipped(!isFlipped)}
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
@@ -347,7 +347,7 @@ export default function Employees() {
                         style={{ perspective: '1200px' }}
                       >
                         <div 
-                          className="w-full h-full relative print:transform-none rounded-2xl"
+                          className="w-full h-full relative print:!transform-none rounded-2xl print:flex print:flex-col print:gap-8 print:items-center"
                           style={{ 
                             transformStyle: 'preserve-3d',
                             WebkitTransformStyle: 'preserve-3d',
@@ -363,7 +363,7 @@ export default function Employees() {
                           
                           {/* FRONT OF THE ID CARD */}
                           <div 
-                            className={`absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-surface to-crust border-2 ${isHovered ? 'border-warning/65 shadow-[inset_0_0_15px_rgba(251,191,36,0.15)]' : 'border-warning/35'} transition-all duration-300 p-6 flex flex-col justify-between shadow-2xl overflow-hidden select-none print:static print:h-auto print:border-black print:text-black`}
+                            className={`absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-surface to-crust border-2 ${isHovered ? 'border-warning/65 shadow-[inset_0_0_15px_rgba(251,191,36,0.15)]' : 'border-warning/35'} transition-all duration-300 p-6 flex flex-col justify-between shadow-2xl overflow-hidden select-none print:!transform-none print:static print:w-[420px] print:h-[580px] print:shrink-0`}
                             style={{ 
                               backfaceVisibility: 'hidden', 
                               WebkitBackfaceVisibility: 'hidden',
@@ -416,7 +416,7 @@ export default function Employees() {
                             {/* Card Header */}
                             <div className="flex justify-between items-start border-b border-warning/20 pb-4 relative z-10">
                               <div>
-                                <span className="font-heading font-black text-lg tracking-tight text-text-main print:text-black">
+                                <span className="font-heading font-black text-lg tracking-tight text-text-main">
                                   FOREN<span className="text-warning">CLUE</span>
                                 </span>
                                 <span className="block text-[8px] text-text-muted uppercase tracking-widest font-mono font-bold mt-0.5">
@@ -424,7 +424,7 @@ export default function Employees() {
                                 </span>
                               </div>
                               <div className="flex flex-col items-end">
-                                <span className="text-[7px] font-bold font-mono text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider print:border-black">
+                                <span className="text-[7px] font-bold font-mono text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
                                   SECURE ID
                                 </span>
                                 <span className="text-[6px] text-text-muted font-mono uppercase tracking-widest mt-1">
@@ -458,7 +458,7 @@ export default function Employees() {
 
                               {/* Identity Titles */}
                               <div>
-                                <h3 className="text-xl font-heading font-black tracking-tight text-text-main uppercase print:text-black">
+                                <h3 className="text-xl font-heading font-black tracking-tight text-text-main uppercase">
                                   {employee.fullName}
                                 </h3>
                                 <p className="text-xs font-mono font-bold text-warning uppercase tracking-wide mt-1">
@@ -470,7 +470,7 @@ export default function Employees() {
                               </div>
 
                               {/* Microchip graphic and Clearance Level */}
-                              <div className="w-full flex justify-between items-center bg-base/50 border border-black/10 dark:border-white/5 p-2 px-3 rounded-xl mt-2 print:border-black">
+                              <div className="w-full flex justify-between items-center bg-base/50 border border-black/10 dark:border-white/5 p-2 px-3 rounded-xl mt-2">
                                 <div className="flex items-center gap-2">
                                   {employee.clearanceLevel?.includes('Level 3') ? (
                                     <svg className="w-7 h-7 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -495,7 +495,7 @@ export default function Employees() {
                                   )}
                                   <div className="text-left">
                                     <span className="block text-[6px] text-text-muted font-mono uppercase">SECURITY LEVEL</span>
-                                    <span className="text-[9px] font-mono font-black text-text-main print:text-black uppercase">
+                                    <span className="text-[9px] font-mono font-black text-text-main uppercase">
                                       {employee.clearanceLevel || 'Level 1 - Employee'}
                                     </span>
                                   </div>
@@ -522,7 +522,7 @@ export default function Employees() {
                                   {employee.employeeId}
                                 </span>
                                 <span className="block text-[6px] text-text-muted font-mono uppercase mt-1">VALIDITY</span>
-                                <span className="text-[8px] font-mono font-bold text-text-main print:text-black">
+                                <span className="text-[8px] font-mono font-bold text-text-main">
                                   {['tejas tapse', 'mrunmayee bodhe', 'ayush gaikwad'].includes(employee.fullName.toLowerCase()) ? 'N/A' : `THRU ${employee.expiryDate}`}
                                 </span>
                               </div>
@@ -541,7 +541,7 @@ export default function Employees() {
 
                           {/* BACK OF THE ID CARD */}
                           <div 
-                            className={`absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-b from-neutral-950 via-zinc-900 to-neutral-950 border-2 ${isHovered ? 'border-warning/65 shadow-[inset_0_0_15px_rgba(251,191,36,0.15)]' : 'border-warning/40'} transition-all duration-300 p-6 pt-16 flex flex-col justify-between shadow-2xl overflow-hidden select-none print:hidden`}
+                            className={`absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-b from-neutral-950 via-zinc-900 to-neutral-950 border-2 ${isHovered ? 'border-warning/65 shadow-[inset_0_0_15px_rgba(251,191,36,0.15)]' : 'border-warning/40'} transition-all duration-300 p-6 pt-16 flex flex-col justify-between shadow-2xl overflow-hidden select-none print:static print:w-[420px] print:h-[580px] print:shrink-0 print:!transform-none`}
                             style={{ 
                               backfaceVisibility: 'hidden', 
                               WebkitBackfaceVisibility: 'hidden',
