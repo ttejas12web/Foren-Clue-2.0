@@ -414,7 +414,7 @@ export default function Employees() {
                             />
                             
                             {/* Card Header */}
-                            <div className="flex justify-between items-start border-b border-warning/20 pb-4 relative z-10">
+                            <div className="flex justify-between items-start border-b border-warning/20 pb-4 relative z-40">
                               <div>
                                 <span className="font-heading font-black text-lg tracking-tight text-text-main">
                                   FOREN<span className="text-warning">CLUE</span>
@@ -434,7 +434,7 @@ export default function Employees() {
                             </div>
 
                             {/* Card Body - Photo & Main details */}
-                            <div className="my-auto flex flex-col items-center text-center gap-4 relative z-10">
+                            <div className="my-auto flex flex-col items-center text-center gap-4 relative z-40">
                               {/* Photo slot */}
                               <div className="relative">
                                 <div className="w-28 h-28 rounded-xl border-2 border-warning/40 overflow-hidden bg-base/50 p-1 shadow-lg shadow-warning/5">
@@ -515,7 +515,7 @@ export default function Employees() {
                             </div>
 
                             {/* Card Footer - Dynamic QR and ID Code */}
-                            <div className="border-t border-warning/10 pt-4 flex justify-between items-end relative z-10">
+                            <div className="border-t border-warning/10 pt-4 flex justify-between items-end relative z-40">
                               <div className="text-left space-y-1">
                                 <span className="block text-[6px] text-text-muted font-mono uppercase">EMPLOYEE ID</span>
                                 <span className="text-xs font-mono font-black text-warning uppercase tracking-widest">
@@ -627,7 +627,7 @@ export default function Employees() {
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#ffbe0b_1px,transparent_1px)] bg-[size:16px_16px] z-0"></div>
                             
                             {/* Card Header Back */}
-                            <div className="border-b border-warning/20 pb-3 flex justify-between items-center relative z-10 mt-1">
+                            <div className="border-b border-warning/20 pb-3 flex justify-between items-center relative z-40 mt-1">
                               <div>
                                 <span className="text-[10px] font-heading font-black tracking-widest text-warning uppercase">
                                   SYSTEM VERIFICATION CLAUSE
@@ -640,7 +640,7 @@ export default function Employees() {
                             </div>
 
                             {/* Card Body Back */}
-                            <div className="my-auto space-y-3.5 text-left relative z-10">
+                            <div className="my-auto space-y-3.5 text-left relative z-40">
                               {/* Metadata list */}
                               <div className="grid grid-cols-2 gap-2 font-mono text-xs">
                                 <div className="bg-neutral-950/50 border border-white/5 rounded-lg p-2 flex flex-col justify-between">
@@ -711,7 +711,7 @@ export default function Employees() {
                             </div>
 
                             {/* Card Footer Back - Barcode and Signatures */}
-                            <div className="border-t border-warning/15 pt-3 flex justify-between items-center relative z-10">
+                            <div className="border-t border-warning/15 pt-3 flex justify-between items-center relative z-40">
                               {/* Procedural Vector Barcode */}
                               <div className="bg-white p-1.5 rounded-md shadow-md border border-neutral-800 flex flex-col gap-1 items-center">
                                 <svg className="w-28 h-6 text-black stroke-current" viewBox="0 0 100 30" preserveAspectRatio="none">
@@ -751,16 +751,16 @@ export default function Employees() {
                                 </div>
                                 
                                 {/* Procedural CEO Signature Line */}
-                                <svg className="w-20 h-8 text-amber-400 opacity-95 drop-shadow-[0_0_1px_rgba(245,158,11,0.5)] relative z-10" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg className="w-20 h-8 text-amber-400 opacity-95 drop-shadow-[0_0_1px_rgba(245,158,11,0.5)] relative z-40" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                                   {/* Elegant cursive "Mrunmayee Bodhe" flow */}
                                   <path d="M8,26 C15,3 18,30 24,18 C28,11 31,27 35,21 C39,13 42,25 46,17 C50,11 53,23 58,19 C66,13 72,11 82,14 C87,15 78,23 90,19" />
                                   <path d="M10,24 Q45,29 80,22" stroke="currentColor" strokeWidth="0.8" opacity="0.6" />
                                   <path d="M15,22 L75,18" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 2" opacity="0.3" />
                                 </svg>
-                                <span className="text-[5.5px] font-mono text-warning font-black uppercase tracking-widest block mt-0.5 relative z-10">
+                                <span className="text-[5.5px] font-mono text-warning font-black uppercase tracking-widest block mt-0.5 relative z-40">
                                   MRUNMAYEE BODHE
                                 </span>
-                                <span className="text-[4.5px] font-mono text-text-muted uppercase tracking-widest block relative z-10 leading-none">
+                                <span className="text-[4.5px] font-mono text-text-muted uppercase tracking-widest block relative z-40 leading-none">
                                   CHIEF EXECUTIVE OFFICER
                                 </span>
                               </div>
