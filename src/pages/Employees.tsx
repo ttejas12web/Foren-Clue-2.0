@@ -350,6 +350,7 @@ export default function Employees() {
                           className="w-full h-full relative print:transform-none rounded-2xl"
                           style={{ 
                             transformStyle: 'preserve-3d',
+                            WebkitTransformStyle: 'preserve-3d',
                             transform: `rotateY(${isFlipped ? 180 - rotateY : rotateY}deg) rotateX(${isFlipped ? -rotateX : rotateX}deg) scale(${isHovered ? 1.03 : 1})`,
                             transition: isHovered 
                               ? 'transform 0.08s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease' 
@@ -363,7 +364,13 @@ export default function Employees() {
                           {/* FRONT OF THE ID CARD */}
                           <div 
                             className={`absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-surface to-crust border-2 ${isHovered ? 'border-warning/65 shadow-[inset_0_0_15px_rgba(251,191,36,0.15)]' : 'border-warning/35'} transition-all duration-300 p-6 flex flex-col justify-between shadow-2xl overflow-hidden select-none print:static print:h-auto print:border-black print:text-black`}
-                            style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                            style={{ 
+                              backfaceVisibility: 'hidden', 
+                              WebkitBackfaceVisibility: 'hidden',
+                              transformStyle: 'preserve-3d',
+                              WebkitTransformStyle: 'preserve-3d',
+                              transform: 'rotateY(0deg) translateZ(1px)'
+                            }}
                           >
                             {/* Metallic Inner Border Bevels */}
                             <div className="absolute inset-[1px] rounded-[15px] border border-white/10 pointer-events-none z-25" />
@@ -376,20 +383,19 @@ export default function Employees() {
                             <div 
                               className="absolute inset-0 pointer-events-none z-30 transition-opacity duration-500 overflow-hidden rounded-2xl"
                               style={{
-                                opacity: isHovered ? 0.35 : 0.12,
+                                opacity: isHovered ? 0.25 : 0.08,
                                 background: `linear-gradient(
                                   135deg,
                                   rgba(255, 255, 255, 0) 0%,
                                   rgba(255, 255, 255, 0) 30%,
-                                  rgba(255, 215, 0, 0.25) 42%,
-                                  rgba(255, 255, 255, 0.8) 50%,
-                                  rgba(255, 215, 0, 0.25) 58%,
-                                  rgba(0, 229, 255, 0.15) 65%,
+                                  rgba(255, 215, 0, 0.4) 42%,
+                                  rgba(255, 255, 255, 0.9) 50%,
+                                  rgba(255, 215, 0, 0.4) 58%,
+                                  rgba(0, 229, 255, 0.3) 65%,
                                   rgba(255, 255, 255, 0) 75%,
                                   rgba(255, 255, 255, 0) 100%
                                 )`,
                                 transform: `translateX(${(rotateY / 12) * 160}px) translateY(${(-rotateX / 12) * 160}px) scale(2.2)`,
-                                mixBlendMode: 'color-dodge',
                                 transition: isHovered ? 'transform 0.08s ease-out, opacity 0.3s ease' : 'transform 0.8s ease-out, opacity 0.5s ease',
                               }}
                             />
@@ -403,7 +409,7 @@ export default function Employees() {
                                                   linear-gradient(45deg, transparent 75%, #000 75%), 
                                                   linear-gradient(-45deg, transparent 75%, #000 75%)`,
                                 backgroundSize: '4px 4px',
-                                mixBlendMode: 'overlay',
+                                opacity: 0.1,
                               }}
                             />
                             
@@ -539,7 +545,9 @@ export default function Employees() {
                             style={{ 
                               backfaceVisibility: 'hidden', 
                               WebkitBackfaceVisibility: 'hidden',
-                              transform: 'rotateY(180deg)'
+                              transformStyle: 'preserve-3d',
+                              WebkitTransformStyle: 'preserve-3d',
+                              transform: 'rotateY(180deg) translateZ(1px)'
                             }}
                           >
                             {/* Metallic Inner Border Bevels (Back) */}
@@ -549,20 +557,19 @@ export default function Employees() {
                             <div 
                               className="absolute inset-0 pointer-events-none z-30 transition-opacity duration-500 overflow-hidden rounded-2xl"
                               style={{
-                                opacity: isHovered ? 0.35 : 0.12,
+                                opacity: isHovered ? 0.25 : 0.08,
                                 background: `linear-gradient(
                                   135deg,
                                   rgba(255, 255, 255, 0) 0%,
                                   rgba(255, 255, 255, 0) 30%,
-                                  rgba(255, 215, 0, 0.25) 42%,
-                                  rgba(255, 255, 255, 0.8) 50%,
-                                  rgba(255, 215, 0, 0.25) 58%,
-                                  rgba(0, 229, 255, 0.15) 65%,
+                                  rgba(255, 215, 0, 0.4) 42%,
+                                  rgba(255, 255, 255, 0.9) 50%,
+                                  rgba(255, 215, 0, 0.4) 58%,
+                                  rgba(0, 229, 255, 0.3) 65%,
                                   rgba(255, 255, 255, 0) 75%,
                                   rgba(255, 255, 255, 0) 100%
                                 )`,
                                 transform: `translateX(${(-rotateY / 12) * 160}px) translateY(${(-rotateX / 12) * 160}px) scale(2.2)`,
-                                mixBlendMode: 'color-dodge',
                                 transition: isHovered ? 'transform 0.08s ease-out, opacity 0.3s ease' : 'transform 0.8s ease-out, opacity 0.5s ease',
                               }}
                             />
@@ -576,7 +583,7 @@ export default function Employees() {
                                                   linear-gradient(45deg, transparent 75%, #000 75%), 
                                                   linear-gradient(-45deg, transparent 75%, #000 75%)`,
                                 backgroundSize: '4px 4px',
-                                mixBlendMode: 'overlay',
+                                opacity: 0.1,
                               }}
                             />
 
