@@ -6,12 +6,14 @@ import {
   Lock, Mail, Key, LayoutGrid, BookOpen, Plus, Trash2, 
   Settings, CheckCircle2, AlertCircle, FileText, Upload, 
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
-  Globe, Edit3, MessageSquare, Radio, Award
+  Globe, Edit3, MessageSquare, Radio, Award,
+  Users, RefreshCw, ShieldCheck, Database, Fingerprint
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ResilientImage, uploadFileResilient } from '@/lib/localFileStore';
+import { cn } from '@/lib/utils';
 
 export default function Admin() {
   const { user, isAdmin, adminLogin, logout } = useAuth();
@@ -23,8 +25,8 @@ export default function Admin() {
   const [authError, setAuthError] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
 
-   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates'>('overview');
+   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees'>('overview');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
@@ -133,6 +135,218 @@ export default function Admin() {
   const [certImageSuccessText, setCertImageSuccessText] = useState('');
   const [certPdfErrorText, setCertPdfErrorText] = useState('');
   const [certPdfSuccessText, setCertPdfSuccessText] = useState('');
+
+  // Employees Management State
+  const [adminEmployees, setAdminEmployees] = useState<any[]>([]);
+  const [employeeLoading, setEmployeeLoading] = useState(false);
+  const [isEditingEmployee, setIsEditingEmployee] = useState(false);
+  const [editEmployeeId, setEditEmployeeId] = useState<string | null>(null);
+  
+  const [employeeFormData, setEmployeeFormData] = useState({
+    employeeId: '',
+    fullName: '',
+    position: '',
+    department: 'Cybersecurity & Digital Forensics',
+    joiningDate: new Date().toISOString().split('T')[0],
+    expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
+    status: 'Active' as 'Active' | 'Suspended' | 'Expired',
+    email: '',
+    phone: '',
+    skills: '',
+    imageUrl: '',
+    clearanceLevel: 'Level 1 - Employee'
+  });
+
+  // Seed Demo Employees
+  const seedDemoEmployees = async () => {
+    setEmployeeLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
+    try {
+      const demoEmployees = [
+        {
+          employeeId: 'FC-EMP-102',
+          fullName: 'Ashutosh Singh',
+          position: 'Cyber Forensic Expert',
+          department: 'Cybersecurity & Digital Forensics',
+          joiningDate: '2024-01-12',
+          expiryDate: '2029-01-12',
+          status: 'Active',
+          email: 'ashutosh.forensics@forenclue.com',
+          phone: '+91 99881 22334',
+          skills: ['Incident Response', 'Malware Reverse Engineering', 'State Evidence Preservation'],
+          imageUrl: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjtLXAx3JA_GV_s7QEAbL8YK43XS7e-5FrJngYv7szTZAs192ppvSo4zXQxX_0sNHnoDZ-rirNR8U6BGTwSPK9kAYRdR6YWVMLUCFLvs5Cbwy81gDHxep6XWIPhdynzKvZUMnai51-QoDEPYvkn0ObkO7K33ImRdWP3yPhV0FFkEA-zMP85DXlT3EOtoCE/s1024/1783083591880.png',
+          clearanceLevel: 'Level 3 - Member',
+          checksum: '8d4f20e98ab776c5dcd890a21cf3e6393b9d0b04a87c126d4efb7936746ef702',
+          createdAt: new Date().toISOString()
+        },
+        {
+          employeeId: 'FC-EMP-304',
+          fullName: 'Ayush Gaikwad',
+          position: 'Founder & Managing Director',
+          department: 'Business Development & Partnerships',
+          joiningDate: '2024-01-01',
+          expiryDate: '2034-01-01',
+          status: 'Active',
+          email: 'ayushgaikwad7050@gmail.com',
+          phone: '+91 88776 65544',
+          skills: ['Cyber Security Architecture', 'Digital Investigations', 'Threat Intelligence & SOC'],
+          imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+          clearanceLevel: 'Level 3 - Member',
+          checksum: '1a5e30c9df76b5c00a9d80cf20efd6394c8e7bd7c9ab1264cde89bf98e09f531',
+          createdAt: new Date().toISOString()
+        },
+        {
+          employeeId: 'FC-EMP-519',
+          fullName: 'Tejas Tapse',
+          position: 'Senior Security Analyst & Instructor',
+          department: 'Cybersecurity & Digital Forensics',
+          joiningDate: '2024-02-15',
+          expiryDate: '2029-02-15',
+          status: 'Active',
+          email: 'tejas.tapse@forenclue.com',
+          phone: '+91 77665 44332',
+          skills: ['Network Forensics', 'Mobile Malware Triaging', 'Security Operations'],
+          imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150',
+          clearanceLevel: 'Level 3 - Member',
+          checksum: 'c2e8f1920acbb83e748d1b1dfcf9a228394b92c4f1c7bf9e8a93e3d9fdf196d4',
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      for (const emp of demoEmployees) {
+        const safeId = emp.employeeId.toUpperCase().trim().replace(/[\/\s]/g, '_');
+        await setDoc(doc(db, 'employees', safeId), emp);
+      }
+      
+      setSuccessMsg('Sample employees seeded successfully!');
+      fetchCollections();
+    } catch (err: any) {
+      console.error('Error seeding demo data:', err);
+      setErrMsg(`Failed to seed demo employees: ${err.message}`);
+    } finally {
+      setEmployeeLoading(false);
+    }
+  };
+
+  // Submit Employee Profile (Create or Edit)
+  const handleEmployeeFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employeeFormData.employeeId.trim() || !employeeFormData.fullName.trim()) {
+      setErrMsg('Employee ID and Full Name are required.');
+      return;
+    }
+
+    setEmployeeLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
+
+    const formattedId = employeeFormData.employeeId.toUpperCase().trim();
+    const safeId = formattedId.replace(/[\/\s]/g, '_');
+
+    // Split skills by commas and trim whitespace
+    const skillsArray = employeeFormData.skills
+      ? employeeFormData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0)
+      : [];
+
+    // Mock hash generation if new
+    const finalChecksum = isEditingEmployee && editEmployeeId
+      ? (adminEmployees.find(emp => emp.employeeId === editEmployeeId)?.checksum || Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join(''))
+      : Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
+
+    const payload: any = {
+      employeeId: formattedId,
+      fullName: employeeFormData.fullName.trim(),
+      position: employeeFormData.position.trim(),
+      department: employeeFormData.department,
+      joiningDate: employeeFormData.joiningDate,
+      expiryDate: employeeFormData.expiryDate,
+      status: employeeFormData.status,
+      skills: skillsArray,
+      clearanceLevel: employeeFormData.clearanceLevel,
+      checksum: finalChecksum,
+      createdAt: isEditingEmployee && editEmployeeId
+        ? (adminEmployees.find(emp => emp.employeeId === editEmployeeId)?.createdAt || new Date().toISOString())
+        : new Date().toISOString()
+    };
+
+    if (employeeFormData.email.trim()) {
+      payload.email = employeeFormData.email.trim();
+    }
+    if (employeeFormData.phone.trim()) {
+      payload.phone = employeeFormData.phone.trim();
+    }
+    if (employeeFormData.imageUrl.trim()) {
+      payload.imageUrl = employeeFormData.imageUrl.trim();
+    }
+
+    try {
+      await setDoc(doc(db, 'employees', safeId), payload);
+      setSuccessMsg(isEditingEmployee ? 'Employee profile updated successfully!' : 'New employee profile registered successfully!');
+      
+      // Reset form
+      setEmployeeFormData({
+        employeeId: '',
+        fullName: '',
+        position: '',
+        department: 'Cybersecurity & Digital Forensics',
+        joiningDate: new Date().toISOString().split('T')[0],
+        expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
+        status: 'Active',
+        email: '',
+        phone: '',
+        skills: '',
+        imageUrl: '',
+        clearanceLevel: 'Level 1 - Employee'
+      });
+      setIsEditingEmployee(false);
+      setEditEmployeeId(null);
+      fetchCollections();
+    } catch (err: any) {
+      console.error('Error saving employee profile:', err);
+      setErrMsg(`Failed to save record: ${err.message}`);
+    } finally {
+      setEmployeeLoading(false);
+    }
+  };
+
+  const handleEmployeeEditInit = (emp: any) => {
+    setIsEditingEmployee(true);
+    setEditEmployeeId(emp.employeeId);
+    setEmployeeFormData({
+      employeeId: emp.employeeId,
+      fullName: emp.fullName,
+      position: emp.position,
+      department: emp.department,
+      joiningDate: emp.joiningDate,
+      expiryDate: emp.expiryDate,
+      status: emp.status,
+      email: emp.email || '',
+      phone: emp.phone || '',
+      skills: emp.skills ? emp.skills.join(', ') : '',
+      imageUrl: emp.imageUrl || '',
+      clearanceLevel: emp.clearanceLevel || 'Level 1 - Employee'
+    });
+  };
+
+  const handleEmployeeDelete = async (id: string) => {
+    if (!window.confirm(`Are you absolutely sure you want to revoke and delete credentials for Employee ID "${id}"? This action cannot be undone.`)) return;
+
+    setEmployeeLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
+    try {
+      const safeId = id.toUpperCase().trim().replace(/[\/\s]/g, '_');
+      await deleteDoc(doc(db, 'employees', safeId));
+      setSuccessMsg(`Credentials for ${id} have been successfully revoked.`);
+      fetchCollections();
+    } catch (err: any) {
+      console.error('Error deleting record:', err);
+      setErrMsg(`Failed to revoke credentials: ${err.message}`);
+    } finally {
+      setEmployeeLoading(false);
+    }
+  };
 
   // Notifications
   const [successMsg, setSuccessMsg] = useState('');
@@ -257,6 +471,23 @@ export default function Admin() {
       console.error("Error fetching certificates collection:", e);
     } finally {
       setCertificateLoading(false);
+    }
+
+    // 7. Employees
+    setEmployeeLoading(true);
+    try {
+      const empSnap = await getDocs(collection(db, 'employees'));
+      const empList: any[] = [];
+      empSnap.forEach(docSnap => {
+        empList.push(docSnap.data());
+      });
+      empList.sort((a, b) => (a.employeeId || '').localeCompare(b.employeeId || ''));
+      setAdminEmployees(empList);
+    } catch (e) {
+      console.error("Error fetching employees collection:", e);
+      handleFirestoreError(e, OperationType.LIST, 'employees');
+    } finally {
+      setEmployeeLoading(false);
     }
   };
 
@@ -1065,6 +1296,12 @@ export default function Admin() {
                 >
                   <Award size={16} /> Certificates Manager
                 </button>
+                <button 
+                  onClick={() => setActiveTab('employees')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'employees' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <Users size={16} /> Employee Manager
+                </button>
               </div>
 
               {/* Active Control Panel Canvas */}
@@ -1075,7 +1312,7 @@ export default function Admin() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
                       <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Workspace Analytics</h2>
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
                         <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Dynamic Courses</span>
                           <span className="text-3xl font-heading font-black text-warning">{courses.length}</span>
@@ -1092,9 +1329,13 @@ export default function Admin() {
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Customised Copy Keys</span>
                           <span className="text-3xl font-heading font-black text-warning">{copiedTexts.length}</span>
                         </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center col-span-2 sm:col-span-1">
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
                           <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Certificates Issued</span>
                           <span className="text-3xl font-heading font-black text-warning">{certificates.length}</span>
+                        </div>
+                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
+                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Employees Manager</span>
+                          <span className="text-3xl font-heading font-black text-warning">{adminEmployees.length}</span>
                         </div>
                       </div>
                     </div>
@@ -2261,6 +2502,303 @@ export default function Admin() {
                                   title="Delete Certificate"
                                 >
                                   <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'employees' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-heading font-black uppercase tracking-tight flex items-center gap-2">
+                          <Users className="text-warning" /> 
+                          {isEditingEmployee ? 'Edit Employee Identity' : 'Provision New Identity'}
+                        </h2>
+                        {adminEmployees.length === 0 && (
+                          <button
+                            onClick={seedDemoEmployees}
+                            disabled={employeeLoading}
+                            className="px-4 py-2 border border-black/10 dark:border-white/10 text-xs font-bold uppercase rounded-xl transition hover:bg-surface flex items-center gap-2"
+                          >
+                            <RefreshCw size={13} className={employeeLoading ? "animate-spin" : ""} /> Seed Demo Data
+                          </button>
+                        )}
+                      </div>
+
+                      <form onSubmit={handleEmployeeFormSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Employee ID (Must be Unique)</label>
+                            <input 
+                              type="text" 
+                              required 
+                              disabled={isEditingEmployee}
+                              value={employeeFormData.employeeId} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, employeeId: e.target.value.toUpperCase()})} 
+                              placeholder="e.g. FC-EMP-001" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors disabled:opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Full Name</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={employeeFormData.fullName} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, fullName: e.target.value})} 
+                              placeholder="e.g. John Doe" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Position / Role</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={employeeFormData.position} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, position: e.target.value})} 
+                              placeholder="e.g. Cybersecurity Analyst" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Department</label>
+                            <select 
+                              value={employeeFormData.department} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, department: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            >
+                              <option>Forensic Case Studies & Publications</option>
+                              <option>Business Development & Partnerships</option>
+                              <option>Human Resources (HR)</option>
+                              <option>Video Editing & Motion Graphics</option>
+                              <option>Cybersecurity & Digital Forensics</option>
+                              <option>Web Development</option>
+                              <option>Marketing & Public Relations</option>
+                              <option>Events & Operations</option>
+                              <option>Social Media Management</option>
+                              <option>Graphic Design & Branding</option>
+                              <option>Content Writing & Editorial</option>
+                              <option>Admin</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Joining Date</label>
+                            <input 
+                              type="date" 
+                              required 
+                              value={employeeFormData.joiningDate} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, joiningDate: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Valid Until</label>
+                            <input 
+                              type="date" 
+                              required 
+                              value={employeeFormData.expiryDate} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, expiryDate: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Status</label>
+                            <select 
+                              value={employeeFormData.status} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, status: e.target.value as any})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            >
+                              <option value="Active">Active</option>
+                              <option value="Suspended">Suspended</option>
+                              <option value="Expired">Expired</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Security Clearance Level</label>
+                            <select 
+                              value={employeeFormData.clearanceLevel} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, clearanceLevel: e.target.value})} 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            >
+                              <option>Level 1 - Employee</option>
+                              <option>Level 2 - Intern</option>
+                              <option>Level 3 - Member</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Email Address</label>
+                            <input 
+                              type="email" 
+                              value={employeeFormData.email} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, email: e.target.value})} 
+                              placeholder="e.g. name@forenclue.com" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Phone Number</label>
+                            <input 
+                              type="text" 
+                              value={employeeFormData.phone} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, phone: e.target.value})} 
+                              placeholder="e.g. +91 9988776655" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Skills & Specializations (Comma Separated)</label>
+                            <input 
+                              type="text" 
+                              value={employeeFormData.skills} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, skills: e.target.value})} 
+                              placeholder="e.g. Threat Intelligence, Incident Response, Malware Analysis" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Profile Photo URL</label>
+                            <input 
+                              type="text" 
+                              value={employeeFormData.imageUrl} 
+                              onChange={e => setEmployeeFormData({...employeeFormData, imageUrl: e.target.value})} 
+                              placeholder="e.g. https://domain.com/photo.jpg" 
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-2">
+                          {isEditingEmployee && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsEditingEmployee(false);
+                                setEditEmployeeId(null);
+                                setEmployeeFormData({
+                                  employeeId: '',
+                                  fullName: '',
+                                  position: '',
+                                  department: 'Cybersecurity & Digital Forensics',
+                                  joiningDate: new Date().toISOString().split('T')[0],
+                                  expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0],
+                                  status: 'Active',
+                                  email: '',
+                                  phone: '',
+                                  skills: '',
+                                  imageUrl: '',
+                                  clearanceLevel: 'Level 1 - Employee'
+                                });
+                              }}
+                              className="px-4 py-2 border border-black/10 dark:border-white/10 text-xs font-bold uppercase rounded-xl transition hover:bg-surface"
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={employeeLoading}
+                            className="px-6 py-2.5 bg-warning text-crust hover:bg-warning/90 disabled:opacity-50 font-black rounded-xl text-xs uppercase tracking-widest transition flex items-center gap-2"
+                          >
+                            {employeeLoading ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin" />
+                                <span>Processing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck size={13} />
+                                <span>{isEditingEmployee ? 'Update Identity' : 'Provision Identity'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-heading font-black uppercase tracking-tight">Active Directory</h2>
+                        <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 px-3 py-1 rounded-lg flex items-center gap-2">
+                          <Database size={12} className="text-warning" />
+                          <span className="text-[10px] font-mono text-text-muted">Total Identities: {adminEmployees.length}</span>
+                        </div>
+                      </div>
+                      
+                      {employeeLoading && !isEditingEmployee ? (
+                        <div className="flex justify-center items-center py-10 font-mono text-xs text-text-muted gap-2">
+                          <Loader2 size={16} className="animate-spin text-warning" /> Synchronizing directory...
+                        </div>
+                      ) : adminEmployees.length === 0 ? (
+                        <div className="text-center py-12 text-xs text-text-muted font-mono border border-dashed border-black/10 dark:border-white/5 rounded-xl flex flex-col items-center justify-center">
+                          <Users size={32} className="mb-3 opacity-20" />
+                          <p>No identities registered in the network.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {adminEmployees.map((emp) => (
+                            <div 
+                              key={emp.employeeId}
+                              className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-base border border-black/5 dark:border-white/5 rounded-xl gap-4 hover:border-warning/20 transition-all group"
+                            >
+                              <div className="flex items-center gap-4">
+                                {emp.imageUrl ? (
+                                  <img 
+                                    src={emp.imageUrl} 
+                                    alt={emp.fullName}
+                                    className="w-12 h-12 rounded-lg object-cover border border-black/10 dark:border-white/10"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 bg-black/5 dark:bg-white/5 text-text-muted rounded-lg flex items-center justify-center border border-black/10 dark:border-white/10">
+                                    <Users size={20} />
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-sm text-text-main group-hover:text-warning transition-colors uppercase">
+                                      {emp.fullName}
+                                    </h3>
+                                    <span className={cn(
+                                      "text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider",
+                                      emp.status === 'Active' ? "bg-green-500/10 text-green-500" :
+                                      emp.status === 'Suspended' ? "bg-red-500/10 text-red-500" :
+                                      "bg-orange-500/10 text-orange-500"
+                                    )}>
+                                      {emp.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-text-muted font-mono mt-0.5">
+                                    <span className="text-warning">{emp.employeeId}</span> • {emp.position}
+                                  </p>
+                                  <p className="text-[10px] text-text-muted/60 flex items-center gap-1 mt-1 font-mono uppercase">
+                                    <Fingerprint size={10} /> clearance: {emp.clearanceLevel.split(' - ')[0]}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 border-black/5 dark:border-white/5 pt-3 md:pt-0">
+                                <button
+                                  onClick={() => {
+                                    handleEmployeeEditInit(emp);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="p-2 border border-blue-500/10 hover:border-blue-500/30 text-blue-400 bg-blue-400/5 hover:bg-blue-400/10 rounded-lg transition-all flex items-center gap-2 text-xs uppercase font-bold"
+                                  title="Edit Identity"
+                                >
+                                  <Edit3 size={14} /> <span className="md:hidden">Edit</span>
+                                </button>
+                                <button
+                                  onClick={() => handleEmployeeDelete(emp.employeeId)}
+                                  className="p-2 border border-red-500/10 hover:border-red-500/30 text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg transition-all flex items-center gap-2 text-xs uppercase font-bold"
+                                  title="Revoke Credentials"
+                                >
+                                  <Trash2 size={14} /> <span className="md:hidden">Revoke</span>
                                 </button>
                               </div>
                             </div>

@@ -12,7 +12,7 @@ import {
   QrCode, Twitter, Linkedin, Facebook, HelpCircle, Download, Printer, Instagram
 } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { useAuth, checkIsAdmin } from '@/contexts/AuthContext';
+import { useAuth, adminEmails, adminUids } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { CaseEditorModal } from '@/components/ui/CaseEditorModal';
@@ -286,7 +286,7 @@ export default function Cases() {
   const filteredArchive = useMemo(() => {
     const allCases = [...dbCases].filter(c => {
        // Only keep files published by admins
-       if (!c.createdBy || !checkIsAdmin(c.createdBy)) return false;
+       if (!c.createdBy || (!adminEmails.some(e => e.toLowerCase() === c.createdBy!.toLowerCase()) && !adminUids.includes(c.createdBy))) return false;
        // user can see published, or admin can see all
        return c.status !== 'draft' || isAdmin;
     }).sort((a, b) => {

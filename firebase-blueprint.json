@@ -197,9 +197,34 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["certificateNo", "fullName", "courseTitle", "issueDate", "createdAt"]
+    },
+    "Employee": {
+      "title": "Employee Profile",
+      "description": "ForenClue official employee verification and digital ID profile",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "position": { "type": "string" },
+        "department": { "type": "string" },
+        "joiningDate": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Suspended", "Expired"] },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" },
+        "qrCodeUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeId", "fullName", "position", "department", "joiningDate", "expiryDate", "status", "createdAt"]
     }
   },
   "firestore": {
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Publicly verifiable digital employee credentials"
+    },
     "/certificates/{certificateId}": {
       "schema": "Certificate",
       "description": "Publicly verifiable certificates issued by Forenclue"

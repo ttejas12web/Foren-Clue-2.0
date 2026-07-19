@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User as UserIcon, Sun, Moon } from 'lucide-react';
+import { Menu, X, LogOut, User as UserIcon, Sun, Moon, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 
-const navLinks = [
+const mainNavLinks = [
   { name: 'Home', path: '/' },
   { name: 'Community', path: '/community' },
   { name: 'Case Studies', path: '/cases' },
@@ -14,12 +14,13 @@ const navLinks = [
   { name: 'Services', path: '/services' },
   { name: 'E-Library', path: '/ebooks' },
   { name: 'Webinars', path: '/webinar' },
-  { name: 'Certificate', path: '/certificate' },
-  { name: 'About Us', path: '/about' },
 ];
+
+const aboutLink = { name: 'About Us', path: '/about' };
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileVerifyOpen, setIsMobileVerifyOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signInWithGoogle, logout } = useAuth();
@@ -27,6 +28,12 @@ export function Navbar() {
     const saved = localStorage.getItem('theme');
     return saved ? saved !== 'light' : true;
   });
+
+  useEffect(() => {
+    if (location.pathname === '/certificate' || location.pathname === '/employees') {
+      setIsMobileVerifyOpen(true);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (isDark) {
@@ -81,7 +88,7 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {mainNavLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -95,6 +102,56 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
+
+            {/* Verify Dropdown */}
+            <div className="relative group/verify-dropdown">
+              <button
+                className={cn(
+                  "flex items-center gap-1 px-4 py-2 font-medium text-sm transition-colors cursor-default",
+                  location.pathname === '/certificate' || location.pathname === '/employees'
+                    ? "text-warning"
+                    : "text-text-muted hover:text-text-main"
+                )}
+              >
+                Verify
+                <ChevronDown size={14} className="transition-transform duration-200 group-hover/verify-dropdown:rotate-180" />
+              </button>
+
+              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover/verify-dropdown:opacity-100 group-hover/verify-dropdown:visible transition-all duration-200 z-50">
+                <div className="w-40 bg-surface border border-black/10 dark:border-white/10 rounded-md shadow-xl overflow-hidden py-1">
+                  <Link
+                    to="/certificate"
+                    className={cn(
+                      "block px-4 py-2 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
+                      location.pathname === '/certificate' && "text-warning bg-black/5 dark:bg-white/5"
+                    )}
+                  >
+                    Certificate
+                  </Link>
+                  <Link
+                    to="/employees"
+                    className={cn(
+                      "block px-4 py-2 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
+                      location.pathname === '/employees' && "text-warning bg-black/5 dark:bg-white/5"
+                    )}
+                  >
+                    ID Card
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to={aboutLink.path}
+              className={cn(
+                "px-4 py-2 font-medium text-sm transition-colors",
+                location.pathname === aboutLink.path
+                  ? "text-warning"
+                  : "text-text-muted hover:text-text-main"
+              )}
+            >
+              {aboutLink.name}
+            </Link>
             
             <button
               onClick={() => setIsDark(!isDark)}
@@ -177,7 +234,7 @@ export function Navbar() {
             className="md:hidden bg-crust border-b border-black/10 dark:border-white/10 overflow-y-auto max-h-[calc(100dvh-80px)]"
           >
             <div className="px-4 py-4 space-y-1">
-              {navLinks.map((link) => (
+              {mainNavLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
@@ -192,6 +249,71 @@ export function Navbar() {
                   {link.name}
                 </Link>
               ))}
+
+              {/* Verify Dropdown / Accordion on Mobile */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setIsMobileVerifyOpen(!isMobileVerifyOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left",
+                    location.pathname === '/certificate' || location.pathname === '/employees'
+                      ? "text-warning"
+                      : "text-text-muted hover:text-text-main"
+                  )}
+                >
+                  <span>Verify</span>
+                  <ChevronDown size={18} className={cn("transition-transform duration-200", isMobileVerifyOpen && "rotate-180")} />
+                </button>
+                
+                <AnimatePresence initial={false}>
+                  {isMobileVerifyOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pl-4 space-y-1 overflow-hidden"
+                    >
+                      <Link
+                        to="/certificate"
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "block px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
+                          location.pathname === '/certificate'
+                            ? "text-warning bg-black/5 dark:bg-white/5"
+                            : "text-text-muted hover:text-text-main"
+                        )}
+                      >
+                        Certificate
+                      </Link>
+                      <Link
+                        to="/employees"
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "block px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
+                          location.pathname === '/employees'
+                            ? "text-warning bg-black/5 dark:bg-white/5"
+                            : "text-text-muted hover:text-text-main"
+                        )}
+                      >
+                        ID Card
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Link
+                to={aboutLink.path}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "block px-4 py-3 font-medium transition-colors",
+                  location.pathname === aboutLink.path
+                    ? "text-warning"
+                    : "text-text-muted hover:text-text-main"
+                )}
+              >
+                {aboutLink.name}
+              </Link>
               
               {user ? (
                  <div className="mt-4 pt-4 border-t border-black/10 dark:border-white/10">

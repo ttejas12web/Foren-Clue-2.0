@@ -174,6 +174,22 @@ service cloud.firestore {
         && (!('additionalDetails' in data) || data.additionalDetails is string && data.additionalDetails.size() <= 5000);
     }
 
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['employeeId', 'fullName', 'position', 'department', 'joiningDate', 'expiryDate', 'status', 'createdAt'])
+        && data.employeeId is string && data.employeeId.size() <= 100
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.position is string && data.position.size() <= 200
+        && data.department is string && data.department.size() <= 200
+        && data.joiningDate is string && data.joiningDate.size() <= 100
+        && data.expiryDate is string && data.expiryDate.size() <= 100
+        && data.status in ['Active', 'Suspended', 'Expired']
+        && (!('email' in data) || data.email is string && data.email.size() <= 256)
+        && (!('phone' in data) || data.phone is string && data.phone.size() <= 100)
+        && (!('skills' in data) || data.skills is list)
+        && (!('imageUrl' in data) || data.imageUrl is string && data.imageUrl.size() <= 2000)
+        && (!('qrCodeUrl' in data) || data.qrCodeUrl is string && data.qrCodeUrl.size() <= 2000);
+    }
+
     // --- Cases ---
     match /cases/{caseId} {
       allow read: if true;
@@ -220,6 +236,13 @@ service cloud.firestore {
     match /certificates/{certificateId} {
       allow read: if true;
       allow create, update: if isAdminEmail() && isValidCertificate(incoming());
+      allow delete: if isAdminEmail();
+    }
+
+    // --- Employees ---
+    match /employees/{employeeId} {
+      allow read: if true;
+      allow create, update: if isAdminEmail() && isValidEmployee(incoming());
       allow delete: if isAdminEmail();
     }
 

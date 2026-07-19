@@ -34,6 +34,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Admin = lazy(() => import('./pages/Admin'));
 const CertificateVerification = lazy(() => import('./pages/CertificateVerification'));
 const Webinar = lazy(() => import('./pages/Webinar'));
+const Employees = lazy(() => import('./pages/Employees'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -50,7 +51,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -118,6 +119,7 @@ export default function App() {
                     <Route path="/podcast" element={<Podcast />} />
                     <Route path="/certificate" element={<CertificateVerification />} />
                     <Route path="/webinar" element={<Webinar />} />
+                    <Route path="/employees" element={<Employees />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

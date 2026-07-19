@@ -36,11 +36,16 @@ interface AuthContextType {
 }
 
 export const adminEmails = ['ayushgaikwad7050@gmail.com', 'ayushgaikwad705o@gmail.com', 'mrunmayeebodhe118@gmail.com', 'webcreator500@gmail.com', 'forenclue@gmail.com'];
+export const adminUids = [
+  'PLvOz5Ah9CgKuhlhcNnIyVte0Dl1',
+  'mz4nA7KKI5YiyvzrXMUQL6Nig7a2',
+  'jfVmtdHZyJUN7DGrYZoWZXI9BRF2',
+  'ePqdFRGvRVM8NMZX1zCLSC9ejGx2'
+];
 
-export const checkIsAdmin = (email: string | null | undefined): boolean => {
-  if (!email) return false;
-  const normalized = email.trim().toLowerCase();
-  return adminEmails.some(e => e.trim().toLowerCase() === normalized) || normalized.includes('ayush') || normalized.includes('forenclue') || normalized.includes('webcreator');
+export const checkIsAdmin = (uid: string | null | undefined): boolean => {
+  if (!uid) return false;
+  return adminUids.includes(uid);
 };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -235,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } as UserProfile
     : userProfile;
 
-  const isAdmin = checkIsAdmin(effectiveUser?.email);
+  const isAdmin = checkIsAdmin(effectiveUser?.uid);
 
   const signInWithGoogle = async () => {
     try {

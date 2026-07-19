@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  Clock, Sparkles, X, ZoomIn, ArrowLeft, Calendar, User, 
+  Clock, Sparkles, ArrowLeft, Calendar, User, 
   Linkedin, Play, ExternalLink, Star, MessageSquare, Send, Check,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -141,7 +141,6 @@ export default function Webinar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedEventId = searchParams.get('event');
   
-  const [isPosterOpen, setIsPosterOpen] = useState(false);
   const [localEvents, setLocalEvents] = useState<WebinarEvent[]>(WEBINARS_DATA);
   
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -176,18 +175,6 @@ export default function Webinar() {
     setFeedbackSuccess(false);
     setNewFeedback({ name: '', role: '', rating: 5, text: '' });
   }, [selectedEventId]);
-
-  // Prevent scroll under modal
-  useEffect(() => {
-    if (isPosterOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isPosterOpen]);
 
   const selectEvent = (eventId: string | null) => {
     if (eventId) {
@@ -468,29 +455,18 @@ export default function Webinar() {
                   </div>
                 </div>
 
-                {/* Visual Cover Poster Thumbnail (Click to Expand Poster) */}
+                {/* Visual Cover Poster Thumbnail */}
                 <div className="space-y-2">
                   <span className="block text-[10px] font-mono text-text-muted uppercase tracking-widest font-bold">
                     Official Session Poster
                   </span>
-                  <div 
-                    onClick={() => setIsPosterOpen(true)}
-                    className="relative rounded-2xl overflow-hidden border-2 border-warning/20 bg-black/40 shadow-xl cursor-zoom-in group transition-all duration-300 hover:border-warning/50"
-                  >
+                  <div className="relative rounded-2xl overflow-hidden border border-warning/20 bg-black/40 shadow-xl">
                     <img 
                       src={currentEvent.poster}
                       alt={`${currentEvent.title} Promotional Poster`}
-                      className="w-full h-auto block transform group-hover:scale-[1.02] transition-transform duration-500"
+                      className="w-full h-auto block"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2">
-                      <div className="bg-warning text-crust p-2.5 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                        <ZoomIn size={18} />
-                      </div>
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-white font-bold bg-black/60 px-2.5 py-1 rounded-md">
-                        Expand Poster
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -729,39 +705,6 @@ export default function Webinar() {
         )}
       </AnimatePresence>
 
-      {/* Lightbox full screen image modal */}
-      <AnimatePresence>
-        {isPosterOpen && currentEvent && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 md:p-6 backdrop-blur-md"
-            onClick={() => setIsPosterOpen(false)}
-          >
-            <div className="absolute top-4 right-4 z-50">
-              <button 
-                onClick={() => setIsPosterOpen(false)}
-                className="p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-full transition-all border border-white/10 hover:scale-105 cursor-pointer"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative max-w-full max-h-[90vh] md:max-h-[95vh] rounded-xl overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img 
-                src={currentEvent.poster}
-                alt={`${currentEvent.title} Full Poster Preview`}
-                className="max-w-full max-h-[90vh] md:max-h-[95vh] object-contain rounded-lg"
-                referrerPolicy="no-referrer"
-              />
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
