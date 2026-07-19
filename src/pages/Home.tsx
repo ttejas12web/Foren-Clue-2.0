@@ -148,7 +148,7 @@ The ForenClue Curriculum Board
   return (
     <div className="flex flex-col min-h-screen">
       <SEO 
-        title="India's Premier Forensic EdTech Platform"
+        title="Your Partner In Forensic Precision !"
         description="Master forensic science, crime scene investigation, fingerprint lifting, digital forensics, and cybersecurity with India's first dedicated, expert-led forensic platform."
         keywords="forensic science, crime scene investigation, fingerprint analysis, digital forensics, ballistics, bloodstain pattern analysis, forensic training india, docudraft, forenclue"
         canonicalPath=""

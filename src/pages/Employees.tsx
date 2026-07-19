@@ -137,6 +137,7 @@ export default function Employees() {
           : "ForenClue secure Employee Verification Portal. Search active duty badges, credentials, and digital cryptographic ID cards."
         }
         keywords="employee verification, verify identity, cyber forensics credentials, forenclue, active badges, MSME registered forensic experts"
+        image={employee?.imageUrl || "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKXJQb5UkVJcbG4a0rTFiNdhEa1wfFDfbew92r5tR1XXbYUkW7AbdMR_MSFwgCJg1zsDwpJX3jVns0as8FzPWrcK_SqiR9c-ah5jHmHksFm2AmiHtC46umM02LTfmeBBoxOjTRJnAzl6gW1dLY0AmDpDdQw2tl1L2D0R_hFonlFjnoNf22TNpbh9Hz9Kw/s1884/Screenshot%202026-07-20%20at%2012.06.52%E2%80%AFAM.png"}
       />
 
       {/* Decorative cyber ambient circles */}
@@ -437,7 +438,7 @@ export default function Employees() {
                             <div className="my-auto flex flex-col items-center text-center gap-4 relative z-40">
                               {/* Photo slot */}
                               <div className="relative">
-                                <div className="w-28 h-28 rounded-xl border-2 border-warning/40 overflow-hidden bg-base/50 p-1 shadow-lg shadow-warning/5">
+                                <div className="w-28 h-28 rounded-xl border-2 border-warning/40 overflow-hidden bg-base p-1 shadow-lg shadow-warning/5">
                                   {employee.imageUrl ? (
                                     <img 
                                       src={employee.imageUrl} 

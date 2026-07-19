@@ -11,7 +11,6 @@ import { ScrollToTop } from './components/layout/ScrollToTop';
 import { FloatingPodcastButton } from './components/ui/FloatingPodcastButton';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
-import { WebinarPopup } from './components/ui/WebinarPopup';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -93,7 +92,6 @@ export default function App() {
       <ScrollToTop />
       <FloatingPodcastButton />
       <GoogleOneTap />
-      <WebinarPopup />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/player/:courseId" element={<Navigate to="/" replace />} />
