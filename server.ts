@@ -516,6 +516,11 @@ async function startServer() {
           title = 'Instant Certificate Verification Portal | ForenClue';
           summary = 'Instantly authenticate and verify official academic credentials, masterclass badges, and course completion certificates issued by the ForenClue Board.';
         }
+        else if (req.path === '/employees') {
+          title = 'ForenClue Employee Verification Board';
+          summary = 'ForenClue secure Employee Verification Portal. Search active duty badges, credentials, and digital cryptographic ID cards.';
+          image = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKXJQb5UkVJcbG4a0rTFiNdhEa1wfFDfbew92r5tR1XXbYUkW7AbdMR_MSFwgCJg1zsDwpJX3jVns0as8FzPWrcK_SqiR9c-ah5jHmHksFm2AmiHtC46umM02LTfmeBBoxOjTRJnAzl6gW1dLY0AmDpDdQw2tl1L2D0R_hFonlFjnoNf22TNpbh9Hz9Kw/s1884/Screenshot%202026-07-20%20at%2012.06.52%E2%80%AFAM.png';
+        }
         else if (req.path === '/privacy') {
           title = 'Privacy Policy | ForenClue';
           summary = 'Understand how ForenClue collects, stores, and protects student data, examination records, and transaction security.';
