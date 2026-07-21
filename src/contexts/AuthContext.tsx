@@ -35,7 +35,7 @@ interface AuthContextType {
   adminLogin?: (email: string, password: string) => Promise<boolean>;
 }
 
-export const adminEmails = ['ayushgaikwad7050@gmail.com', 'ayushgaikwad705o@gmail.com', 'mrunmayeebodhe118@gmail.com', 'webcreator500@gmail.com', 'forenclue@gmail.com'];
+export const adminEmails = ['ayushgaikwad7050@gmail.com', 'ayushgaikwad705o@gmail.com', 'mrunmayeebodhe118@gmail.com', 'webcreator500@gmail.com', 'forenclue@gmail.com', 'ttapse12@gmail.com'];
 export const adminUids = [
   'PLvOz5Ah9CgKuhlhcNnIyVte0Dl1',
   'mz4nA7KKI5YiyvzrXMUQL6Nig7a2',
@@ -43,9 +43,11 @@ export const adminUids = [
   'ePqdFRGvRVM8NMZX1zCLSC9ejGx2'
 ];
 
-export const checkIsAdmin = (uid: string | null | undefined): boolean => {
+export const checkIsAdmin = (uid: string | null | undefined, email?: string | null): boolean => {
   if (!uid) return false;
-  return adminUids.includes(uid);
+  if (adminUids.includes(uid)) return true;
+  if (email && adminEmails.map(e => e.toLowerCase()).includes(email.trim().toLowerCase())) return true;
+  return false;
 };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -240,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } as UserProfile
     : userProfile;
 
-  const isAdmin = checkIsAdmin(effectiveUser?.uid);
+  const isAdmin = checkIsAdmin(effectiveUser?.uid, effectiveUser?.email);
 
   const signInWithGoogle = async () => {
     try {

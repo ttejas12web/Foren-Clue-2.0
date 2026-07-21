@@ -1,26 +1,56 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User as UserIcon, Sun, Moon, ChevronDown } from 'lucide-react';
+import { 
+  Menu, 
+  X, 
+  LogOut, 
+  User as UserIcon, 
+  Sun, 
+  Moon, 
+  ChevronDown,
+  BookOpen, 
+  FileText, 
+  Mic, 
+  Video, 
+  Award, 
+  ShieldCheck, 
+  Info, 
+  Users, 
+  GraduationCap 
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 
-const mainNavLinks = [
+const directLinks = [
   { name: 'Home', path: '/' },
-  { name: 'Community', path: '/community' },
   { name: 'Case Studies', path: '/cases' },
-  { name: 'Careers', path: '/careers' },
   { name: 'Services', path: '/services' },
-  { name: 'E-Library', path: '/ebooks' },
-  { name: 'Webinars', path: '/webinar' },
+  { name: 'Community', path: '/community' },
 ];
 
-const aboutLink = { name: 'About Us', path: '/about' };
+const resourcesDropdown = [
+  { name: 'E-Library', path: '/ebooks', icon: BookOpen },
+  { name: 'Podcast', path: '/podcast', icon: Mic },
+  { name: 'Webinars', path: '/webinar', icon: Video },
+];
+
+const verifyDropdown = [
+  { name: 'Certificate Verification', path: '/certificate', icon: Award },
+  { name: 'ID Card Verification', path: '/employees', icon: ShieldCheck },
+];
+
+const teamDropdown = [
+  { name: 'Volunteers', path: '/volunteers', icon: Users },
+  { name: 'Campus Ambassadors', path: '/ambassadors', icon: GraduationCap },
+];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileResourcesOpen, setIsMobileResourcesOpen] = useState(false);
   const [isMobileVerifyOpen, setIsMobileVerifyOpen] = useState(false);
+  const [isMobileTeamOpen, setIsMobileTeamOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signInWithGoogle, logout } = useAuth();
@@ -30,8 +60,14 @@ export function Navbar() {
   });
 
   useEffect(() => {
-    if (location.pathname === '/certificate' || location.pathname === '/employees') {
+    if (['/ebooks', '/podcast', '/webinar'].includes(location.pathname)) {
+      setIsMobileResourcesOpen(true);
+    }
+    if (['/certificate', '/employees'].includes(location.pathname)) {
       setIsMobileVerifyOpen(true);
+    }
+    if (['/volunteers', '/ambassadors'].includes(location.pathname)) {
+      setIsMobileTeamOpen(true);
     }
   }, [location.pathname]);
 
@@ -47,7 +83,6 @@ export function Navbar() {
 
   useEffect(() => {
     const handleResize = () => {
-      // Auto-close menu on desktop resize
       if (window.innerWidth >= 768) {
         setIsOpen(false);
       }
@@ -72,7 +107,7 @@ export function Navbar() {
           {/* Logo */}
           <Link 
             to={location.pathname === '/podcast' ? "/podcast" : "/"} 
-            className="group"
+            className="group block"
           >
             {location.pathname === '/podcast' ? (
                <div className="flex items-center gap-3">
@@ -88,12 +123,12 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {mainNavLinks.map((link) => (
+            {directLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-4 py-2 font-medium text-sm transition-colors",
+                  "px-3 py-2 font-medium text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5",
                   location.pathname === link.path
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
@@ -103,12 +138,48 @@ export function Navbar() {
               </Link>
             ))}
 
+            {/* Resources Dropdown */}
+            <div className="relative group/resources-dropdown">
+              <button
+                className={cn(
+                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  ['/ebooks', '/podcast', '/webinar'].includes(location.pathname)
+                    ? "text-warning"
+                    : "text-text-muted hover:text-text-main"
+                )}
+              >
+                Resources
+                <ChevronDown size={14} className="transition-transform duration-200 group-hover/resources-dropdown:rotate-180" />
+              </button>
+
+              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover/resources-dropdown:opacity-100 group-hover/resources-dropdown:visible transition-all duration-200 z-50">
+                <div className="w-56 bg-surface border border-black/10 dark:border-white/10 rounded-md shadow-xl overflow-hidden py-1">
+                  {resourcesDropdown.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={cn(
+                          "flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
+                          location.pathname === link.path && "text-warning bg-black/5 dark:bg-white/5"
+                        )}
+                      >
+                        <Icon size={16} className="text-warning/80" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {/* Verify Dropdown */}
             <div className="relative group/verify-dropdown">
               <button
                 className={cn(
-                  "flex items-center gap-1 px-4 py-2 font-medium text-sm transition-colors cursor-default",
-                  location.pathname === '/certificate' || location.pathname === '/employees'
+                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  ['/certificate', '/employees'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
                 )}
@@ -118,44 +189,79 @@ export function Navbar() {
               </button>
 
               <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover/verify-dropdown:opacity-100 group-hover/verify-dropdown:visible transition-all duration-200 z-50">
-                <div className="w-40 bg-surface border border-black/10 dark:border-white/10 rounded-md shadow-xl overflow-hidden py-1">
-                  <Link
-                    to="/certificate"
-                    className={cn(
-                      "block px-4 py-2 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
-                      location.pathname === '/certificate' && "text-warning bg-black/5 dark:bg-white/5"
-                    )}
-                  >
-                    Certificate
-                  </Link>
-                  <Link
-                    to="/employees"
-                    className={cn(
-                      "block px-4 py-2 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
-                      location.pathname === '/employees' && "text-warning bg-black/5 dark:bg-white/5"
-                    )}
-                  >
-                    ID Card
-                  </Link>
+                <div className="w-60 bg-surface border border-black/10 dark:border-white/10 rounded-md shadow-xl overflow-hidden py-1">
+                  {verifyDropdown.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={cn(
+                          "flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
+                          location.pathname === link.path && "text-warning bg-black/5 dark:bg-white/5"
+                        )}
+                      >
+                        <Icon size={16} className="text-warning/80" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
+            {/* Team Dropdown */}
+            <div className="relative group/team-dropdown">
+              <button
+                className={cn(
+                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  ['/volunteers', '/ambassadors'].includes(location.pathname)
+                    ? "text-warning"
+                    : "text-text-muted hover:text-text-main"
+                )}
+              >
+                Team
+                <ChevronDown size={14} className="transition-transform duration-200 group-hover/team-dropdown:rotate-180" />
+              </button>
+
+              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover/team-dropdown:opacity-100 group-hover/team-dropdown:visible transition-all duration-200 z-50">
+                <div className="w-56 bg-surface border border-black/10 dark:border-white/10 rounded-md shadow-xl overflow-hidden py-1">
+                  {teamDropdown.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={cn(
+                          "flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors",
+                          location.pathname === link.path && "text-warning bg-black/5 dark:bg-white/5"
+                        )}
+                      >
+                        <Icon size={16} className="text-warning/80" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* About Us */}
             <Link
-              to={aboutLink.path}
+              to="/about"
               className={cn(
-                "px-4 py-2 font-medium text-sm transition-colors",
-                location.pathname === aboutLink.path
+                "px-3 py-2 font-medium text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                location.pathname === '/about'
                   ? "text-warning"
                   : "text-text-muted hover:text-text-main"
               )}
             >
-              {aboutLink.name}
+              About Us
             </Link>
-            
+
             <button
               onClick={() => setIsDark(!isDark)}
-              className="p-2 ml-2 rounded-full text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-black/5 dark:bg-white/5 transition-colors"
+              className="p-2 ml-2 rounded-full text-text-muted hover:text-warning hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               aria-label="Toggle theme"
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -234,31 +340,78 @@ export function Navbar() {
             className="md:hidden bg-crust border-b border-black/10 dark:border-white/10 overflow-y-auto max-h-[calc(100dvh-80px)]"
           >
             <div className="px-4 py-4 space-y-1">
-              {mainNavLinks.map((link) => (
+              {directLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "block px-4 py-3 font-medium transition-colors",
+                    "block px-4 py-3 font-medium transition-colors rounded-md",
                     location.pathname === link.path
-                      ? "text-warning"
-                      : "text-text-muted hover:text-text-main"
+                      ? "text-warning bg-black/5 dark:bg-white/5"
+                      : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                   )}
                 >
                   {link.name}
                 </Link>
               ))}
 
+              {/* Resources Dropdown / Accordion on Mobile */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setIsMobileResourcesOpen(!isMobileResourcesOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left rounded-md",
+                    ['/ebooks', '/podcast', '/webinar'].includes(location.pathname)
+                      ? "text-warning bg-black/5 dark:bg-white/5"
+                      : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+                  )}
+                >
+                  <span>Resources</span>
+                  <ChevronDown size={18} className={cn("transition-transform duration-200", isMobileResourcesOpen && "rotate-180")} />
+                </button>
+                
+                <AnimatePresence initial={false}>
+                  {isMobileResourcesOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pl-4 space-y-1 overflow-hidden"
+                    >
+                      {resourcesDropdown.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                          <Link
+                            key={link.path}
+                            to={link.path}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
+                              location.pathname === link.path
+                                ? "text-warning bg-black/5 dark:bg-white/5"
+                                : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <Icon size={16} className="text-warning/80" />
+                            <span>{link.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Verify Dropdown / Accordion on Mobile */}
               <div className="space-y-1">
                 <button
                   onClick={() => setIsMobileVerifyOpen(!isMobileVerifyOpen)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left",
-                    location.pathname === '/certificate' || location.pathname === '/employees'
-                      ? "text-warning"
-                      : "text-text-muted hover:text-text-main"
+                    "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left rounded-md",
+                    ['/certificate', '/employees'].includes(location.pathname)
+                      ? "text-warning bg-black/5 dark:bg-white/5"
+                      : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                   )}
                 >
                   <span>Verify</span>
@@ -273,48 +426,91 @@ export function Navbar() {
                       exit={{ opacity: 0, height: 0 }}
                       className="pl-4 space-y-1 overflow-hidden"
                     >
-                      <Link
-                        to="/certificate"
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          "block px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
-                          location.pathname === '/certificate'
-                            ? "text-warning bg-black/5 dark:bg-white/5"
-                            : "text-text-muted hover:text-text-main"
-                        )}
-                      >
-                        Certificate
-                      </Link>
-                      <Link
-                        to="/employees"
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          "block px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
-                          location.pathname === '/employees'
-                            ? "text-warning bg-black/5 dark:bg-white/5"
-                            : "text-text-muted hover:text-text-main"
-                        )}
-                      >
-                        ID Card
-                      </Link>
+                      {verifyDropdown.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                          <Link
+                            key={link.path}
+                            to={link.path}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
+                              location.pathname === link.path
+                                ? "text-warning bg-black/5 dark:bg-white/5"
+                                : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <Icon size={16} className="text-warning/80" />
+                            <span>{link.name}</span>
+                          </Link>
+                        );
+                      })}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
+              {/* Team Dropdown / Accordion on Mobile */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setIsMobileTeamOpen(!isMobileTeamOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left rounded-md",
+                    ['/volunteers', '/ambassadors'].includes(location.pathname)
+                      ? "text-warning bg-black/5 dark:bg-white/5"
+                      : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+                  )}
+                >
+                  <span>Team</span>
+                  <ChevronDown size={18} className={cn("transition-transform duration-200", isMobileTeamOpen && "rotate-180")} />
+                </button>
+                
+                <AnimatePresence initial={false}>
+                  {isMobileTeamOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pl-4 space-y-1 overflow-hidden"
+                    >
+                      {teamDropdown.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                          <Link
+                            key={link.path}
+                            to={link.path}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-md",
+                              location.pathname === link.path
+                                ? "text-warning bg-black/5 dark:bg-white/5"
+                                : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+                            )}
+                          >
+                            <Icon size={16} className="text-warning/80" />
+                            <span>{link.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* About Us */}
               <Link
-                to={aboutLink.path}
+                to="/about"
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "block px-4 py-3 font-medium transition-colors",
-                  location.pathname === aboutLink.path
-                    ? "text-warning"
-                    : "text-text-muted hover:text-text-main"
+                  "block px-4 py-3 font-medium transition-colors rounded-md",
+                  location.pathname === '/about'
+                    ? "text-warning bg-black/5 dark:bg-white/5"
+                    : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                 )}
               >
-                {aboutLink.name}
+                About Us
               </Link>
-              
+
               {user ? (
                  <div className="mt-4 pt-4 border-t border-black/10 dark:border-white/10">
                    <Link 
@@ -326,7 +522,7 @@ export function Navbar() {
                         <img src={user.photoURL} alt={user.displayName || 'User'} className="w-10 h-10 rounded-full" />
                      ) : (
                         <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center">
-                          <UserIcon size={20} className="text-text-muted transition-colors group-hover:text-warning" />
+                           <UserIcon size={20} className="text-text-muted transition-colors group-hover:text-warning" />
                         </div>
                      )}
                      <div>
@@ -337,7 +533,7 @@ export function Navbar() {
                    <Link
                      to="/profile"
                      onClick={() => setIsOpen(false)}
-                      className="block px-4 py-3 mb-2 font-medium text-text-muted hover:text-text-main transition-colors"
+                     className="block px-4 py-3 mb-2 font-medium text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-md"
                    >
                      View Profile
                    </Link>
@@ -347,7 +543,7 @@ export function Navbar() {
                        setIsOpen(false); 
                        navigate('/');
                      }}
-                      className="w-full flex items-center justify-center gap-2 px-5 py-3 text-text-muted font-bold hover:text-text-main transition-colors"
+                     className="w-full flex items-center justify-center gap-2 px-5 py-3 text-text-muted font-bold hover:text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-md"
                    >
                      <LogOut size={18} />
                      Sign Out
@@ -357,7 +553,7 @@ export function Navbar() {
                   <Link
                     to="/login"
                     onClick={() => setIsOpen(false)}
-                    className="w-full block text-center mt-4 px-5 py-3 text-warning font-bold hover:text-warning-dark transition-colors"
+                    className="w-full block text-center mt-4 px-5 py-3 bg-warning text-white font-bold rounded-md hover:bg-warning-dark transition-colors"
                   >
                     Sign In
                   </Link>

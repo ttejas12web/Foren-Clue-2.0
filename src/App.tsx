@@ -34,6 +34,8 @@ const Admin = lazy(() => import('./pages/Admin'));
 const CertificateVerification = lazy(() => import('./pages/CertificateVerification'));
 const Webinar = lazy(() => import('./pages/Webinar'));
 const Employees = lazy(() => import('./pages/Employees'));
+const Volunteers = lazy(() => import('./pages/Volunteers'));
+const CampusAmbassadors = lazy(() => import('./pages/CampusAmbassadors'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -50,7 +52,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 'volunteers', 'ambassadors'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -118,6 +120,8 @@ export default function App() {
                     <Route path="/certificate" element={<CertificateVerification />} />
                     <Route path="/webinar" element={<Webinar />} />
                     <Route path="/employees" element={<Employees />} />
+                    <Route path="/volunteers" element={<Volunteers />} />
+                    <Route path="/ambassadors" element={<CampusAmbassadors />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

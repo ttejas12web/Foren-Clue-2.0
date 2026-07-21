@@ -20,7 +20,6 @@ export function Footer() {
                 <ul className="space-y-3 text-sm text-text-muted">
                   <li><Link to="/ebooks" className="hover:text-warning transition-colors">E-Library</Link></li>
                   <li><Link to="/cases" className="hover:text-warning transition-colors">Case Studies</Link></li>
-                  <li><Link to="/careers" className="hover:text-warning transition-colors">Career Pathways</Link></li>
                   <li><Link to="/community" className="hover:text-warning transition-colors">Community Forum</Link></li>
                   <li><Link to="/certificate" className="hover:text-warning transition-colors">Verify Certificate</Link></li>
                 </ul>
