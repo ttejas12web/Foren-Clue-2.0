@@ -146,7 +146,7 @@ export default function CertificateVerification() {
                 type="text"
                 value={certificateNo}
                 onChange={(e) => setCertificateNo(e.target.value)}
-                placeholder="Enter Certificate No. (e.g., FC-1025-AB)"
+                placeholder="Enter Certificate No."
                 className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-sm font-bold tracking-wider outline-none text-text-main focus:border-warning/50 transition-colors uppercase"
                 disabled={loading}
                 required
@@ -172,19 +172,7 @@ export default function CertificateVerification() {
           </form>
 
           {/* Quick instructions / Info */}
-          <div className="mt-4 flex items-center gap-2 text-xs text-text-muted font-mono justify-center">
-            <span>Example:</span>
-            <button 
-              type="button"
-              onClick={() => {
-                setCertificateNo('FC-1025-AB');
-                setSearchParams({ id: 'FC-1025-AB' });
-              }}
-              className="text-warning border-b border-dashed border-warning/30 hover:border-warning transition-colors uppercase font-bold"
-            >
-              FC-1025-AB
-            </button>
-            <span className="text-text-muted/30">|</span>
+          <div className="mt-4 text-xs text-text-muted font-mono text-center">
             <span>All codes are case-insensitive</span>
           </div>
         </motion.div>

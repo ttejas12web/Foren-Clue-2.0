@@ -33,6 +33,18 @@ const activeVolunteers = [
     id: 'FC-VOL-2026-015',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7NjsynbUNGEHtBcdAbwHvYcI97RxZjC37EFxJEzqjNfOuJoJE7NyqPj1wfF8V5BHp5xcqS05tY_PblKMJ8J5-i38Hh2d-uEvn_MHzo0AtMpXv3zM-qqd8R_hHZ11z48WAKzbwsmMQn9PrB4-IAEGYoDZh5pHKA2RYSzxLkCVU0uHgttUEhU3RToTOzQI/s818/WhatsApp%20Image%202026-07-20%20at%2018.15.07.jpeg'
   },
+  {
+    name: 'Okorie Ketandu Victory',
+    role: 'Forensic Research Associate',
+    id: 'FC-VOL-2026-013',
+    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgE7VcpHg85KhrC4rtZL0F5p7UC7dx8E5Wm5MmWld5fPc7pSOG7AwdGokOkA6bQA1iHfkQXE2mOzeNYgFiozJyuML_VWEezpnocni5UndNdSZN6z0LP1guOm5ZycvNwGorhpjA3xSnRDN_fJST-iODVkAA-xlWd6CFvuFJ3dWVQMH-kkd9a0FFu3ZT6apQ/s2560/WhatsApp%20Image%202026-07-21%20at%2012.03.07.jpeg'
+  },
+  {
+    name: 'Jubachukwu Adaeze Blessing',
+    role: 'Forensic Research Associate',
+    id: 'FC-VOL-2026-019',
+    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgh_iueBO-7X7feaE-FKxU1oktps4zilIyn0s-NlfayYwbmcjlpUMue-20jw0tzhRQqNg7cFxllbvZHb6X90ZBS0bzz81BeUldr2_mCIpfa2UrIev8l0OvNt5td8MyVVTUxzO-g_o1TW0AG-JAiEX-63ZoId_hS8rvTnT5oq25O8OGHvR7ZSUl5RcylhjI/s1280/WhatsApp%20Image%202026-07-21%20at%2012.07.24.jpeg'
+  },
   { 
     name: 'Akshat Dubey', 
     role: 'Forensic Research Associate', 
@@ -170,7 +182,7 @@ export default function Volunteers() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.08 }}
-                className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative group hover:border-warning/30 transition-all duration-300 shadow-xl flex flex-col items-center text-center justify-between"
+                className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative group hover:border-warning/40 hover:-translate-y-1.5 hover:shadow-[0_20px_30px_-10px_rgba(0,0,0,0.4),_0_0_25px_rgba(217,119,6,0.12)] transition-all duration-300 shadow-xl flex flex-col items-center text-center justify-between cursor-pointer"
               >
                 {/* Status Indicator */}
                 <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-mono uppercase tracking-wider">
@@ -219,7 +231,7 @@ export default function Volunteers() {
                   <div className="bg-base/40 border border-white/5 rounded-xl p-3.5 space-y-1.5 text-left text-xs">
                     <div className="flex justify-between items-center font-mono text-text-muted">
                       <span>DEPARTMENT:</span>
-                      <span className="text-text-main font-bold uppercase truncate max-w-[130px]">{vol.role}</span>
+                      <span className="text-warning font-bold uppercase truncate max-w-[130px]">TO BE ALLOTED</span>
                     </div>
                   </div>
                 </div>

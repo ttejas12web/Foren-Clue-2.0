@@ -270,61 +270,15 @@ The ForenClue Curriculum Board
                 </div>
               </div>
 
-              {/* Live Countdown Timer */}
-              <div className="bg-surface border border-warning/15 rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-warning font-bold">
-                    <Clock size={12} className="animate-pulse" />
-                    Timer Till 15th July Live Event
-                  </span>
-                  {timeLeft.isCompleted && (
-                    <span className="text-[10px] font-mono text-emerald-500 font-bold uppercase tracking-wider animate-pulse">
-                      🟢 Live Now
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="bg-crust border border-black/10 dark:border-white/5 rounded-xl p-2 text-center">
-                    <span className="font-mono text-lg sm:text-xl font-black text-warning block leading-none">
-                      {timeLeft.days.toString().padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] font-mono uppercase text-text-muted mt-1 block font-semibold">Days</span>
-                  </div>
-                  <div className="bg-crust border border-black/10 dark:border-white/5 rounded-xl p-2 text-center">
-                    <span className="font-mono text-lg sm:text-xl font-black text-warning block leading-none">
-                      {timeLeft.hours.toString().padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] font-mono uppercase text-text-muted mt-1 block font-semibold">Hours</span>
-                  </div>
-                  <div className="bg-crust border border-black/10 dark:border-white/5 rounded-xl p-2 text-center">
-                    <span className="font-mono text-lg sm:text-xl font-black text-warning block leading-none">
-                      {timeLeft.minutes.toString().padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] font-mono uppercase text-text-muted mt-1 block font-semibold">Mins</span>
-                  </div>
-                  <div className="bg-crust border border-black/10 dark:border-white/5 rounded-xl p-2 text-center">
-                    <span className="font-mono text-lg sm:text-xl font-black text-warning block leading-none">
-                      {timeLeft.seconds.toString().padStart(2, '0')}
-                    </span>
-                    <span className="text-[8px] font-mono uppercase text-text-muted mt-1 block font-semibold">Secs</span>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-4">
-                {/* 3D Touchable Registration Button */}
-                <a 
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSf7F7kaCXA2LQuL94Ipq4hADtx2yG8cOL52P024-53l8Pm0Uw/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl text-xs sm:text-sm shadow-[0_6px_0_0_#9a3412] hover:shadow-[0_4px_0_0_#9a3412] active:shadow-[0_0px_0_0_#9a3412] active:translate-y-[6px] border border-amber-500/20 transition-all text-center"
+                {/* 3D Touchable View Recent Event Button */}
+                <Link 
+                  to="/webinar?event=cybersecurity-career-pathways"
+                  className="group relative w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl text-xs sm:text-sm shadow-[0_6px_0_0_#9a3412] hover:shadow-[0_4px_0_0_#9a3412] active:shadow-[0_0px_0_0_#9a3412] active:translate-y-[6px] border border-amber-500/20 transition-all text-center cursor-pointer font-sans"
                 >
-                  <Sparkles size={16} className="animate-pulse text-crust" />
-                  <span>Click Here To Register</span>
-                </a>
-
-
+                  <Video size={16} className="text-crust" />
+                  <span>View Recent Event</span>
+                </Link>
               </div>
 
             </div>

@@ -91,7 +91,7 @@ export default function About() {
   const team = [
     {
       name: "Tejas Tapse",
-      role: "Founder of Foren Clue",
+      role: "Founder",
       image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBbTT3QCs_EHXasFjAT9pC1laU-vAIRhIQ7qjpQHS3ErsprqykE9eT63H-XnATqutTGhCjq-zzbmvCeFhHfE0_DZ1wtZmu8pmARltV1makLhdqyCwftxjW55J0qyPbmjn6H6Abb6OzIHPUrkbkYOwmDeVxLmGyH_0nbr9qOnWtWKEg3NaPIvEJKTNg8vU/s1323/IMG_0865.PNG",
       points: [
         "Creator of Neet Cracker",
@@ -183,7 +183,7 @@ export default function About() {
       </div>
 
       <div className="max-w-7xl mx-auto perspective-[2000px]">
-        <h2 className="text-3xl font-heading font-black mb-12 text-center">Meet Our Team</h2>
+        <h2 className="text-3xl font-heading font-black mb-12 text-center">Meet Our Leaders</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {team.map((member, i) => (
