@@ -519,11 +519,28 @@ export default function Courses() {
   return (
     <div className="py-20 px-4 max-w-7xl mx-auto">
       <SEO 
-        title="Professional Forensic Science & Investigation Courses"
-        description="Browse professional forensic science training courses. Master questioning protocols, DNA fingerprinting, cybercrime analysis, and trace evidence logging."
-        keywords="forensic courses online, forensic certificates, learn forensics, crime scene investigation training, fingerprint lifting course"
-        canonicalPath="/courses"
+        title={selectedCourse ? `${selectedCourse.title} - Forensic Course` : "Professional Forensic Science & Investigation Courses"}
+        description={selectedCourse ? (selectedCourse.description || `Master forensic skills in ${selectedCourse.title} with expert instruction.`) : "Browse professional forensic science training courses. Master questioning protocols, DNA fingerprinting, cybercrime analysis, and trace evidence logging."}
+        keywords={selectedCourse ? `${selectedCourse.title.toLowerCase()}, forensic course, learn forensics, certifed forensic training` : "forensic courses online, forensic certificates, learn forensics, crime scene investigation training, fingerprint lifting course, forenclue courses"}
+        canonicalPath={selectedCourse ? `/courses?id=${selectedCourse.id}` : "/courses"}
+        type={selectedCourse ? "course" : "website"}
+        courseDetails={selectedCourse ? {
+          name: selectedCourse.title,
+          description: selectedCourse.description,
+          provider: "ForenClue",
+          category: selectedCourse.category
+        } : undefined}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Courses', path: '/courses' },
+          ...(selectedCourse ? [{ name: selectedCourse.title, path: `/courses?id=${selectedCourse.id}` }] : [])
+        ]}
+        faqs={[
+          { question: "How long is each forensic training course?", answer: "Course durations range from 4 hours to several weeks, complete with hands-on labs and expert-led video lectures." },
+          { question: "Do I get a verified forensic certificate upon completion?", answer: "Yes, every successfully finished course triggers a cryptographic verification ID on our student portal." }
+        ]}
       />
+
       {/* Title Header with View Mode Segmented Controls */}
       <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-8 border-b border-black/10 dark:border-white/5 pb-8">
         <div className="text-left w-full md:w-auto">

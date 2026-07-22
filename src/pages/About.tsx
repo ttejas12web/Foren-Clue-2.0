@@ -134,7 +134,16 @@ export default function About() {
         description="Learn about the visionaries, educators, and technology experts behind ForenClue. We are democratizing case-based and high-fidelity forensic science learning globally."
         keywords="forenclue founders, forenclue team, tejas tapse, mrunmayee bodhe, forensic learning platform, chief technology officer forensic"
         canonicalPath="/about"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'About Us', path: '/about' }
+        ]}
+        faqs={[
+          { question: "What is the mission of ForenClue?", answer: "ForenClue is dedicated to democratizing advanced case-based forensic science education through interactive tech tools, expert training, and virtual labs." },
+          { question: "Who founded ForenClue?", answer: "The platform is founded by visionary forensic educators and technology professionals, with leadership including Tejas Tapse and Mrunmayee Bodhe." }
+        ]}
       />
+
       <div className="max-w-4xl mx-auto mb-24 text-left">
         <h1 className="text-4xl md:text-5xl font-heading font-black mb-12 uppercase tracking-tight text-center">
           About <span className="text-warning">ForenClue</span>

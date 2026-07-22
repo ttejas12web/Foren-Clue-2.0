@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Lock, Mail, Key, LayoutGrid, BookOpen, Plus, Trash2, 
   Settings, CheckCircle2, AlertCircle, FileText, Upload, 
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
   Globe, Edit3, MessageSquare, Radio, Award,
-  Users, RefreshCw, ShieldCheck, Database, Fingerprint
+  Users, RefreshCw, ShieldCheck, Database, Fingerprint, ClipboardList
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
@@ -1370,6 +1370,12 @@ export default function Admin() {
                 >
                   <Users size={16} /> Employee Manager
                 </button>
+                <Link 
+                  to="/forms"
+                  className="w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors bg-surface hover:bg-surface/80 text-text-muted hover:text-warning border border-black/5 dark:border-white/5 cursor-pointer"
+                >
+                  <ClipboardList size={16} /> Google Forms Portal
+                </Link>
               </div>
 
               {/* Active Control Panel Canvas */}

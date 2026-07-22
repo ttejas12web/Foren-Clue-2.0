@@ -611,7 +611,16 @@ export default function Careers() {
         description="Navigate your forensic education step-by-step. Discover precise milestones, practical task lists, and average forensic chemistry and dactyloscopy salaries in India."
         keywords="forensic science careers, molecular dna expert india, crime scene officer jobs, biometric investigator, trace evidence guide"
         canonicalPath="/careers"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Careers', path: '/careers' }
+        ]}
+        faqs={[
+          { question: "What are the career options in Forensic Science in India?", answer: "Aspiring specialists can pursue roles as Crime Scene Officers, Digital Forensic Analysts, Fingerprint Experts, Ballistics Specialists, and Forensic Toxicologists in both public and private labs." },
+          { question: "How does ForenClue help with forensic careers?", answer: "We provide interactive step-by-step career tracks, salary estimates, required skill lists, certifications, and target milestones to systematically map your career path." }
+        ]}
       />
+
       
       {/* Background glowing particles, keeping the elegant layout */}
       <div className="absolute top-1/4 left-0 w-[500px] h-[500px] pointer-events-none opacity-20 -translate-y-1/2 -ml-32">

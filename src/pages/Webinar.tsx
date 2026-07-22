@@ -243,9 +243,15 @@ export default function Webinar() {
             id={`webinar-screen-${currentEvent.id}`}
           >
             <SEO 
-              title={`Webinar ${currentEvent.sequence}: ${currentEvent.title} | ForenClue`}
-              description={`${currentEvent.subtitle} Direct video capture, speaker credentials, and student feedbacks.`}
-              keywords={`${currentEvent.tags.join(', ')}, forenclue, digital forensics webinar`}
+              title={`Webinar: ${currentEvent.title}`}
+              description={`${currentEvent.subtitle || ''} Direct video capture, speaker credentials, and student feedbacks.`}
+              keywords={`${(currentEvent.tags || []).join(', ')}, forenclue, digital forensics webinar`}
+              canonicalPath={`/webinar?id=${currentEvent.id}`}
+              breadcrumbs={[
+                { name: 'Home', path: '/' },
+                { name: 'Webinars', path: '/webinar' },
+                { name: currentEvent.title, path: `/webinar?id=${currentEvent.id}` }
+              ]}
             />
 
             {/* Premium Sticky-Ready Header Nav bar */}
@@ -529,9 +535,18 @@ export default function Webinar() {
             className="w-full max-w-5xl mx-auto space-y-12 relative z-10"
           >
             <SEO 
-              title="Webinars & Virtual Training Masterclasses | ForenClue"
+              title="Webinars & Virtual Training Masterclasses"
               description="Register for live forensic workshops, browse professional video lectures, and master legal investigation frameworks directly from verified practitioners."
-              keywords="Delhi Police forensics, finger print analysis webinars, forensics genetic lectures, cybersecurity events"
+              keywords="Delhi Police forensics, finger print analysis webinars, forensics genetic lectures, cybersecurity events, forenclue webinars"
+              canonicalPath="/webinar"
+              breadcrumbs={[
+                { name: 'Home', path: '/' },
+                { name: 'Webinars', path: '/webinar' }
+              ]}
+              faqs={[
+                { question: "How can I attend ForenClue webinars?", answer: "Register directly from our Webinars tab to receive stream access keys, interactive slides, and live Q&A entry codes." },
+                { question: "Are webinars recorded for later playback?", answer: "Yes, registered students gain immediate playback access to the entire recorded session alongside reference PDF resources." }
+              ]}
             />
 
             {/* Interactive Webinar Hub - Premium Hero Design */}

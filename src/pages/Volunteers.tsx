@@ -4,16 +4,18 @@ import { SEO } from '@/components/layout/SEO';
 
 const activeVolunteers = [
   { 
+    name: 'Nikitha B', 
+    role: 'Forensic Analyst & Researcher', 
+    institute: 'Amity University',
+    badge: 'Verified Contributor',
+    id: 'FC-VOL-2026-025',
+    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhofilNlkbJWvjAxFLk9i72sbgVT_2SwexBeXssxgZYH1EwiuEsAHceh5ESFONKrPOrvk1n7daXMe8lRVtXMpCtk20vWJC1BdHzG3V3sfQDuiBMD2E4WQYnge_a-ECnx6TSOjMB4s4ZFiEjPZM2WmCMhTeGN6mLT2Qjg333AwuyDoyapc3Vi8u_U6WcF4c/s1280/WhatsApp%20Image%202026-07-21%20at%2019.05.19.jpeg'
+  },
+  { 
     name: 'Kalyani Kumari', 
     role: 'Forensic Research Associate', 
     id: 'FC-VOL-2026-024',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjuehxkvibikGCm0qLOP1sjl7Ou7wRXIla_fGvD45I-dZMKsQd4qSPfzAoUsZroHrgmtUt54IP_9w2K_gfWAjoO8EWDgM3OOxTnz1ccn2_I9mix6j_Vv3LWYg2doyc6Tllf_NFlDk88-B3w-g1S15ZGUYmGmelXx-K4Uu2oPHk5rLGIn-jQm73RWoYoHsA/s1599/WhatsApp%20Image%202026-07-20%20at%2015.37.50.jpeg'
-  },
-  {
-    name: 'Nikita Chauhan',
-    role: 'Forensic Research Associate',
-    id: 'FC-VOL-2026-023',
-    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDVa3l8fgYKyngwoEqCXNKOTXqRveALhpCOR0Ieq3Hg2BQvaEjUqgXZVOk_pN1TgMWPIfL-vlOwSkzVn1UhwoSI_1iytiBIOEvxFGSgWb-WxbN-s2Ayz2sBOq4NEPL7GRlW0UmF_FZY_by5tTuFas4f_g2wTAS9XMkq-B846PHkhwp-5Gq_UUkp2-psfQ/s1566/WhatsApp%20Image%202026-07-20%20at%2018.16.27.jpeg'
   },
   { 
     name: 'Deepanshi Malviya', 
@@ -56,12 +58,6 @@ const activeVolunteers = [
     role: 'Forensic Research Associate', 
     id: 'FC-VOL-2026-009',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhtbaWNihBiYQrc2IVhwyJe6eAMKl8byl_Ps4pJ-3o0PhYl3Q1gTBXh3aX7EamTrilbsXb8q0EbyGkWMsUoV7CeZxzfm7UzENNPsiZbhDvxZE7gsUzNJT6LdlV0E7QrUdNOA3aLPoS-B1AiMVQbezJudrxwG6Mx0RkubP8A2Po0c1GuScrKxVYSKHiFPV8/s1280/WhatsApp%20Image%202026-07-20%20at%2017.57.24.jpeg'
-  },
-  { 
-    name: 'Mayur Hengada', 
-    role: 'Technical & Platform Assistant', 
-    id: 'FC-VOL-2026-010',
-    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxGDvS_aoG1hTFe5ROWKXh0kyHvfAVQTqk0lfqmvfzWXoM4Ps67hEsFK4fSC2e7GIuEuSeGYwFaCY_oMKnuJi28WvPvIJqnm0tHvicjCsFa1H8GbpOv2h4HfjnDT91ASfyKN4bPQc0_HBgTbFgwcMw8cm_ieytOJDmzo24c1Vs6o_UTKmhe_QfL133-Ak/s1600/WhatsApp%20Image%202026-07-20%20at%2017.57.26.jpeg'
   },
   { 
     name: 'Ashmita Mondal', 
@@ -228,12 +224,7 @@ export default function Volunteers() {
                     </p>
                   </div>
 
-                  <div className="bg-base/40 border border-white/5 rounded-xl p-3.5 space-y-1.5 text-left text-xs">
-                    <div className="flex justify-between items-center font-mono text-text-muted">
-                      <span>DEPARTMENT:</span>
-                      <span className="text-warning font-bold uppercase truncate max-w-[130px]">TO BE ALLOTED</span>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Verification Status */}

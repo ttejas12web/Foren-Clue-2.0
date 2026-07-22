@@ -333,12 +333,24 @@ export default function Cases() {
   return (
     <div className="min-h-screen bg-base py-24 pb-32">
       <SEO 
-        title="Solved Cases & Investigative Case Studies"
-        description="Study real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."
-        keywords="solved forensic cases, crime case studies, dactyloscopy case studies, criminalistics research archive"
-        canonicalPath="/cases"
+        title={selectedCase ? `${selectedCase.title} - Investigative Case Study` : "Solved Cases & Investigative Case Studies"}
+        description={selectedCase ? (selectedCase.summary || `Review the forensic investigation of ${selectedCase.title}. Analysis and evidence breakdown.`) : "Study real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."}
+        keywords={selectedCase ? `${selectedCase.title.toLowerCase()}, solved forensic case, case archive, crime investigation report` : "solved forensic cases, crime case studies, dactyloscopy case studies, criminalistics research archive, forenclue cases"}
+        canonicalPath={selectedCase ? `/cases?case=${selectedCase.id}` : "/cases"}
         image={selectedCase?.image}
+        type={selectedCase ? "article" : "website"}
+        authorName={selectedCase?.createdBy || "ForenClue Forensic Expert"}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Case Archive', path: '/cases' },
+          ...(selectedCase ? [{ name: selectedCase.title, path: `/cases?case=${selectedCase.id}` }] : [])
+        ]}
+        faqs={[
+          { question: "Are these real forensic cases?", answer: "Yes, these are documented real-world criminal case studies re-examined from a scientific, investigative, and procedural standpoint." },
+          { question: "Who prepares these forensic investigations?", answer: "Our case archives are researched and written by forensic professionals, criminologists, and cyber investigators." }
+        ]}
       />
+
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
         <div className="absolute inset-0 forensic-grid" />

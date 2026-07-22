@@ -6,8 +6,19 @@ interface SEOProps {
   keywords?: string;
   canonicalPath?: string;
   image?: string;
-  type?: 'website' | 'article' | 'book';
+  type?: 'website' | 'article' | 'book' | 'course' | 'service';
   noindex?: boolean;
+  // Dynamic SEO Structured Data extensions
+  authorName?: string;
+  publishDate?: string;
+  courseDetails?: {
+    name: string;
+    description?: string;
+    provider?: string;
+    category?: string;
+  };
+  faqs?: Array<{ question: string; answer: string }>;
+  breadcrumbs?: Array<{ name: string; path: string }>;
 }
 
 export function SEO({
@@ -18,6 +29,11 @@ export function SEO({
   image,
   type = 'website',
   noindex = false,
+  authorName,
+  publishDate,
+  courseDetails,
+  faqs,
+  breadcrumbs,
 }: SEOProps) {
   useEffect(() => {
     const siteTitle = 'ForenClue | Forensic EdTech Mastery';
@@ -48,12 +64,19 @@ export function SEO({
 
     // Standard Meta Tags
     setMetaTag('name', 'description', description);
-    setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow');
+    setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1');
+    setMetaTag('name', 'content-language', 'en-IN');
+    
+    // Geographic Targeting for Forensic Training Excellence in India and globally
+    setMetaTag('name', 'geo.region', 'IN-DL');
+    setMetaTag('name', 'geo.placename', 'Delhi');
+    setMetaTag('name', 'geo.position', '28.6139;77.2090');
+    setMetaTag('name', 'ICBM', '28.6139, 77.2090');
 
     if (keywords) {
       setMetaTag('name', 'keywords', keywords);
     } else {
-      setMetaTag('name', 'keywords', 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career');
+      setMetaTag('name', 'keywords', 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics');
     }
 
     // Canonical link setup
@@ -64,8 +87,10 @@ export function SEO({
     const shareTitle = title ? `${title} | Forensic Science Hub` : 'ForenClue - Master Forensic Science & Investigations';
     setMetaTag('property', 'og:title', shareTitle);
     setMetaTag('property', 'og:description', description);
-    setMetaTag('property', 'og:type', type);
+    setMetaTag('property', 'og:type', type === 'article' ? 'article' : 'website');
     setMetaTag('property', 'og:url', absoluteCanonicalUrl);
+    setMetaTag('property', 'og:site_name', 'ForenClue');
+    setMetaTag('property', 'og:locale', 'en_IN');
 
     // Determine the optimal image URL (override low-res thumbnail parameters if present)
     let ogImg = 'https://forenclue.in/forenclue_og_banner.jpg';
@@ -96,22 +121,120 @@ export function SEO({
     setMetaTag('name', 'twitter:title', shareTitle);
     setMetaTag('name', 'twitter:description', description);
     setMetaTag('name', 'twitter:image', ogImg);
+    setMetaTag('name', 'twitter:site', '@ForenClue');
+    setMetaTag('name', 'twitter:creator', '@ForenClue');
 
-    // Dynamic insertion of Google Schema Markup Structured Data (Organization, Website details)
-    const jsonLdData = {
-      '@context': 'https://schema.org',
-      '@type': type === 'article' ? 'Article' : type === 'book' ? 'Book' : 'WebSite',
-      'name': title || 'ForenClue',
-      'description': description,
-      'url': absoluteCanonicalUrl,
-      'publisher': {
-        '@type': 'Organization',
+    // Structured Data Graph Architecture (Organizes multiple relational entities)
+    const graphData: any[] = [
+      {
+        '@type': 'EducationalOrganization',
+        '@id': 'https://forenclue.in/#organization',
         'name': 'ForenClue',
+        'url': 'https://forenclue.in',
         'logo': {
           '@type': 'ImageObject',
           'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1600/4b5616a4-6069-44a7-ba52-88f965165067.png'
-        }
+        },
+        'sameAs': [
+          'https://www.youtube.com/@ForenClue',
+          'https://www.instagram.com/forenclue',
+          'https://t.me/forenclue'
+        ]
+      },
+      {
+        '@type': type === 'article' ? 'Article' : type === 'book' ? 'Book' : 'WebPage',
+        '@id': `${absoluteCanonicalUrl}#webpage`,
+        'url': absoluteCanonicalUrl,
+        'name': title || 'ForenClue',
+        'description': description,
+        'isPartOf': { '@id': 'https://forenclue.in/#website' },
+        'publisher': { '@id': 'https://forenclue.in/#organization' }
       }
+    ];
+
+    // Rich Article Additions
+    if (type === 'article') {
+      const articleNode: any = {
+        '@type': 'BlogPosting',
+        '@id': `${absoluteCanonicalUrl}#article`,
+        'isPartOf': { '@id': `${absoluteCanonicalUrl}#webpage` },
+        'headline': title,
+        'description': description,
+        'image': ogImg,
+        'publisher': { '@id': 'https://forenclue.in/#organization' }
+      };
+      if (authorName) {
+        articleNode.author = {
+          '@type': 'Person',
+          'name': authorName
+        };
+      }
+      if (publishDate) {
+        articleNode.datePublished = publishDate;
+      }
+      graphData.push(articleNode);
+    }
+
+    // Course Rich Schema Additions
+    if (type === 'course' && courseDetails) {
+      graphData.push({
+        '@type': 'Course',
+        '@id': `${absoluteCanonicalUrl}#course`,
+        'name': courseDetails.name,
+        'description': courseDetails.description || description,
+        'provider': {
+          '@id': 'https://forenclue.in/#organization'
+        },
+        'category': courseDetails.category || 'Forensic Science'
+      });
+    }
+
+    // Service Rich Schema Additions
+    if (type === 'service') {
+      graphData.push({
+        '@type': 'Service',
+        '@id': `${absoluteCanonicalUrl}#service`,
+        'name': title,
+        'description': description,
+        'provider': {
+          '@id': 'https://forenclue.in/#organization'
+        }
+      });
+    }
+
+    // FAQPage Structured Data (Highly recommended for high-intent SEO queries)
+    if (faqs && faqs.length > 0) {
+      graphData.push({
+        '@type': 'FAQPage',
+        '@id': `${absoluteCanonicalUrl}#faq`,
+        'mainEntity': faqs.map(faq => ({
+          '@type': 'Question',
+          'name': faq.question,
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': faq.answer
+          }
+        }))
+      });
+    }
+
+    // BreadcrumbList Structured Data (Translates physical page layouts into intuitive breadcrumb trails)
+    if (breadcrumbs && breadcrumbs.length > 0) {
+      graphData.push({
+        '@type': 'BreadcrumbList',
+        '@id': `${absoluteCanonicalUrl}#breadcrumbs`,
+        'itemListElement': breadcrumbs.map((crumb, idx) => ({
+          '@type': 'ListItem',
+          'position': idx + 1,
+          'name': crumb.name,
+          'item': `https://forenclue.in${crumb.path}`
+        }))
+      });
+    }
+
+    const jsonLdData = {
+      '@context': 'https://schema.org',
+      '@graph': graphData
     };
 
     let scriptTag = document.querySelector('script[type="application/ld+json"]');
@@ -122,7 +245,8 @@ export function SEO({
     }
     scriptTag.textContent = JSON.stringify(jsonLdData);
 
-  }, [title, description, keywords, canonicalPath, image, type, noindex]);
+  }, [title, description, keywords, canonicalPath, image, type, noindex, authorName, publishDate, courseDetails, faqs, breadcrumbs]);
 
   return null; // Side-effect only component
 }
+

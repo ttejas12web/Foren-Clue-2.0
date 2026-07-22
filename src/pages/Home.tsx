@@ -148,11 +148,19 @@ The ForenClue Curriculum Board
   return (
     <div className="flex flex-col min-h-screen">
       <SEO 
-        title="Your Partner In Forensic Precision !"
+        title="Your Partner In Forensic Precision"
         description="Master forensic science, crime scene investigation, fingerprint lifting, digital forensics, and cybersecurity with India's first dedicated, expert-led forensic platform."
         keywords="forensic science, crime scene investigation, fingerprint analysis, digital forensics, ballistics, bloodstain pattern analysis, forensic training india, docudraft, forenclue"
         canonicalPath=""
+        breadcrumbs={[
+          { name: 'Home', path: '/' }
+        ]}
+        faqs={[
+          { question: "What is ForenClue?", answer: "ForenClue is India's first dedicated, expert-led forensic EdTech platform, providing specialized masterclasses, certification courses, solved crime case archives, and study resources." },
+          { question: "Who can enroll in ForenClue courses?", answer: "Students, legal professionals, law enforcement officers, cyber security enthusiasts, and anyone interested in forensic science and crime scene investigation can enroll." }
+        ]}
       />
+
       
       {/* Hero Section */}
       <section 

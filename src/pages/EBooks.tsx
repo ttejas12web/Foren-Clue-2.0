@@ -281,11 +281,20 @@ export default function EBooks() {
   return (
     <div className="pt-8 pb-20 min-h-screen bg-base relative overflow-hidden text-text-main font-sans">
       <SEO 
-        title="Academic eLibrary - Reference Textbook Vault | ForenClue"
+        title="Academic eLibrary - Reference Textbook Vault"
         description="Access standard academic forensic medicine textbooks, handwritten toxicology notes, national eligibility solved papers, and standard extraction protocols."
         keywords="forensic library, forenclue, forensic textbooks, toxicological revision keys, UGC NET papers"
         canonicalPath="/ebooks"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'eLibrary', path: '/ebooks' }
+        ]}
+        faqs={[
+          { question: "What resources are in the ForenClue eLibrary?", answer: "Our library hosts digital forensic medicine manuals, toxicological revision notes, previous UGC NET exam paper solutions, and active lab extraction protocols." },
+          { question: "Can I download these books and notes?", answer: "Yes, standard public reference books, revision notes, and past exams are fully available for on-demand study access on our learning portal." }
+        ]}
       />
+
 
       {/* Grid Overlay */}
       <div className="absolute top-0 left-0 w-full h-[600px] z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.06] bg-grid-black/[0.1] dark:bg-grid-white/[0.1] bg-[size:30px_30px]" />

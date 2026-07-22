@@ -280,10 +280,22 @@ export default function Podcast() {
   return (
     <div className="min-h-screen bg-[#121212] text-white pb-28 font-sans selection:bg-green-500/30 selection:text-green-200 pl-0 md:pl-2">
       <SEO 
-        title="ForenClue Podcast - ForenClue" 
-        description="Listen to the ForenClue Podcast by ForenClue."
-        keywords="podcast, forensic science podcast, neet cracker, ugc net"
+        title={currentEpisode ? `${currentEpisode.title} | ForenClue Podcast` : "ForenClue Podcast - Auditory Forensic Learning"} 
+        description={currentEpisode ? (currentEpisode.description || `Listen to ${currentEpisode.title} on ForenClue. Forensic audio guides and UGC NET exam notes.`) : "Dive deep into the world of forensic science, competitive exams (UGC NET & FACT), and criminal case studies. An auditory learning experience designed for aspiring forensic experts."}
+        keywords={currentEpisode ? `${currentEpisode.title.toLowerCase()}, forensic science podcast, audio revision notes` : "podcast, forensic science podcast, neet cracker, ugc net, forensic audio notes"}
+        canonicalPath={currentEpisode ? `/podcast?episode=${currentEpisode.id}` : "/podcast"}
+        image={currentEpisode?.coverImage || "https://forenclue.in/forenclue_og_banner.jpg"}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Podcast', path: '/podcast' },
+          ...(currentEpisode ? [{ name: currentEpisode.title, path: `/podcast?episode=${currentEpisode.id}` }] : [])
+        ]}
+        faqs={[
+          { question: "Where can I stream ForenClue podcasts?", answer: "Our complete library of forensic medicine reviews, UGC NET exam guidelines, and mock series is available directly via the ForenClue Web player." },
+          { question: "Who presents the ForenClue Podcast?", answer: "Our show is hosted and presented by ForenClue's expert educators, training professionals, and guest scientists." }
+        ]}
       />
+
       
       {/* Audio Element */}
       <audio 

@@ -31,7 +31,17 @@ export default function Services() {
         description="Boost your profile with recognized forensic certification credentials, live webinars, physical hands-on workshops, and institutional university affiliations."
         keywords="forensic science workshops, forensic science certified online, forensic university collaboration, study forensics program"
         canonicalPath="/services"
+        type="service"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/services' }
+        ]}
+        faqs={[
+          { question: "What services does ForenClue offer colleges?", answer: "We offer guest lectures, forensic science workshops, institutional university collaborations, curriculum design assistance, and student certification drives." },
+          { question: "Are physical hands-on forensic workshops available?", answer: "Yes! ForenClue facilitates both high-fidelity online workshops and physical hands-on crime scene, fingerprinting, and digital forensic training events." }
+        ]}
       />
+
       <h1 className="text-4xl md:text-6xl font-heading font-black mb-16 text-center uppercase tracking-tight">
         Our <span className="text-warning">Services</span>
       </h1>

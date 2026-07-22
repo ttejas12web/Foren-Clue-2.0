@@ -9,7 +9,16 @@ export default function Contact() {
         description="Reach out to ForenClue. Send your queries regarding forensic science certifications, institute partnerships, customized training, or handbook pre-orders."
         keywords="contact forenclue, forensic support portal, contact forensic advisory team, pune forensic institute"
         canonicalPath="/contact"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Contact', path: '/contact' }
+        ]}
+        faqs={[
+          { question: "How can I contact ForenClue support?", answer: "You can write to us directly at forenclue@gmail.com, or reach out via our official social communities on Telegram and Instagram." },
+          { question: "Where is ForenClue located?", answer: "ForenClue is a premium digital forensic learning portal serving forensic students and university institutions globally, headquartered in India." }
+        ]}
       />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div>
           <h1 className="text-4xl md:text-6xl font-heading font-black mb-6 uppercase tracking-tight text-warning">
