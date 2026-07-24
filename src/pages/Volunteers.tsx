@@ -110,6 +110,12 @@ const activeVolunteers = [
     badge: 'Verified Contributor',
     id: 'FC-VOL-2026-017',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgII8E3uDMB1pddGXFvPmpIWY6Qyy1XHfZxh3p4WjHgkB9XQyS6mZZaz4prDJ8iUtEkNDHAfMbt3Fpo9KqVQgmdPJX82pw6Fl0mpiwP3PNAtfexIm1Au5sosYHCZvYvVj4D8kwHnbLmx3Pu1RhIS2SkWmLzWFOTzfh5lj1dsFl2Hx6T4ojajz-XCTZm3YA/s1280/WhatsApp%20Image%202026-07-20%20at%205.59.10%20PM.jpeg'
+  },
+  {
+    name: 'Okeke Rejoice',
+    role: 'Forensic Research Associate',
+    id: 'FC-VOL-2026-003',
+    image: 'https://blogger.googleusercontent.com/img/a/AVvXsEh2lfWQbOpyUvbC2hsraNNxni4OWJizFhjEaHqdCHn_DCew5tPHHv3us0A9eYThwvtAYkBVom4Sn3--hI3D2dqmBGxlEQYHOA0oG4TPDNTnmDjCN9xstG4J8M-Cz_6sAKJLIkXRrDLE7WaruEJK4cDLVLaCNnaNvIztSPvP09IEXQB3kr0Ko4sBI1koVuw'
   }
 ];
 

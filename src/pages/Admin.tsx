@@ -264,31 +264,35 @@ export default function Admin() {
 
       const demoCases = [
         {
-          id: 'v0FbBY5KebZ0L6HbCyHqE',
-          title: 'The Mystery of Lab 104: Saliva DNA Profiling',
-          tag: 'DNA Profiling',
+          id: 'okq4BfBv5EEjsxvnn5dP',
+          title: 'The RG Kar Medical College Tragedy: A Forensic Investigation',
+          tag: 'Forensic Pathology',
           year: '2024',
-          location: 'Mumbai Forensic Lab',
-          difficulty: 'Expert',
-          type: 'Homicide',
-          image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e024?auto=format&fit=crop&q=80&w=1000',
-          summary: 'A high-profile homicide case solved using state-of-the-art DNA profiling. Secretion extraction from a partially smoked cigarette butt led to positive database matching.',
-          details: '## Case Background\\nOn May 12, 2024, Dr. Vikram Sarabhai was found dead in his private research office at the Mumbai Forensic Institute. There were signs of a struggle, but no clear weapon or fingerprints left at the primary scene. The suspect had meticulously wiped down all physical surfaces with ethanol.\\n\\n## Forensic Recovery\\nInvestigating officers recovered a single, partially smoked cigarette butt from an ashtray inside the lab. Initial inspection suggested it had been left recently. Standard fingerprinting yielded no clear ridges due to moisture.\\n\\n## Laboratory Analysis\\n1. **DNA Extraction**: Forensic technicians used a modified Differential Extraction protocol to isolate cellular material left in the saliva residues on the cigarette filter.\\n2. **PCR Amplification**: The recovered DNA was amplified using standard multiplex PCR targeting 24 CODIS STR loci.\\n3. **Electropherogram Results**: A clear, single-source male profile was generated. The profile was queried against the National Forensic Database.\\n\\n## Break in the Case\\nThe search yielded a perfect match with a former research assistant, Rohan Mehra, who had been terminated three months prior for security violations. Confronted with the DNA evidence, the suspect confessed to the homicide.\\n\\n## Scientific Evidence and Conclusion\\nThe likelihood ratio of the match was calculated at 1 in 4.8 quadrillion, presenting irrefutable proof in a court of law.',
+          location: 'Kolkata, West Bengal',
+          difficulty: 'Advanced',
+          type: 'Homicide & Sexual Assault',
+          image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=1000',
+          summary: 'A comprehensive forensic analysis of the August 2024 RG Kar Medical College tragedy in Kolkata, detailing the autopsy findings, CBI investigation, digital evidence, and DNA profiling that unraveled the brutal rape and murder of a trainee doctor.',
+          details: '## Case Background\nOn the morning of August 9, 2024, the body of a 31-year-old postgraduate trainee doctor (commonly referred to as "Abhaya") was discovered in the seminar hall of R. G. Kar Medical College and Hospital in Kolkata. She had been on a grueling 36-hour shift and had gone to the seminar hall to rest. The horrific nature of the crime—involving severe sexual assault and murder—sparked massive nationwide protests among the medical community, demanding justice and better workplace security. The case was eventually transferred to the Central Bureau of Investigation (CBI) by the Calcutta High Court due to concerns over the initial police handling.\n\n## The Crime Scene & Initial Response\nThe victim was found on the podium of the seminar hall, partially clothed with severe visible injuries. \nThe initial response by local authorities was heavily criticized for failing to secure the crime scene effectively, leading to allegations of evidence tampering. During a subsequent protest on August 14, a mob vandalized the hospital, further complicating the scene, though police claimed the seminar hall remained secure.\n\n## Forensic Pathology and Autopsy Findings\nThe autopsy, conducted under intense scrutiny, revealed the sheer brutality of the attack. Key findings included:\n1. **Cause of Death**: Manual strangulation (throttling) associated with smothering. The thyroid cartilage was fractured, confirming forceful compression of the neck.\n2. **Physical Trauma**: The victim sustained 14 distinct injuries. Deep wounds were documented on her face, eyes, neck, belly, lips, and limbs. A severe head injury was also noted, suggesting her head was repeatedly bashed against a hard surface (likely the floor or wall).\n3. **Sexual Assault**: The medical examination confirmed aggravated sexual assault, with significant genital trauma. Crucially, the presence of seminal fluid was documented, which became the cornerstone of the DNA evidence.\n4. **Time of Death**: Forensic experts estimated the time of death to be between 3:00 AM and 5:00 AM on August 9.\n\n## Digital and Trace Evidence\nThe CBI\'s investigation utilized modern digital forensics to pinpoint the suspect:\n1. **CCTV Analysis**: Footage from the hospital corridors captured the primary suspect, a civic volunteer named Sanjay Roy, entering the chest medicine department building at around 4:03 AM and leaving approximately 35 minutes later.\n2. **Digital Forensics (The Bluetooth Earphone)**: A crucial piece of evidence—a broken Bluetooth earphone—was found near the victim\'s body. Investigators matched the MAC address and pairing logs of this earphone directly to Sanjay Roy\'s mobile phone, placing him at the exact scene of the crime.\n3. **Pornographic Material**: Digital forensics on the suspect\'s seized mobile phone revealed a history of consuming violent pornography, establishing a potential psychological profile.\n\n## DNA and Biological Evidence\nThe Central Forensic Science Laboratory (CFSL) in New Delhi played a pivotal role in confirming the suspect\'s involvement:\n- **Seminal Fluid Match**: The DNA extracted from the seminal fluid recovered from the victim\'s body conclusively matched the DNA profile of Sanjay Roy.\n- **Trace Evidence on Suspect**: Swabs taken from the suspect\'s body revealed defensive scratch marks. DNA from the victim was found in the suspect\'s nail clippings, and the suspect\'s skin cells were found under the victim\'s fingernails, evidencing a violent struggle.\n- **Blood Stains**: The suspect\'s clothes and shoes, which he had allegedly washed, were subjected to luminol testing, revealing trace amounts of the victim\'s blood.\n\n## Investigation Conclusion and Impact\nThe integration of the forensic pathology report, irrefutable DNA evidence, and digital tracking (CCTV and Bluetooth logs) allowed the CBI to build a watertight charge sheet against the accused. The case remains a stark reminder of the critical importance of secure crime scene management, rapid evidence collection, and the power of multidisciplinary forensic science in delivering justice.',
           status: 'published',
           createdBy: 'forenclue@gmail.com',
-          evidenceLabels: ['Cigarette Butt', 'Saliva Resides', 'Dr. Sarabhai Blood Spatter'],
-          forensicTechniques: ['PCR Multiplexing', 'STR Analysis', 'Differential DNA Extraction'],
+          evidenceLabels: ['Autopsy Report', 'CCTV Corridors', 'Bluetooth Earphone Log', 'CFSL DNA Report', 'Luminol Blood Trace'],
+          forensicTechniques: ['Forensic Pathology', 'DNA Profiling', 'Digital Forensics', 'Crime Scene Reconstruction'],
           contentImages: [
             {
-              url: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&q=80&w=600',
-              caption: 'Laboratory DNA Extraction Chamber with Centrifuge Setup'
+              url: 'https://images.unsplash.com/photo-1582719471384-894fbb16e024?auto=format&fit=crop&q=80&w=600',
+              caption: 'Forensic Laboratory DNA Processing'
             },
             {
-              url: 'https://images.unsplash.com/photo-1542382257-80dedb725088?auto=format&fit=crop&q=80&w=600',
-              caption: 'Automated Capillary Electrophoresis STR Output Peaks'
+              url: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=600',
+              caption: 'Medical Examination and Pathology Lab'
+            },
+            {
+              url: 'https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?auto=format&fit=crop&q=80&w=600',
+              caption: 'Digital Forensics: Device Pairing Analysis'
             }
           ],
-          attachments: ['https://forenclue.in/sample_cert.pdf'],
+          attachments: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
