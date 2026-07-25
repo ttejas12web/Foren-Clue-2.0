@@ -41,6 +41,11 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+const Webinars = lazy(() => import('./pages/Webinar')); // Fix potential issue if they aren't matching
+const Simulations = lazy(() => import('./pages/Simulations'));
+const MicroscopeLab = lazy(() => import('./pages/MicroscopeLab'));
+const SpectrophotometerLab = lazy(() => import('./pages/SpectrophotometerLab'));
+
 function PageLoader() {
   return (
     <div className="flex h-[60vh] items-center justify-center">
@@ -53,7 +58,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 'volunteers', 'ambassadors', 'forms'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 'volunteers', 'ambassadors', 'forms', 'simulations'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -124,6 +129,9 @@ export default function App() {
                     <Route path="/volunteers" element={<Volunteers />} />
                     <Route path="/ambassadors" element={<CampusAmbassadors />} />
                     <Route path="/forms" element={<GoogleForms />} />
+                    <Route path="/simulations" element={<Simulations />} />
+                    <Route path="/simulations/microscope" element={<MicroscopeLab />} />
+                    <Route path="/simulations/spectrophotometer" element={<SpectrophotometerLab />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

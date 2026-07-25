@@ -44,10 +44,12 @@
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.1.14",
-    "three": "^0.184.0",
+    "three": "^0.185.1",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "tailwind-scrollbar": "^4.0.2"
+  }
 }

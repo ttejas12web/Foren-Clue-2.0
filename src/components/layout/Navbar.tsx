@@ -15,7 +15,8 @@ import {
   ShieldCheck, 
   Info, 
   Users, 
-  GraduationCap
+  GraduationCap,
+  Search
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ const resourcesDropdown = [
   { name: 'E-Library', path: '/ebooks', icon: BookOpen },
   { name: 'Podcast', path: '/podcast', icon: Mic },
   { name: 'Webinars', path: '/webinar', icon: Video },
+  { name: 'Simulations', path: '/simulations', icon: Search },
 ];
 
 const verifyDropdown = [
@@ -60,7 +62,7 @@ export function Navbar() {
   });
 
   useEffect(() => {
-    if (['/ebooks', '/podcast', '/webinar'].includes(location.pathname)) {
+    if (['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)) {
       setIsMobileResourcesOpen(true);
     }
     if (['/certificate', '/employees'].includes(location.pathname)) {
@@ -143,7 +145,7 @@ export function Navbar() {
               <button
                 className={cn(
                   "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
-                  ['/ebooks', '/podcast', '/webinar'].includes(location.pathname)
+                  ['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
                 )}
@@ -362,7 +364,7 @@ export function Navbar() {
                   onClick={() => setIsMobileResourcesOpen(!isMobileResourcesOpen)}
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left rounded-md",
-                    ['/ebooks', '/podcast', '/webinar'].includes(location.pathname)
+                    ['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
                       ? "text-warning bg-black/5 dark:bg-white/5"
                       : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                   )}
