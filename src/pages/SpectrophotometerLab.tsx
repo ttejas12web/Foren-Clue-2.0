@@ -60,10 +60,10 @@ export default function SpectrophotometerLab() {
   }, [currentSample]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] overflow-hidden">
+    <div className="w-full min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col lg:flex-row bg-[#0a0a0a] text-white font-sans lg:overflow-hidden">
       
       {/* 3D Viewport - Left Side */}
-      <div className="flex-1 relative min-h-[50vh] lg:min-h-full border-r border-white/10">
+      <div className="w-full h-[50vh] lg:h-full lg:flex-1 relative border-b lg:border-b-0 lg:border-r border-white/10 flex-shrink-0">
         <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
           <Beaker size={20} className="text-warning" />
           <span className="font-bold tracking-widest text-sm uppercase">Spectrophotometer 3D</span>
@@ -86,7 +86,7 @@ export default function SpectrophotometerLab() {
       </div>
 
       {/* Controls & Readings - Right Side */}
-      <div className="w-full lg:w-[500px] flex flex-col h-full bg-surface overflow-y-auto">
+      <div className="w-full lg:w-[500px] flex flex-col lg:h-full bg-surface lg:overflow-y-auto">
         
         {/* Digital Display */}
         <div className="p-8 bg-[#0a0a0a] border-b border-white/5 relative">

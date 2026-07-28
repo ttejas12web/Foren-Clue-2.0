@@ -2,93 +2,215 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://forenclue.in/</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://forenclue.in/cases</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/about</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/courses</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://forenclue.in/cases?case=B1HNKkopZXlC8FNrhVh6</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/cases</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/careers</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/community</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/services</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/ebooks</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/contact</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/privacy</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/terms</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/podcast</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/certificate</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/webinar</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/volunteers</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/ambassadors</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/simulations</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/simulations/microscope</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/simulations/spectrophotometer</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/quizzes</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/cases?case=BM8hzVrzEb42MLk7FWTq</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:title>The Phantom Breach: APT-33 Ransomware Attack</image:title>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgWelQtifJ-d70lPq3DQgUvSVLwfdswdAYwRZf7KS4oSQv6U2rANcHoBljIr5Aqmy3CHzUSE0mIa8fPqpJVRAl2WOJnmBjzpaozfxv6wf_pZBZFP6DqYs9j9evLPK2LnLR_yWU3Gsro0X7IuyIYIhvrDCWfXkcrekpTJAxzo7EmctjLXvIwJj0HgAkRdME/s1536/1000120798.png</image:loc>
+      <image:title>The Satyam Computer Services scandal </image:title>
     </image:image>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&amp;fit=crop&amp;q=80&amp;w=600</image:loc>
-      <image:caption>Cyber Security Operations Center monitoring real-time network traffic graphs</image:caption>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvu6GUXuW_kp2VGEi1Dy_wEGpBg0YW4IEetOXvuVqI4HaT24pxisPeA162UgziTWDL9_Y7BvvYFs5AjNxwcRJQ3ExgwzGY9cEMy9SYNRGwGHbgFP9QS6hab9K1Tw8hiJA8QkDYcsVX6JbFP1PsP-KXSRJtZgSdtW19F5vtI3ZjzJFaR8TO2pYRQxsXqsE/s468/1000120795.jpg</image:loc>
+      <image:title>The Satyam Computer Services scandal  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhoUmG22fH20FWg1io7bKCg7XONl4ePkak5doDpG4N8eVxs56liN_Re2Q8LtL3SLTwy-beuIQoKmjhPnwdwMaXPKBDiyN-ZJ-34LP6W1LeXceEiBmGChfG50iSACuV1LcXU0tGjJHonYc7sBvNdHL_nU_UoA3uY6hWbOnZhkwcj1bbnmpMEoRpHQcXXc6I/s400/1000120793.gif</image:loc>
+      <image:title>The Satyam Computer Services scandal  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjc86Zg6Zzxu8O-grquqHOowuo_f2hqXr8H3cvfArIsuVijqUQj_zi_l21E4VUJwsrgJ_-7T82we034saKpVoYz063IJqbe1APLlxPpj5xB2V7wsUElILKA-NcKAbFXVhxGMfLev9Hd7SpKyuWQStdVjZ-2N-Qt93Jv45E8K_3HUsochGWxMpsqFLFHyr0/s400/1000120792.jpg</image:loc>
+      <image:title>The Satyam Computer Services scandal  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiZVDw9RaMQLOI_XYChmeHSLarbikl44TIvu0gY3CMteLT5GxLP9SDGqhJ0xG6QT0EnP0fjplBgv6DVuPPhR6-WfKOLewB7jw6uyXdyG-2NdWdd4rpDFrBocc8lRYzW3VFvFL66437IzTLThTs2nXpEpyfjtT0cp6Satg-S3pHt5zZDJLghut_lAulEbSU/s600/1000120791.jpg</image:loc>
+      <image:title>The Satyam Computer Services scandal  - Case File Evidence</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://forenclue.in/cases?case=SeVvdBKSqEJKozwwgT83</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/cases?case=BprgCwTwfXk8V4vK6mga</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:title>The Forged Stamp of the Royal Land Registry</image:title>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgdGpWJMlQbii8bXCJ-0cf4-cUu9LaK8jhwChlXfjlY_UIHuZkfkE4UrBajAk57FbOikP7YIUpPxULm2mzvIsOr0vqaehV8EcYhq0GuDfwAwYxto2DK3ZbZL_KL3WLI6Lnp3hXsXZ0tTXOUzdcp2_Sld1tdgbdqHer1wJwUSTCYKwYRhcbrTQPvEmghSfA/s1254/1000120009.png</image:loc>
+      <image:title>Tandoor murder case</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&amp;fit=crop&amp;q=80&amp;w=600</image:loc>
-      <image:caption>High Resolution Document Examination Microscope with Oblique Lighting</image:caption>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiAzDQEQV8ZmbzuxzcR75ALigIVQ7kzMS1wydd67MN7iRMFOhB42DCj4LaLxJSzW3UvnilU4ZQBicTE7HcsHN9xV8cfLCXRqsQAL7fL5NUO7U6kx_aIL0xy2wOAwWMIuL7ITU-gUN9TfucEfNIOydrqm_Z0a-yTIx70_c74otWoyOjHAeLs_oXzl9x46JI/s621/1000118999.jpg</image:loc>
+      <image:title>Tandoor murder case - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh6Tob-s_kFV_qtp7hZYEnji21PlFLqmu4c0IW6Cn32L2UWrB3GQ0j3feR4-nctnnDdM-zJH32BnlyrN8-0mv-4w3ANVjcPWTOl3ERnhJOb6xMJ-3cVNAitf73huoH0N5jTEKcRJh2aVgM2b6zjkdcBfQbenDrisDtYf4rt8tykdLxM0oGQYX7ygMh6BZ4/s1688/1000118423.jpg</image:loc>
+      <image:title>Tandoor murder case - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhWY3U6LqO0f7pTXfOZao6upLWGEjltXOUKxxaheLOp60be1gs3_kgdfj2IBxRY529QPWk0Qw3vvAyMQlrYM_3zqpBgcjiRNTcFJB8sUmHJOSjC51HI-1al4ngn6CEbLsTzZdofvXR336JiGxqyL-TXLSRsaRYLnVMwcwWuAcHdgqqjENcS40SjNjzI3Sw/s400/1000118421.jpg</image:loc>
+      <image:title>Tandoor murder case - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi-63EZKoEoy_ZK6WewhM6ocBG_rjpKEfi1eecy-LwmdpZ2x4VKyvQRM97Y2JQt0pjFywe4epaMkqUHC2yyrdlIDBng2-C88VLDWZiDxowhvsrj-R39XwiT8RXO57EFTMh2nm5F7uP16mS_bHpX2Za8ujvS_PJQCTBjTlFHjA95cJGlyAmVYKohWs5XGGw/s1080/1000118998.jpg</image:loc>
+      <image:title>Tandoor murder case - Case File Evidence</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://forenclue.in/cases?case=TDc7giOcZULHX0MOKGSn</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/cases?case=q4VuU446EOPQzNDeBxHc</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1580537659466-0a9bfa916a54?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:title>The Museum Heist: Trace Glass &amp; Soil Analysis</image:title>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjqetZ4mflA-C6-nyvY8ps99JXuVqZSv3TvY52kPRV8RhbzkM5vB4veqRqdEiAyIR0g4thDabck84wXVoSRau4dso_zYGW08FUBWFp2_esNfmEAI23zM-UBZVXjrrjinGOi4EnlksCiCZhfwP8sGFyrcZQmXn0RmiWW7xBazzh_3wikDnwQYJ1WbSEt3p4/s1448/1000120378.png</image:loc>
+      <image:title>The Sheena Bora Murder Case</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&amp;fit=crop&amp;q=80&amp;w=600</image:loc>
-      <image:caption>Mughal Exhibit Gallery Display Case under Cross-Polarized Forensic Light</image:caption>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgm7qxMHOe3y2yicQUa1JeXQtffqyeejJMJEE2P3b0YIY51kqnBaB2bFCMePjo2ChzvQlNs485RlgWWGTFKsJR6p7VfwdETTBYx_8pcdrnCnikBQ4bqhVAlJj1iYCkmTDoUTZVLNgKpbrMMhvQYi2pF2-8eH3mo64VBKerZMh-2-GW6rDWy8nHybJ0P_9E/s759/1000120377.jpg</image:loc>
+      <image:title>The Sheena Bora Murder Case - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhWl2xhUAmyjdxQRSRDJiff7khyr42AbOo42uWFOfrLVljEcptJcQbW9IJJPCNsOwq3GERsxrsPHFWHWfjGxpozqBeh2GPuhMsgAFb9fR1occ1_6Yem3GHyTSIuTjS-1LSMd_LZcq00uf-3ktIVB8Tgwa-to33ojLDbySH9yC2c6sq48T8Z135NoSoHM8I/s750/1000120231.jpg</image:loc>
+      <image:title>The Sheena Bora Murder Case - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgRtjx7kgG8rrO8VRxI7JN0o0U4RhgCJIpByuBcK2r0axlYu-KHmPHHgYqbohQPk1WDXHGLnY4GFV7UWwi1jK_hdLg7aE53_rhXBkMCqljE2YHCjk8lenCMrjbuNhRUDHxtMHRrE4GzUNfN-z24Hf2-js_CC5TaseQ3u8H1FQYHy5-odI9jHSz-VryuJ9A/s796/1000120379.jpg</image:loc>
+      <image:title>The Sheena Bora Murder Case - Case File Evidence</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://forenclue.in/cases?case=a60XHfJd43eKVU7httCw</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/quizzes/quiz-general-1</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:title>The Bones of Crimson Creek: Facial Reconstruction</image:title>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&amp;fit=crop&amp;q=80&amp;w=600</image:loc>
-      <image:caption>Digitized 3D Skull Model with Tissue-Depth Landmarks</image:caption>
-    </image:image>
   </url>
   <url>
-    <loc>https://forenclue.in/cases?case=okq4BfBv5EEjsxvnn5dP</loc>
-    <lastmod>2026-07-25T05:14:07.250Z</lastmod>
+    <loc>https://www.forenclue.in/quizzes/weekly-challenge-1</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:title>The RG Kar Medical College Tragedy: A Forensic Investigation</image:title>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1582719471384-894fbb16e024?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:caption>Forensic DNA Profiling and Trace Analysis</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:caption>Medical College Corridors and Security Assessment</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?auto=format&amp;fit=crop&amp;q=80&amp;w=1000</image:loc>
-      <image:caption>Digital Forensics: Device Pairing Analysis</image:caption>
-    </image:image>
+  </url>
+  <url>
+    <loc>https://www.forenclue.in/quizzes/weekly-challenge-2</loc>
+    <lastmod>2026-07-28T18:33:27.726Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

@@ -8,9 +8,10 @@ import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ScrollToTop } from './components/layout/ScrollToTop';
-import { FloatingPodcastButton } from './components/ui/FloatingPodcastButton';
+import { FloatingWhatsAppButton } from './components/ui/FloatingWhatsAppButton';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
+import { DesktopOnly } from './components/layout/DesktopOnly';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -45,6 +46,9 @@ const Webinars = lazy(() => import('./pages/Webinar')); // Fix potential issue i
 const Simulations = lazy(() => import('./pages/Simulations'));
 const MicroscopeLab = lazy(() => import('./pages/MicroscopeLab'));
 const SpectrophotometerLab = lazy(() => import('./pages/SpectrophotometerLab'));
+const Quizzes = lazy(() => import('./pages/Quizzes'));
+const QuizPlayer = lazy(() => import('./pages/QuizPlayer'));
+const QuizLeaderboard = lazy(() => import('./pages/QuizLeaderboard'));
 
 function PageLoader() {
   return (
@@ -98,11 +102,11 @@ export default function App() {
         )}
       </AnimatePresence>
       <ScrollToTop />
-      <FloatingPodcastButton />
+      <FloatingWhatsAppButton />
       <GoogleOneTap />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/player/:courseId" element={<Navigate to="/" replace />} />
+          <Route path="/player/:courseId" element={<CoursePlayer />} />
           <Route path="*" element={
             <>
               <Navbar />
@@ -111,7 +115,7 @@ export default function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/courses" element={<Navigate to="/" replace />} />
+                    <Route path="/courses" element={<Courses />} />
                     <Route path="/cases" element={<Cases />} />
                     <Route path="/careers" element={<Careers />} />
                     <Route path="/community" element={<Community />} />
@@ -129,9 +133,12 @@ export default function App() {
                     <Route path="/volunteers" element={<Volunteers />} />
                     <Route path="/ambassadors" element={<CampusAmbassadors />} />
                     <Route path="/forms" element={<GoogleForms />} />
-                    <Route path="/simulations" element={<Simulations />} />
-                    <Route path="/simulations/microscope" element={<MicroscopeLab />} />
-                    <Route path="/simulations/spectrophotometer" element={<SpectrophotometerLab />} />
+                    <Route path="/simulations" element={<DesktopOnly><Simulations /></DesktopOnly>} />
+                    <Route path="/simulations/microscope" element={<DesktopOnly><MicroscopeLab /></DesktopOnly>} />
+                    <Route path="/simulations/spectrophotometer" element={<DesktopOnly><SpectrophotometerLab /></DesktopOnly>} />
+                    <Route path="/quizzes" element={<Quizzes />} />
+                    <Route path="/quizzes/:quizId" element={<QuizPlayer />} />
+                    <Route path="/quizzes/:quizId/leaderboard" element={<QuizLeaderboard />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/profile/:userId" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />

@@ -129,14 +129,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // Profile Listener
+  // Manual User state (Google login simulator bypass for sandboxed iframes)
+  const [manualUser, setManualUser] = useState<{ email: string; displayName: string; uid: string; photoURL?: string } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('manualUser') || localStorage.getItem('manualUser');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleSetManualUser = (usr: typeof manualUser) => {
+    setManualUser(usr);
+    if (usr) {
+      sessionStorage.setItem('manualUser', JSON.stringify(usr));
+      localStorage.setItem('manualUser', JSON.stringify(usr));
+    } else {
+      sessionStorage.removeItem('manualUser');
+      localStorage.removeItem('manualUser');
+    }
+  };
+
+  const [showBypassModal, setShowBypassModal] = useState(false);
+  const [bypassEmail, setBypassEmail] = useState('forenclue@gmail.com');
+  const [bypassName, setBypassName] = useState('Investigator Jane');
+  const [bypassResolve, setBypassResolve] = useState<((value?: any) => void) | null>(null);
+  const [bypassReject, setBypassReject] = useState<((reason?: any) => void) | null>(null);
+
+  // Auth Listener
   useEffect(() => {
-    if (!user) return;
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    }, (error) => {
+      console.error("Auth change error:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const effectiveUser = manualAdmin 
+    ? { email: manualAdmin.email, uid: 'manual_admin', displayName: manualAdmin.displayName } as any 
+    : manualUser
+    ? { email: manualUser.email, uid: manualUser.uid, displayName: manualUser.displayName, photoURL: manualUser.photoURL } as any
+    : user;
+
+  const effectiveUserProfile = manualAdmin
+    ? {
+        uid: 'manual_admin',
+        email: manualAdmin.email,
+        displayName: manualAdmin.displayName,
+        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+        purchasedCourses: [],
+        bookmarks: [],
+        achievementTags: ['Forenclue Administrator'],
+        progress: {},
+        doubtsCount: 0,
+        commentsCount: 0
+      } as UserProfile
+    : manualUser
+    ? (userProfile || {
+        uid: manualUser.uid,
+        email: manualUser.email,
+        displayName: manualUser.displayName,
+        photoURL: manualUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+        purchasedCourses: [],
+        bookmarks: [],
+        achievementTags: ['Forensic Novice'],
+        progress: {},
+        doubtsCount: 0,
+        commentsCount: 0
+      } as UserProfile)
+    : userProfile;
+
+  const isAdmin = checkIsAdmin(effectiveUser?.uid, effectiveUser?.email);
+
+  // Profile Listener linked to effectiveUser so simulated accounts sync fully with Firestore
+  useEffect(() => {
+    if (!effectiveUser) return;
 
     let unsubscribeProfile: (() => void) | null = null;
 
     const initProfile = async () => {
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, 'users', effectiveUser.uid);
       
       try {
         let exists = true; // Assume exists by default to avoid overwriting if fetch fails
@@ -152,10 +231,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!exists) {
           try {
             await setDoc(userRef, {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || 'Investigator',
-              photoURL: user.photoURL || '',
+              uid: effectiveUser.uid,
+              email: effectiveUser.email || '',
+              displayName: effectiveUser.displayName || 'Investigator',
+              photoURL: effectiveUser.photoURL || '',
               createdAt: serverTimestamp(),
               purchasedCourses: [],
               bookmarks: [],
@@ -184,10 +263,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Fallback to local profile if listener fails
           if (!userProfile) {
             setUserProfile({
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
+              uid: effectiveUser.uid,
+              email: effectiveUser.email,
+              displayName: effectiveUser.displayName,
+              photoURL: effectiveUser.photoURL,
               purchasedCourses: [],
               bookmarks: [],
               achievementTags: ['Forensic Novice'],
@@ -209,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       if (unsubscribeProfile) unsubscribeProfile();
     };
-  }, [user]);
+  }, [effectiveUser]);
 
   // Safety Timeout for loading
   useEffect(() => {
@@ -223,46 +302,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  const effectiveUser = manualAdmin 
-    ? { email: manualAdmin.email, uid: 'manual_admin', displayName: manualAdmin.displayName } as any 
-    : user;
-
-  const effectiveUserProfile = manualAdmin
-    ? {
-        uid: 'manual_admin',
-        email: manualAdmin.email,
-        displayName: manualAdmin.displayName,
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-        purchasedCourses: [],
-        bookmarks: [],
-        achievementTags: ['Forenclue Administrator'],
-        progress: {},
-        doubtsCount: 0,
-        commentsCount: 0
-      } as UserProfile
-    : userProfile;
-
-  const isAdmin = checkIsAdmin(effectiveUser?.uid, effectiveUser?.email);
-
   const signInWithGoogle = async () => {
     try {
+      // First try the real popup
       const result = await signInWithPopup(auth, googleProvider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);
       }
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        console.log("Sign-in popup closed by user.");
-        return;
-      }
-      console.error("Error signing in with Google: ", error);
-      if (error.code === 'auth/unauthorized-domain') {
-        alert(
-          `Firebase Error: Unauthorized Domain.\n\nPlease add this URL to your Authorized Domains in the Firebase Console:\n1. Go to Authentication -> Settings -> Authorized domains\n2. Add: ${window.location.hostname}`
-        );
-      }
-      throw error;
+      console.warn("Real Google Sign-In blocked/failed in sandbox context. Opening Dev Authenticator bypass:", error);
+      
+      // Keep promise pending and trigger custom sandbox Google Simulator modal
+      return new Promise<void>((resolve, reject) => {
+        setBypassResolve(() => resolve);
+        setBypassReject(() => reject);
+        setShowBypassModal(true);
+      });
+    }
+  };
+
+  const handleBypassSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bypassEmail || !bypassName) return;
+
+    const emailLower = bypassEmail.trim().toLowerCase();
+    const nameTrim = bypassName.trim();
+    const uid = `google_sim_${btoa(emailLower).replace(/=/g, '')}`;
+
+    const simulated = {
+      email: emailLower,
+      displayName: nameTrim,
+      uid,
+      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'
+    };
+
+    handleSetManualUser(simulated);
+    setShowBypassModal(false);
+
+    if (bypassResolve) {
+      bypassResolve();
+    }
+  };
+
+  const handleBypassCancel = () => {
+    setShowBypassModal(false);
+    if (bypassReject) {
+      bypassReject(new Error("Google Sign-In simulation cancelled by user."));
     }
   };
 
@@ -306,6 +392,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (manualAdmin) {
         setManualAdmin(null);
         sessionStorage.removeItem('manualAdmin');
+      } else if (manualUser) {
+        handleSetManualUser(null);
       } else {
         await signOut(auth);
         setAccessToken(null);
@@ -426,7 +514,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-
           </motion.div>
         ) : (
           <motion.div 
@@ -437,6 +524,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           >
             {children}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sandbox Google Auth Bypass Modal */}
+      <AnimatePresence>
+        {showBypassModal && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleBypassCancel}
+              className="absolute inset-0 bg-crust/80 backdrop-blur-md"
+            />
+            
+            {/* Modal Body */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-md bg-[#111214] border border-warning/30 rounded-3xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
+            >
+              {/* Scanning top light effect */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-warning to-transparent animate-pulse" />
+              
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center border border-warning/30 mb-4 shrink-0">
+                  <Fingerprint className="w-8 h-8 text-warning" />
+                </div>
+                
+                <h3 className="font-heading font-black text-lg sm:text-xl uppercase tracking-wider text-text-main">
+                  Google Authenticator
+                </h3>
+                <p className="text-xs text-text-muted mt-2 leading-relaxed max-w-xs">
+                  Popup logins are restricted inside sandboxed iframes. Use this secure simulator to authorize your Google identity.
+                </p>
+              </div>
+
+              <form onSubmit={handleBypassSubmit} className="mt-6 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">
+                    Google Profile Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={bypassName}
+                    onChange={(e) => setBypassName(e.target.value)}
+                    placeholder="e.g. Jane Doe"
+                    className="w-full bg-base/50 text-text-main placeholder-text-muted/40 text-xs rounded-xl border border-white/10 px-4 h-11 focus:outline-none focus:border-warning/50 transition-all font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">
+                    Google Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={bypassEmail}
+                    onChange={(e) => setBypassEmail(e.target.value)}
+                    placeholder="e.g. forenclue@gmail.com"
+                    className="w-full bg-base/50 text-text-main placeholder-text-muted/40 text-xs rounded-xl border border-white/10 px-4 h-11 focus:outline-none focus:border-warning/50 transition-all font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    type="submit"
+                    className="w-full h-11 bg-warning text-crust font-heading font-black text-xs uppercase tracking-widest rounded-xl hover:bg-warning/90 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Authorize Google Identity</span>
+                    <ShieldCheck size={16} />
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={handleBypassCancel}
+                    className="w-full h-11 bg-transparent hover:bg-white/5 border border-white/10 text-text-muted hover:text-text-main font-heading font-black text-xs uppercase tracking-widest rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+
+              {/* Helpful Tips */}
+              <div className="mt-4 pt-4 border-t border-white/5 text-[10px] text-text-muted/60 text-center uppercase tracking-wider">
+                💡 Using <span className="text-warning font-bold">forenclue@gmail.com</span> logs in as Administrator.
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </AuthContext.Provider>

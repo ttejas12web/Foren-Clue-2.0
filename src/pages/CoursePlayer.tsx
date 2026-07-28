@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
 import { 
   ChevronLeft, 
   Menu, 
@@ -1263,7 +1264,7 @@ export default function CoursePlayer() {
                   Course Mentor
                 </h4>
                 <div className="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-lg border border-black/10 dark:border-white/5">
-                   <img src={course.instructorImage} className="w-8 h-8 rounded-full border border-warning/30" />
+                   <img src={course.instructorImage} alt={course.instructor} className="w-8 h-8 rounded-full border border-warning/30" />
                    <div>
                       <p className="text-[11px] font-black text-text-main">{course.instructor}</p>
                       <p className="text-[9px] text-text-muted">Lead Investigator</p>
@@ -1326,7 +1327,7 @@ export default function CoursePlayer() {
                               onClick={() => handleSocialShare('whatsapp')}
                               className="flex items-center gap-3 px-3 py-2 hover:bg-black/5 dark:bg-white/5 rounded text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-main transition-colors"
                             >
-                              <MessageCircle size={12} className="text-green-400" />
+                              <WhatsAppIcon className="w-3 h-3 text-[#25D366]" />
                               WhatsApp
                             </button>
                             <button 

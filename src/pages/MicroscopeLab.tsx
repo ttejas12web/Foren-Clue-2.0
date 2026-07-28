@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
+import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { Microscope3D } from '@/components/laboratory/Microscope3D';
 import { Microscope, Settings2, Lightbulb, Move, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import plantEpidermisImg from '@/assets/images/plant_epidermis_microscope_1785090601160.jpg';
+import syntheticFiberImg from '@/assets/images/synthetic_fiber_microscope_1785090621165.jpg';
+import pollenGrainsImg from '@/assets/images/pollen_grains_microscope_1785090638783.jpg';
+import bloodStainsImg from '@/assets/images/blood_stains_microscope_1785090877110.jpg';
 
 const SAMPLES = [
   { id: 's1', name: 'Red Blood Cells', url: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&q=80&w=800' },
-  { id: 's2', name: 'Plant Epidermis', url: 'https://images.unsplash.com/photo-1530026186672-2cd00ffc50fe?auto=format&fit=crop&q=80&w=800' },
-  { id: 's3', name: 'Synthetic Fiber', url: '/images/synthetic_fiber_microscope_1784918115473.jpg' },
-  { id: 's4', name: 'Pollen Grains', url: '/images/pollen_grains_microscope_1784918131892.jpg' },
-  { id: 's5', name: 'Salt Crystals', url: '/images/salt_crystals_microscope_1784918146173.jpg' },
+  { id: 's2', name: 'Plant Epidermis', url: plantEpidermisImg },
+  { id: 's3', name: 'Synthetic Fiber', url: syntheticFiberImg },
+  { id: 's4', name: 'Pollen Grains', url: pollenGrainsImg },
+  { id: 's5', name: 'Blood Stains', url: bloodStainsImg },
 ];
 
 const OBJECTIVES = [4, 10, 40, 100];
@@ -38,10 +42,10 @@ export default function MicroscopeLab() {
   const brightness = Math.max(0.1, lightIntensity / 100);
 
   return (
-    <div className="w-full h-screen sm:min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row bg-[#0a0a0a] text-white font-sans overflow-hidden">
+    <div className="w-full min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col lg:flex-row bg-[#0a0a0a] text-white font-sans lg:overflow-hidden">
       
       {/* 3D Viewport - Left Side */}
-      <div className="flex-1 relative min-h-[50vh] lg:min-h-full border-r border-white/10">
+      <div className="w-full h-[50vh] lg:h-full lg:flex-1 relative border-b lg:border-b-0 lg:border-r border-white/10 flex-shrink-0">
         <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
           <Microscope size={20} className="text-info" />
           <span className="font-bold tracking-widest text-sm uppercase">Virtual Lab 3D</span>
@@ -61,12 +65,13 @@ export default function MicroscopeLab() {
             stageX={stageX}
             stageY={stageY}
           />
+          <ContactShadows position={[0, -3.2, 0]} opacity={0.6} scale={10} blur={2.5} far={4} color="#000000" />
           <OrbitControls makeDefault minDistance={2} maxDistance={15} target={[0, 1, 0]} />
         </Canvas>
       </div>
 
       {/* Controls & Eyepiece - Right Side */}
-      <div className="w-full lg:w-[500px] flex flex-col h-full bg-surface overflow-y-auto">
+      <div className="w-full lg:w-[500px] flex flex-col lg:h-full bg-surface lg:overflow-y-auto">
         
         {/* Eyepiece View */}
         <div className="p-8 flex justify-center bg-black relative shadow-inner">

@@ -16,7 +16,8 @@ import {
   Info, 
   Users, 
   GraduationCap,
-  Search
+  Trophy,
+  Microscope
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -32,10 +33,11 @@ const directLinks = [
 ];
 
 const resourcesDropdown = [
+  { name: 'Quizzes & Challenges', path: '/quizzes', icon: Trophy },
   { name: 'E-Library', path: '/ebooks', icon: BookOpen },
   { name: 'Podcast', path: '/podcast', icon: Mic },
   { name: 'Webinars', path: '/webinar', icon: Video },
-  { name: 'Simulations', path: '/simulations', icon: Search },
+  { name: 'Simulations', path: '/simulations', icon: Microscope },
 ];
 
 const verifyDropdown = [
@@ -62,7 +64,7 @@ export function Navbar() {
   });
 
   useEffect(() => {
-    if (['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)) {
+    if (['/quizzes', '/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)) {
       setIsMobileResourcesOpen(true);
     }
     if (['/certificate', '/employees'].includes(location.pathname)) {
@@ -145,7 +147,7 @@ export function Navbar() {
               <button
                 className={cn(
                   "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
-                  ['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
+                  ['/quizzes', '/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
                 )}
@@ -308,7 +310,7 @@ export function Navbar() {
                 to="/login"
                 className="ml-4 px-5 py-2.5 bg-warning text-white font-bold text-sm tracking-wide rounded-md hover:bg-warning-dark transition-colors"
               >
-                Sign In
+                Sign In / Login
               </Link>
             )}
           </div>
@@ -364,7 +366,7 @@ export function Navbar() {
                   onClick={() => setIsMobileResourcesOpen(!isMobileResourcesOpen)}
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-3 font-medium transition-colors text-left rounded-md",
-                    ['/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
+                    ['/quizzes', '/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
                       ? "text-warning bg-black/5 dark:bg-white/5"
                       : "text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5"
                   )}
@@ -557,7 +559,7 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="w-full block text-center mt-4 px-5 py-3 bg-warning text-white font-bold rounded-md hover:bg-warning-dark transition-colors"
                   >
-                    Sign In
+                    Sign In / Login
                   </Link>
               )}
             </div>

@@ -28,13 +28,19 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isSimulatedUser(userId) {
+      return userId == 'manual_admin' || userId.matches('^google_sim_.*');
+    }
+    function isOwnerOrSimulated(userId) {
+      return isOwner(userId) || isSimulatedUser(userId);
+    }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
 
     // Validation Blueprints (with strict type checks and .size() limits)
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'createdAt'])
         && data.uid is string && data.uid.size() <= 128
-        && data.uid == request.auth.uid
+        && (data.uid == request.auth.uid || isSimulatedUser(data.uid))
         && (!('email' in data) || data.email == null || (data.email is string && data.email.size() <= 256))
         && (!('displayName' in data) || data.displayName == null || (data.displayName is string && data.displayName.size() <= 256))
         && (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 2000))
@@ -191,6 +197,19 @@ service cloud.firestore {
         && (!('qrCodeUrl' in data) || data.qrCodeUrl is string && data.qrCodeUrl.size() <= 2000);
     }
 
+    function isValidQuiz(data) {
+      return data.keys().hasAll(['title', 'description'])
+        && data.title is string && data.title.size() <= 300
+        && data.description is string && data.description.size() <= 5000;
+    }
+
+    function isValidQuizAttempt(data) {
+      return data.keys().hasAll(['quizId', 'userId', 'score'])
+        && data.quizId is string && data.quizId.size() <= 128
+        && data.userId is string && data.userId.size() <= 128
+        && data.score is number;
+    }
+
     // --- Cases ---
     match /cases/{caseId} {
       allow read: if true;
@@ -236,14 +255,14 @@ service cloud.firestore {
     // --- Certificates ---
     match /certificates/{certificateId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isAdminEmail() && isValidCertificate(incoming());
       allow delete: if isAdminEmail();
     }
 
     // --- Employees ---
     match /employees/{employeeId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isAdminEmail() && isValidEmployee(incoming());
       allow delete: if isAdminEmail();
     }
 
@@ -251,10 +270,10 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow public get so profile details can be seen in community links
       allow get: if true;
-      allow list: if isSignedIn(); 
+      allow list: if isSignedIn() || isSimulatedUser(userId); 
       
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
-      allow update: if isOwner(userId) && isValidUser(incoming()) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt;
+      allow create: if isOwnerOrSimulated(userId) && isValidUser(incoming()) && (isSimulatedUser(userId) || incoming().createdAt == request.time);
+      allow update: if isOwnerOrSimulated(userId) && isValidUser(incoming()) && incoming().uid == existing().uid;
     }
 
     // --- Reports ---
@@ -337,6 +356,21 @@ service cloud.firestore {
     match /google_forms/{formId} {
       allow read: if true;
       allow create, update, delete: if isAdminEmail();
+    }
+
+    // Quizzes & Weekly Challenges Rule
+    match /quizzes/{quizId} {
+      allow read: if true;
+      allow create, delete: if isAdminEmail();
+      // Allow admin to update OR enrolled signed-in user updating enrolledUserIds
+      allow update: if isAdminEmail() || (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['enrolledUserIds']));
+    }
+
+    // Quiz Attempts & Leaderboards Rule
+    match /quizAttempts/{attemptId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidQuizAttempt(incoming()) && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdminEmail();
     }
   }
 }

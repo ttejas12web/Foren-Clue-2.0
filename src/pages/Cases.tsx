@@ -17,6 +17,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { CaseEditorModal } from '@/components/ui/CaseEditorModal';
 import { PdfViewerModal } from '@/components/ui/PdfViewerModal';
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon';
 import { ResilientImage } from '@/lib/localFileStore';
 
 // --- Types ---
@@ -234,7 +235,7 @@ export default function Cases() {
   const handleCopyLink = (e: React.MouseEvent, caseId: string, caseTitle: string, caseSummary: string) => {
     e.stopPropagation(); // prevent opening the modal when clicking share!
     
-    const shareUrl = `https://forenclue.in/cases?case=${caseId}`;
+    const shareUrl = `https://www.forenclue.in/cases?case=${caseId}`;
     
     if (navigator.share) {
       navigator.share({
@@ -1164,12 +1165,12 @@ export default function Cases() {
                   <input 
                     type="text" 
                     readOnly 
-                    value={`https://forenclue.in/cases?case=${sharingCase.id}`}
+                    value={`https://www.forenclue.in/cases?case=${sharingCase.id}`}
                     className="flex-grow bg-transparent text-xs text-white/95 px-3 py-1.5 focus:outline-none select-all font-mono"
                   />
                   <button 
                     onClick={() => {
-                      navigator.clipboard.writeText(`https://forenclue.in/cases?case=${sharingCase.id}`);
+                      navigator.clipboard.writeText(`https://www.forenclue.in/cases?case=${sharingCase.id}`);
                       setCopiedId(sharingCase.id);
                       setTimeout(() => setCopiedId(null), 2500);
                     }}
@@ -1197,7 +1198,7 @@ export default function Cases() {
                   
                   {/* Twitter / X */}
                   <a 
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Investigating this fascinating forensic case study: "' + sharingCase.title + '" on ForenClue. Check it out!')}&url=${encodeURIComponent('https://forenclue.in/cases?case=' + sharingCase.id)}`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Investigating this fascinating forensic case study: "' + sharingCase.title + '" on ForenClue. Check it out!')}&url=${encodeURIComponent('https://www.forenclue.in/cases?case=' + sharingCase.id)}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2.5 bg-[#1da1f2]/10 border border-[#1da1f2]/20 hover:bg-[#1da1f2]/20 text-[#1da1f2] rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
@@ -1208,7 +1209,7 @@ export default function Cases() {
 
                   {/* LinkedIn */}
                   <a 
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://forenclue.in/cases?case=' + sharingCase.id)}`}
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://www.forenclue.in/cases?case=' + sharingCase.id)}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2.5 bg-[#0a66c2]/10 border border-[#0a66c2]/20 hover:bg-[#0a66c2]/20 text-[#0a66c2] rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
@@ -1219,12 +1220,12 @@ export default function Cases() {
 
                   {/* WhatsApp */}
                   <a 
-                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out this forensic investigation case study: ' + sharingCase.title + ' https://forenclue.in/cases?case=' + sharingCase.id)}`}
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent('Check out this forensic investigation case study: ' + sharingCase.title + ' https://www.forenclue.in/cases?case=' + sharingCase.id)}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2.5 bg-[#25d366]/10 border border-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
                   >
-                    <Volume2 size={14} className="shrink-0 rotate-[-45deg]" />
+                    <WhatsAppIcon className="w-3.5 h-3.5 shrink-0" />
                     <span>WhatsApp</span>
                   </a>
 
@@ -1232,7 +1233,7 @@ export default function Cases() {
                   <button 
                     onClick={() => {
                         window.open("https://instagram.com", "_blank");
-                        navigator.clipboard.writeText(`https://forenclue.in/cases?case=${sharingCase.id}`);
+                        navigator.clipboard.writeText(`https://www.forenclue.in/cases?case=${sharingCase.id}`);
                         setCopiedId(sharingCase.id);
                         setTimeout(() => setCopiedId(null), 2500);
                     }}
@@ -1244,7 +1245,7 @@ export default function Cases() {
 
                   {/* Facebook */}
                   <a 
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://forenclue.in/cases?case=' + sharingCase.id)}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.forenclue.in/cases?case=' + sharingCase.id)}`}
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-2.5 bg-[#1877f2]/10 border border-[#1877f2]/20 hover:bg-[#1877f2]/20 text-[#1877f2] rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
@@ -1260,7 +1261,7 @@ export default function Cases() {
                         navigator.share({
                           title: sharingCase.title,
                           text: sharingCase.summary,
-                          url: `https://forenclue.in/cases?case=${sharingCase.id}`
+                          url: `https://www.forenclue.in/cases?case=${sharingCase.id}`
                         }).catch(console.warn);
                       } else {
                         alert("Native system menu is not supported on this device's browser window. Use our copying or platform options above!");

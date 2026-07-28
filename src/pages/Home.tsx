@@ -7,6 +7,7 @@ import { EvidenceMarker } from '@/components/ui/EvidenceMarker';
 import { EditableText } from '@/components/ui/EditableText';
 import { SEO } from '@/components/layout/SEO';
 import { ForensicGridCanvas } from '@/components/ui/ForensicGridCanvas';
+import { UpcomingQuizSection } from '@/components/quiz/UpcomingQuizSection';
 
 const MotionLink = motion.create(Link);
 
@@ -261,10 +262,12 @@ The ForenClue Curriculum Board
                 className="relative rounded-2xl overflow-hidden border border-black/15 dark:border-white/10 shadow-lg bg-black/50 w-full cursor-zoom-in group transition-all duration-300 hover:border-warning/50 hover:shadow-warning/10"
               >
                 <img 
-                  src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgiJ2oOCQiw2cxeNN6p5b40F-AKZdIkdSRRZ9V14gvIgg2MOymbNvpD2_QcaQ8gB9UxMzmp1l3iafah8Tdz2GChCInBXR8HeRIr3x_-N7a3zrpUejvhRpRhN_8UrEcvMxKN46sAl322fuGSgE3WRyeURXB0MiRstqFsk7jPALV8r3Vx8TyN_eWEPULmX0w/s1492/Mr.%20Ashutosh%20Singh.png"
-                  alt="Official Webinar Event Poster - Career Pathways in Cybersecurity"
+                  src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png"
+                  alt="Official Webinar Event Poster - Beyond The Smiles"
                   className="w-full h-auto block"
                   referrerPolicy="no-referrer"
+                  loading="lazy"
+                  decoding="async"
                 />
                 
                 {/* Click to zoom overlay */}
@@ -279,13 +282,13 @@ The ForenClue Curriculum Board
               </div>
 
               <div className="space-y-4">
-                {/* 3D Touchable View Recent Event Button */}
+                {/* 3D Touchable View Upcoming Event Button */}
                 <Link 
-                  to="/webinar?event=cybersecurity-career-pathways"
+                  to="/webinar?event=beyond-the-smiles"
                   className="group relative w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl text-xs sm:text-sm shadow-[0_6px_0_0_#9a3412] hover:shadow-[0_4px_0_0_#9a3412] active:shadow-[0_0px_0_0_#9a3412] active:translate-y-[6px] border border-amber-500/20 transition-all text-center cursor-pointer font-sans"
                 >
                   <Video size={16} className="text-crust" />
-                  <span>View Recent Event</span>
+                  <span>View Upcoming Event</span>
                 </Link>
               </div>
 
@@ -293,6 +296,9 @@ The ForenClue Curriculum Board
           </div>
         </div>
       </motion.section>
+
+      {/* Upcoming & Active Quiz Challenges */}
+      <UpcomingQuizSection />
 
       {/* About Snapshot */}
       <motion.section 
@@ -379,6 +385,8 @@ The ForenClue Curriculum Board
                       alt="Careers in Forensic Science Handbook Cover" 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute top-3 right-3 bg-warning text-crust text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded shadow-lg">
                       Kindle Edition
@@ -486,10 +494,12 @@ The ForenClue Curriculum Board
             onClick={(e) => e.stopPropagation()}
           >
             <img 
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgiJ2oOCQiw2cxeNN6p5b40F-AKZdIkdSRRZ9V14gvIgg2MOymbNvpD2_QcaQ8gB9UxMzmp1l3iafah8Tdz2GChCInBXR8HeRIr3x_-N7a3zrpUejvhRpRhN_8UrEcvMxKN46sAl322fuGSgE3WRyeURXB0MiRstqFsk7jPALV8r3Vx8TyN_eWEPULmX0w/s1492/Mr.%20Ashutosh%20Singh.png"
+              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png"
               alt="Official Webinar Event Poster - Full Screen"
               className="max-w-full max-h-[90vh] md:max-h-[95vh] object-contain rounded-lg"
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>

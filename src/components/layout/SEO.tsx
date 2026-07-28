@@ -19,6 +19,7 @@ interface SEOProps {
   };
   faqs?: Array<{ question: string; answer: string }>;
   breadcrumbs?: Array<{ name: string; path: string }>;
+  customSchema?: any[];
 }
 
 export function SEO({
@@ -34,6 +35,7 @@ export function SEO({
   courseDetails,
   faqs,
   breadcrumbs,
+  customSchema,
 }: SEOProps) {
   useEffect(() => {
     const siteTitle = 'ForenClue | Forensic EdTech Mastery';
@@ -80,7 +82,7 @@ export function SEO({
     }
 
     // Canonical link setup
-    const absoluteCanonicalUrl = `https://forenclue.in${canonicalPath}`;
+    const absoluteCanonicalUrl = `https://www.forenclue.in${canonicalPath}`;
     setLinkTag('canonical', absoluteCanonicalUrl);
 
     // OpenGraph social preview metadata
@@ -93,7 +95,7 @@ export function SEO({
     setMetaTag('property', 'og:locale', 'en_IN');
 
     // Determine the optimal image URL (override low-res thumbnail parameters if present)
-    let ogImg = 'https://forenclue.in/forenclue_og_banner.jpg';
+    let ogImg = 'https://www.forenclue.in/forenclue_og_banner.jpg';
     if (image) {
       ogImg = image;
     }
@@ -128,9 +130,9 @@ export function SEO({
     const graphData: any[] = [
       {
         '@type': 'EducationalOrganization',
-        '@id': 'https://forenclue.in/#organization',
+        '@id': 'https://www.forenclue.in/#organization',
         'name': 'ForenClue',
-        'url': 'https://forenclue.in',
+        'url': 'https://www.forenclue.in',
         'logo': {
           '@type': 'ImageObject',
           'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1600/4b5616a4-6069-44a7-ba52-88f965165067.png'
@@ -147,8 +149,14 @@ export function SEO({
         'url': absoluteCanonicalUrl,
         'name': title || 'ForenClue',
         'description': description,
-        'isPartOf': { '@id': 'https://forenclue.in/#website' },
-        'publisher': { '@id': 'https://forenclue.in/#organization' }
+        'isPartOf': { '@id': 'https://www.forenclue.in/#website' },
+        'publisher': { '@id': 'https://www.forenclue.in/#organization' },
+        'image': ogImg,
+        'primaryImageOfPage': {
+          '@type': 'ImageObject',
+          '@id': `${absoluteCanonicalUrl}#primaryimage`,
+          'url': ogImg
+        }
       }
     ];
 
@@ -161,7 +169,7 @@ export function SEO({
         'headline': title,
         'description': description,
         'image': ogImg,
-        'publisher': { '@id': 'https://forenclue.in/#organization' }
+        'publisher': { '@id': 'https://www.forenclue.in/#organization' }
       };
       if (authorName) {
         articleNode.author = {
@@ -183,9 +191,10 @@ export function SEO({
         'name': courseDetails.name,
         'description': courseDetails.description || description,
         'provider': {
-          '@id': 'https://forenclue.in/#organization'
+          '@id': 'https://www.forenclue.in/#organization'
         },
-        'category': courseDetails.category || 'Forensic Science'
+        'category': courseDetails.category || 'Forensic Science',
+        'image': ogImg
       });
     }
 
@@ -197,8 +206,9 @@ export function SEO({
         'name': title,
         'description': description,
         'provider': {
-          '@id': 'https://forenclue.in/#organization'
-        }
+          '@id': 'https://www.forenclue.in/#organization'
+        },
+        'image': ogImg
       });
     }
 
@@ -227,9 +237,13 @@ export function SEO({
           '@type': 'ListItem',
           'position': idx + 1,
           'name': crumb.name,
-          'item': `https://forenclue.in${crumb.path}`
+          'item': `https://www.forenclue.in${crumb.path}`
         }))
       });
+    }
+
+    if (customSchema && customSchema.length > 0) {
+      graphData.push(...customSchema);
     }
 
     const jsonLdData = {
@@ -245,7 +259,7 @@ export function SEO({
     }
     scriptTag.textContent = JSON.stringify(jsonLdData);
 
-  }, [title, description, keywords, canonicalPath, image, type, noindex, authorName, publishDate, courseDetails, faqs, breadcrumbs]);
+  }, [title, description, keywords, canonicalPath, image, type, noindex, authorName, publishDate, courseDetails, faqs, breadcrumbs, customSchema]);
 
   return null; // Side-effect only component
 }

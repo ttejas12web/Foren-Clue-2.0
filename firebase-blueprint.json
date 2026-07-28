@@ -218,9 +218,56 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["employeeId", "fullName", "position", "department", "joiningDate", "expiryDate", "status", "createdAt"]
+    },
+    "Quiz": {
+      "title": "Quiz and Weekly Challenge",
+      "description": "Interactive forensic quiz or weekly timed challenge",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "isWeeklyChallenge": { "type": "boolean" },
+        "scheduledStartTime": { "type": "string" },
+        "scheduledEndTime": { "type": "string" },
+        "durationMinutes": { "type": "integer" },
+        "totalPoints": { "type": "integer" },
+        "passingScore": { "type": "integer" },
+        "enrolledUserIds": { "type": "array", "items": { "type": "string" } },
+        "questions": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["title", "description"]
+    },
+    "QuizAttempt": {
+      "title": "Quiz Attempt Result",
+      "description": "Recorded attempt for a quiz with score and time taken for leaderboard",
+      "type": "object",
+      "properties": {
+        "quizId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "score": { "type": "integer" },
+        "totalPoints": { "type": "integer" },
+        "timeTakenSeconds": { "type": "integer" },
+        "completedAt": { "type": "string" },
+        "answers": { "type": "object" }
+      },
+      "required": ["quizId", "userId", "score"]
     }
   },
   "firestore": {
+    "/quizzes/{quizId}": {
+      "schema": "Quiz",
+      "description": "Administrator created quizzes and weekly challenges"
+    },
+    "/quizAttempts/{attemptId}": {
+      "schema": "QuizAttempt",
+      "description": "User quiz attempt submissions for scoring and leaderboard"
+    },
     "/employees/{employeeId}": {
       "schema": "Employee",
       "description": "Publicly verifiable digital employee credentials"

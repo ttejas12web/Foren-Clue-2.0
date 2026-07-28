@@ -10,10 +10,19 @@ import {
   Users, RefreshCw, ShieldCheck, Database, Fingerprint, ClipboardList
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ResilientImage, uploadFileResilient } from '@/lib/localFileStore';
 import { cn } from '@/lib/utils';
+import { Quiz, QuizQuestion } from '@/types/quiz';
+import { fetchQuizzes as fetchAdminQuizzes, saveQuiz, deleteQuiz } from '@/services/quizService';
+
+
+const getLocalDatetimeString = (dateObj: Date | string | number) => {
+  const d = new Date(dateObj);
+  if (isNaN(d.getTime())) return '';
+  return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+};
 
 export default function Admin() {
   const { user, isAdmin, adminLogin, logout, signInWithGoogle } = useAuth();
@@ -26,8 +35,8 @@ export default function Admin() {
   const [btnLoading, setBtnLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees'>('overview');
+  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes'>('overview');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
@@ -114,6 +123,196 @@ export default function Admin() {
   const [copiedTexts, setCopiedTexts] = useState<any[]>([]);
   const [textKey, setTextKey] = useState('');
   const [textVal, setTextVal] = useState('');
+
+  // Quizzes state
+  const [adminQuizzes, setAdminQuizzes] = useState<Quiz[]>([]);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+
+  const [enrolledUsersList, setEnrolledUsersList] = useState<{name: string, email: string}[]>([]);
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [selectedQuizTitle, setSelectedQuizTitle] = useState('');
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+
+  const handleViewEnrolledUsers = async (q: Quiz) => {
+    setSelectedQuizTitle(q.title);
+    setIsUsersModalOpen(true);
+    setEnrolledUsersList([]);
+    setFetchingUsers(true);
+    if (!q.enrolledUserIds || q.enrolledUserIds.length === 0) {
+      setFetchingUsers(false);
+      return;
+    }
+    
+    try {
+      const usersInfo = [];
+      for (const uid of q.enrolledUserIds) {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          usersInfo.push({ name: data.displayName || data.name || 'Unknown', email: data.email || 'N/A' });
+        } else {
+          usersInfo.push({ name: 'Unknown User', email: uid });
+        }
+      }
+      setEnrolledUsersList(usersInfo);
+    } catch (err) {
+      console.error("Error fetching enrolled users:", err);
+    } finally {
+      setFetchingUsers(false);
+    }
+  };
+
+  const [newQuizForm, setNewQuizForm] = useState({
+    title: '',
+    description: '',
+    category: 'Forensic Identification',
+    isWeeklyChallenge: true,
+    scheduledStartTime: getLocalDatetimeString(Date.now() + 86400000),
+    durationMinutes: 10,
+    totalPoints: 100,
+    passingScore: 70
+  });
+
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([
+    {
+      id: 'q1',
+      question: 'Which fingerprint pattern is most common in humans?',
+      options: ['Arches', 'Loops', 'Whorls', 'Accidental'],
+      correctAnswerIndex: 1,
+      explanation: 'Loops account for ~60-65% of human fingerprints.',
+      points: 50
+    },
+    {
+      id: 'q2',
+      question: 'What is AFIS?',
+      options: ['Automated Fingerprint Identification System', 'Advanced Forensic Image System', 'Automated Footwear System', 'None'],
+      correctAnswerIndex: 0,
+      explanation: 'AFIS stands for Automated Fingerprint Identification System.',
+      points: 50
+    }
+  ]);
+
+  const handleAddQuestion = () => {
+    const newQ: QuizQuestion = {
+      id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      question: '',
+      options: ['', '', '', ''],
+      correctAnswerIndex: 0,
+      explanation: '',
+      points: 10
+    };
+    setQuizQuestions(prev => [...prev, newQ]);
+  };
+
+  const handleRemoveQuestion = (index: number) => {
+    if (quizQuestions.length <= 1) {
+      alert("A quiz must have at least 1 question.");
+      return;
+    }
+    setQuizQuestions(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleQuestionChange = (index: number, field: keyof QuizQuestion, val: any) => {
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: val };
+      return updated;
+    });
+  };
+
+  const handleOptionChange = (qIndex: number, optIndex: number, val: string) => {
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      const opts = [...updated[qIndex].options];
+      opts[optIndex] = val;
+      updated[qIndex] = { ...updated[qIndex], options: opts };
+      return updated;
+    });
+  };
+
+  const handleAddOption = (qIndex: number) => {
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      const opts = [...updated[qIndex].options, ''];
+      updated[qIndex] = { ...updated[qIndex], options: opts };
+      return updated;
+    });
+  };
+
+  const handleRemoveOption = (qIndex: number, optIndex: number) => {
+    setQuizQuestions(prev => {
+      const updated = [...prev];
+      if (updated[qIndex].options.length <= 2) {
+        alert("A question must have at least 2 options.");
+        return prev;
+      }
+      const opts = updated[qIndex].options.filter((_, i) => i !== optIndex);
+      let newCorrect = updated[qIndex].correctAnswerIndex;
+      if (newCorrect >= opts.length) {
+        newCorrect = opts.length - 1;
+      }
+      updated[qIndex] = { ...updated[qIndex], options: opts, correctAnswerIndex: newCorrect };
+      return updated;
+    });
+  };
+
+  const handleEditQuiz = (q: Quiz) => {
+    setEditingQuizId(q.id);
+    setNewQuizForm({
+      title: q.title || '',
+      description: q.description || '',
+      category: q.category || 'Forensic Identification',
+      isWeeklyChallenge: q.isWeeklyChallenge || false,
+      scheduledStartTime: q.scheduledStartTime ? getLocalDatetimeString(q.scheduledStartTime) : '',
+      durationMinutes: q.durationMinutes || 10,
+      totalPoints: q.totalPoints || 100,
+      passingScore: q.passingScore || 70,
+    });
+    setQuizQuestions(q.questions && q.questions.length > 0 ? q.questions : [
+      {
+        id: 'q1',
+        question: '',
+        options: ['', ''],
+        correctAnswerIndex: 0,
+        explanation: '',
+        points: 10
+      }
+    ]);
+  };
+
+  const handleResetQuizForm = () => {
+    setEditingQuizId(null);
+    setNewQuizForm({
+      title: '',
+      description: '',
+      category: 'Forensic Identification',
+      isWeeklyChallenge: true,
+      scheduledStartTime: getLocalDatetimeString(Date.now() + 86400000),
+      durationMinutes: 10,
+      totalPoints: 100,
+      passingScore: 70,
+    });
+    setQuizQuestions([
+      {
+        id: 'q1',
+        question: 'Which fingerprint pattern is most common in humans?',
+        options: ['Arches', 'Loops', 'Whorls', 'Accidental'],
+        correctAnswerIndex: 1,
+        explanation: 'Loops account for ~60-65% of human fingerprints.',
+        points: 50
+      },
+      {
+        id: 'q2',
+        question: 'What is AFIS?',
+        options: ['Automated Fingerprint Identification System', 'Advanced Forensic Image System', 'Automated Footwear System', 'None'],
+        correctAnswerIndex: 0,
+        explanation: 'AFIS stands for Automated Fingerprint Identification System.',
+        points: 50
+      }
+    ]);
+  };
 
   // Certificate states
   const [certificates, setCertificates] = useState<any[]>([]);
@@ -685,6 +884,96 @@ export default function Admin() {
       handleFirestoreError(e, OperationType.LIST, 'employees');
     } finally {
       setEmployeeLoading(false);
+    }
+
+    // 8. Quizzes & Challenges
+    setQuizLoading(true);
+    try {
+      const qList = await fetchAdminQuizzes();
+      setAdminQuizzes(qList);
+    } catch (e) {
+      console.error("Error fetching quizzes:", e);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handleAdminSaveQuiz = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMsg('');
+    setErrMsg('');
+
+    if (!newQuizForm.title || !newQuizForm.description) {
+      setErrMsg("Please fill in Title and Description for the quiz.");
+      return;
+    }
+
+    if (!quizQuestions || quizQuestions.length === 0) {
+      setErrMsg("Please add at least one question to the quiz.");
+      return;
+    }
+
+    // Validate manual questions
+    for (let i = 0; i < quizQuestions.length; i++) {
+      const q = quizQuestions[i];
+      if (!q.question.trim()) {
+        setErrMsg(`Question #${i + 1} text cannot be empty.`);
+        return;
+      }
+      if (!q.options || q.options.length < 2) {
+        setErrMsg(`Question #${i + 1} must have at least 2 options.`);
+        return;
+      }
+      for (let j = 0; j < q.options.length; j++) {
+        if (!q.options[j].trim()) {
+          setErrMsg(`Option #${j + 1} in Question #${i + 1} cannot be empty.`);
+          return;
+        }
+      }
+    }
+
+    const calculatedTotalPoints = quizQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0);
+
+    try {
+      const payload: Partial<Quiz> = {
+        title: newQuizForm.title,
+        description: newQuizForm.description,
+        category: newQuizForm.category,
+        isWeeklyChallenge: newQuizForm.isWeeklyChallenge,
+        durationMinutes: Number(newQuizForm.durationMinutes),
+        totalPoints: calculatedTotalPoints > 0 ? calculatedTotalPoints : Number(newQuizForm.totalPoints),
+        passingScore: Number(newQuizForm.passingScore),
+        questions: quizQuestions,
+        createdBy: user?.email || 'Admin'
+      };
+
+      if (newQuizForm.scheduledStartTime) {
+        payload.scheduledStartTime = new Date(newQuizForm.scheduledStartTime).toISOString();
+      } else {
+        payload.scheduledStartTime = '';
+      }
+
+      if (editingQuizId) {
+        payload.id = editingQuizId;
+      }
+
+      await saveQuiz(payload);
+      setSuccessMsg(editingQuizId ? "Quiz updated successfully!" : "New Quiz / Weekly Challenge created!");
+      handleResetQuizForm();
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Error saving quiz: ${err.message}`);
+    }
+  };
+
+  const handleAdminDeleteQuiz = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this quiz?")) return;
+    try {
+      await deleteQuiz(id);
+      setSuccessMsg("Quiz deleted successfully.");
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Failed to delete quiz: ${err.message}`);
     }
   };
 
@@ -1513,7 +1802,7 @@ export default function Admin() {
                   onClick={logout} 
                   className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold transition-colors flex items-center gap-2"
                 >
-                  <LogOut size={14} /> Relinquish Credentials
+                  <LogOut size={14} /> Sign Out
                 </button>
               </div>
             </div>
@@ -1565,6 +1854,12 @@ export default function Admin() {
                   className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'employees' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
                 >
                   <Users size={16} /> Employee Manager
+                </button>
+                <button 
+                  onClick={() => setActiveTab('quizzes')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'quizzes' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <Award size={16} /> Quizzes & Challenges
                 </button>
                 <Link 
                   to="/forms"
@@ -3101,11 +3396,424 @@ export default function Admin() {
                     </div>
                   </motion.div>
                 )}
+
+                {/* 8. QUIZZES & WEEKLY CHALLENGES MANAGER */}
+                {activeTab === 'quizzes' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-2">
+                        Create / Edit Quiz & Weekly Challenge
+                      </h2>
+                      <p className="text-xs text-text-muted mb-6">
+                        Admins can publish timed weekly quiz challenges or practice quizzes for students.
+                      </p>
+
+                      <form onSubmit={handleAdminSaveQuiz} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Quiz Title</label>
+                            <input
+                              type="text"
+                              value={newQuizForm.title}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, title: e.target.value })}
+                              placeholder="Weekly Challenge #1: Fingerprint Analysis"
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Category</label>
+                            <select
+                              value={newQuizForm.category}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, category: e.target.value })}
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none"
+                            >
+                              <option value="Forensic Identification">Forensic Identification</option>
+                              <option value="Forensic Biology">Forensic Biology</option>
+                              <option value="Crime Scene Investigation">Crime Scene Investigation</option>
+                              <option value="Digital Forensics">Digital Forensics</option>
+                              <option value="Forensic Chemistry">Forensic Chemistry</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Description</label>
+                          <textarea
+                            value={newQuizForm.description}
+                            onChange={(e) => setNewQuizForm({ ...newQuizForm, description: e.target.value })}
+                            rows={2}
+                            placeholder="Detailed description of the quiz..."
+                            className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs text-text-main outline-none"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                          <div className="flex items-center gap-2 pt-6">
+                            <input
+                              type="checkbox"
+                              id="isWeeklyChallenge"
+                              checked={newQuizForm.isWeeklyChallenge}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, isWeeklyChallenge: e.target.checked })}
+                              className="w-4 h-4 text-warning"
+                            />
+                            <label htmlFor="isWeeklyChallenge" className="text-xs font-bold uppercase text-text-main cursor-pointer">
+                              Weekly Challenge?
+                            </label>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Start Date & Time</label>
+                            <input
+                              type="datetime-local"
+                              value={newQuizForm.scheduledStartTime}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, scheduledStartTime: e.target.value })}
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-xs text-text-main outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Duration (Mins)</label>
+                            <input
+                              type="number"
+                              value={newQuizForm.durationMinutes}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, durationMinutes: Number(e.target.value) })}
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-xs font-bold text-text-main outline-none"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono text-text-muted mb-1 uppercase">Total Points</label>
+                            <input
+                              type="number"
+                              value={newQuizForm.totalPoints}
+                              onChange={(e) => setNewQuizForm({ ...newQuizForm, totalPoints: Number(e.target.value) })}
+                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-xs font-bold text-text-main outline-none"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        {/* MANUAL QUESTIONS BUILDER SECTION */}
+                        <div className="pt-4 border-t border-black/10 dark:border-white/10 space-y-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-sm font-heading font-black uppercase tracking-wider text-text-main flex items-center gap-2">
+                                <HelpCircle size={16} className="text-warning" /> Quiz Questions ({quizQuestions.length})
+                              </h3>
+                              <p className="text-[11px] text-text-muted mt-0.5">
+                                Add questions manually with choices, mark the correct answer, and set point values.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleAddQuestion}
+                              className="px-3 py-1.5 bg-warning/10 hover:bg-warning/20 border border-warning/30 text-warning text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Plus size={14} /> Add Question
+                            </button>
+                          </div>
+
+                          <div className="space-y-6">
+                            {quizQuestions.map((q, qIdx) => (
+                              <div key={q.id || qIdx} className="bg-base border border-black/10 dark:border-white/10 rounded-2xl p-5 relative shadow-sm">
+                                <div className="flex items-center justify-between mb-3 border-b border-black/5 dark:border-white/5 pb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-full bg-warning/20 text-warning text-xs font-mono font-bold flex items-center justify-center">
+                                      {qIdx + 1}
+                                    </span>
+                                    <span className="font-bold text-xs uppercase tracking-wider text-text-main">
+                                      Question #{qIdx + 1}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 bg-surface border border-black/10 dark:border-white/10 px-2 py-1 rounded-lg">
+                                      <span className="text-[10px] text-text-muted font-mono uppercase">Points:</span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={q.points || 10}
+                                        onChange={(e) => handleQuestionChange(qIdx, 'points', Number(e.target.value))}
+                                        className="w-12 bg-transparent text-xs font-bold font-mono text-warning outline-none text-right"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveQuestion(qIdx)}
+                                      className="p-1.5 text-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                                      title="Remove Question"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  {/* Question prompt text */}
+                                  <div>
+                                    <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">
+                                      Question Prompt / Statement
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={q.question}
+                                      onChange={(e) => handleQuestionChange(qIdx, 'question', e.target.value)}
+                                      placeholder="e.g. Which chemical is used to visualize latent fingerprints on porous surfaces?"
+                                      className="w-full bg-surface border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                      required
+                                    />
+                                  </div>
+
+                                  {/* Answer Options */}
+                                  <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <label className="text-[10px] font-mono text-text-muted uppercase">
+                                        Answer Choices (Click letter icon to mark correct answer)
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddOption(qIdx)}
+                                        className="text-[10px] font-bold text-warning hover:underline flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Plus size={12} /> Add Choice
+                                      </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      {q.options.map((opt, optIdx) => {
+                                        const isCorrect = q.correctAnswerIndex === optIdx;
+                                        return (
+                                          <div
+                                            key={optIdx}
+                                            className={cn(
+                                              "flex items-center gap-2 p-2 rounded-xl border transition-all",
+                                              isCorrect
+                                                ? "bg-green-500/10 border-green-500/40 text-text-main"
+                                                : "bg-surface border-black/10 dark:border-white/10"
+                                            )}
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQuestionChange(qIdx, 'correctAnswerIndex', optIdx)}
+                                              className={cn(
+                                                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all cursor-pointer",
+                                                isCorrect
+                                                  ? "bg-green-500 text-crust font-black shadow-sm"
+                                                  : "border border-black/20 dark:border-white/20 text-text-muted hover:border-warning"
+                                              )}
+                                              title={isCorrect ? "Correct Answer" : "Mark as Correct Answer"}
+                                            >
+                                              {isCorrect ? <CheckCircle2 size={14} /> : String.fromCharCode(65 + optIdx)}
+                                            </button>
+
+                                            <input
+                                              type="text"
+                                              value={opt}
+                                              onChange={(e) => handleOptionChange(qIdx, optIdx, e.target.value)}
+                                              placeholder={`Option ${String.fromCharCode(65 + optIdx)}...`}
+                                              className="w-full bg-transparent text-xs font-medium text-text-main outline-none"
+                                              required
+                                            />
+
+                                            {isCorrect && (
+                                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-green-500/20 text-green-500 shrink-0">
+                                                Correct Answer
+                                              </span>
+                                            )}
+
+                                            {q.options.length > 2 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRemoveOption(qIdx, optIdx)}
+                                                className="p-1 text-text-muted hover:text-red-400 rounded transition shrink-0"
+                                                title="Remove Choice"
+                                              >
+                                                <Trash2 size={12} />
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  {/* Explanation / Rationale */}
+                                  <div>
+                                    <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">
+                                      Explanation / Rationale (Optional)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={q.explanation || ''}
+                                      onChange={(e) => handleQuestionChange(qIdx, 'explanation', e.target.value)}
+                                      placeholder="e.g. Ninhydrin reacts with amino acids in sweat to form purple Ruhemann's purple."
+                                      className="w-full bg-surface border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-xs text-text-muted outline-none focus:text-text-main focus:border-warning"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-center pt-2">
+                            <button
+                              type="button"
+                              onClick={handleAddQuestion}
+                              className="w-full border-2 border-dashed border-warning/30 hover:border-warning/60 bg-warning/5 hover:bg-warning/10 p-3 rounded-2xl text-warning font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <Plus size={16} /> Add Another Question
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4">
+                          <button
+                            type="submit"
+                            className="px-6 py-3 bg-warning text-crust hover:bg-warning/90 font-black rounded-xl text-xs uppercase tracking-widest transition flex items-center gap-2 cursor-pointer"
+                          >
+                            <Award size={16} /> {editingQuizId ? "Update Quiz" : "Save Quiz / Weekly Challenge"}
+                          </button>
+
+                          {editingQuizId && (
+                            <button
+                              type="button"
+                              onClick={handleResetQuizForm}
+                              className="px-4 py-3 bg-base hover:bg-white/5 border border-black/10 dark:border-white/10 text-text-muted hover:text-text-main font-bold rounded-xl text-xs uppercase tracking-widest transition cursor-pointer"
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Active Quizzes Listing */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Existing Quizzes</h2>
+                      
+                      {quizLoading ? (
+                        <div className="py-8 text-center text-xs text-text-muted">Loading Quizzes...</div>
+                      ) : adminQuizzes.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-text-muted">No quizzes available in database.</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {adminQuizzes.map((q) => (
+                            <div key={q.id} className="p-4 bg-base border border-black/5 dark:border-white/5 rounded-xl flex items-center justify-between gap-4">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-bold text-sm text-text-main">{q.title}</h3>
+                                  {q.isWeeklyChallenge && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-400">
+                                      Weekly Challenge
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <p className="text-xs text-text-muted">{q.category} • {q.durationMinutes} mins • {q.questions?.length || 0} Questions</p>
+                                  {q.isWeeklyChallenge && (
+                                    <span className="text-xs text-emerald-400 font-mono font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                      <Users size={12} /> {q.enrolledUserIds?.length || 0} Enrolled
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {q.isWeeklyChallenge && (
+                                  <button
+                                    onClick={() => handleViewEnrolledUsers(q)}
+                                    className="p-2 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-500/10 flex items-center gap-1"
+                                  >
+                                    <Users size={14} /> Users
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    handleEditQuiz(q);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="p-2 border border-blue-500/20 text-blue-400 text-xs font-bold rounded-lg hover:bg-blue-500/10 flex items-center gap-1"
+                                >
+                                  <Edit3 size={14} /> Edit
+                                </button>
+                                <Link
+                                  to={`/quizzes/${q.id}/leaderboard`}
+                                  className="px-3 py-1.5 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-lg hover:bg-amber-500/10"
+                                >
+                                  Leaderboard
+                                </Link>
+                                <button
+                                  onClick={() => handleAdminDeleteQuiz(q.id)}
+                                  className="p-2 border border-red-500/20 text-red-400 text-xs font-bold rounded-lg hover:bg-red-500/10"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
+      {/* Enrolled Users Modal */}
+      <AnimatePresence>
+        {isUsersModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsUsersModalOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-lg bg-surface border border-black/10 dark:border-white/10 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-heading font-black text-text-main">
+                  Enrolled Users
+                </h3>
+                <button
+                  onClick={() => setIsUsersModalOpen(false)}
+                  className="p-2 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors flex items-center justify-center"
+                >
+                  <span className="text-xl leading-none font-bold">&times;</span>
+                </button>
+              </div>
+              <p className="text-xs text-warning mb-4 font-bold">{selectedQuizTitle}</p>
+              
+              <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                {fetchingUsers ? (
+                  <div className="py-8 text-center text-xs text-text-muted flex justify-center items-center gap-2">
+                    <Loader2 size={16} className="animate-spin" /> Fetching users...
+                  </div>
+                ) : enrolledUsersList.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-text-muted">No users enrolled yet.</div>
+                ) : (
+                  enrolledUsersList.map((u, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-base rounded-xl border border-black/5 dark:border-white/5">
+                      <div className="w-8 h-8 rounded-full bg-warning/20 text-warning flex items-center justify-center font-bold uppercase text-xs">
+                        {u.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-text-main">{u.name}</p>
+                        <p className="text-xs text-text-muted">{u.email}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

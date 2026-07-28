@@ -27,7 +27,7 @@ interface WebinarEvent {
   time: string;
   description: string;
   fullDetails: string;
-  youtubeId: string;
+  youtubeId?: string;
   speaker: {
     name: string;
     role: string;
@@ -41,6 +41,26 @@ interface WebinarEvent {
 }
 
 const WEBINARS_DATA: WebinarEvent[] = [
+  {
+    id: "beyond-the-smiles",
+    sequence: 2,
+    title: "Beyond The Smiles",
+    subtitle: "Insights into Forensic Odontology and Criminal Profiling with Dr. Angela Mathew.",
+    date: "August 01, 2026",
+    time: "08:00 PM IST",
+    description: "Join us for an upcoming session on Forensic Odontology and Criminal Profiling by renowned expert Dr. Angela Mathew.",
+    fullDetails: "Upcoming session Details: 'Beyond The Smiles'. Join Dr. Angela Mathew as she delves into Forensic Odontology, Criminal Profiling, and Investigative Psychology.",
+    speaker: {
+      name: "Dr. Angela Mathew",
+      role: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling",
+      avatar: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png",
+      linkedin: "",
+      bio: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling , Forensic & Investigative Psychology | Gold Medalist(2022-2024) | Member - IDA| Fellow-Pierre Fauchard Academy, USA( Asia at Large)"
+    },
+    poster: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png",
+    tags: ["Forensic Odontology", "Criminal Profiling", "Upcoming"],
+    feedbacks: []
+  },
   {
     id: "cybersecurity-career-pathways",
     sequence: 1,
@@ -298,15 +318,31 @@ export default function Webinar() {
                 <div className="bg-crust border border-warning/20 rounded-3xl p-3 sm:p-4 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-warning via-amber-500 to-warning" />
                   
-                  {/* YouTube Embed Container */}
-                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black relative border border-black/30">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${currentEvent.youtubeId}?autoplay=0&rel=0&modestbranding=1`}
-                      title={`ForenClue Webinar: ${currentEvent.title}`}
-                      className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
+                  {/* YouTube Embed Container or Poster */}
+                  <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black relative border border-black/30 flex items-center justify-center group">
+                    {currentEvent.youtubeId ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${currentEvent.youtubeId}?autoplay=0&rel=0&modestbranding=1`}
+                        title={`ForenClue Webinar: ${currentEvent.title}`}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    ) : (
+                      <>
+                        <img 
+                          src={currentEvent.poster} 
+                          alt={`ForenClue Webinar: ${currentEvent.title}`} 
+                          className="w-full h-full object-cover opacity-80"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <span className="bg-warning text-crust font-bold px-4 py-2 rounded-lg text-sm uppercase tracking-wider">
+                            Event Upcoming
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Operational strip banner */}

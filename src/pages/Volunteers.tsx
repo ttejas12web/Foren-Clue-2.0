@@ -96,14 +96,6 @@ const activeVolunteers = [
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfLdNfmlvifm0TbX_jMZ3w4Hu-B0eHMtzxhmE9E84M7Yv2VLTf6fl9ofyeAMqtXnZrwoZ922dUIVN52PeTQqZ2GVTMTwEZGY9tLtXtMtxFn0587XDwU6OX4ZKNqapc6VFniN1zNGRp6-ObJnlD5-OOrt-NejjhDw09OiYPO2LCsTwX83VbVLn6DkFGJyg/s1600/WhatsApp%20Image%202026-07-20%20at%2020.31.36.jpeg'
   },
   { 
-    name: 'Shivaram More', 
-    role: 'Cyber Forensic Specialist', 
-    institute: 'National Forensic Sciences University', 
-    badge: 'Verified Contributor',
-    id: 'FC-VOL-2026-005',
-    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEinv5YfMvu5Irf50Dd8wWstsAXuSMqrfGzFwJnVcw_yyWVqs1nkuVUc3xew9Bz8P6pLkIjLkiy5Z6hYGU6MM2tCK53on953crSAqR7-DxaW500nNkNfbEWQtD6seQOtgJEIAIz18YNTrzo8u18-dgNhsbPwxdAVsQzfevnXxndzpC81l85MZm9DYzOQeXg/s1599/WhatsApp%20Image%202026-07-20%20at%2021.36.38.jpeg'
-  },
-  { 
     name: 'Sheetal Kumari', 
     role: 'Forensic Analyst & Researcher', 
     institute: 'Amity University', 
@@ -120,6 +112,21 @@ const activeVolunteers = [
 ];
 
 export default function Volunteers() {
+  const volunteerSchemas = activeVolunteers.map(vol => ({
+    '@type': 'Person',
+    '@id': `https://www.forenclue.in/volunteers#${vol.id}`,
+    'name': vol.name,
+    'jobTitle': vol.role,
+    'memberOf': {
+      '@type': 'Organization',
+      '@id': 'https://www.forenclue.in/#organization',
+      'name': 'ForenClue'
+    },
+    'image': vol.image,
+    'identifier': vol.id,
+    ...(vol.institute ? { 'alumniOf': { '@type': 'Organization', 'name': vol.institute } } : {})
+  }));
+
   return (
     <div className="min-h-screen bg-base relative overflow-hidden">
       <SEO 
@@ -127,6 +134,7 @@ export default function Volunteers() {
         description="Join the ForenClue Global Volunteer Program. Work alongside expert forensic examiners, contribute to cases, and receive certified career mentorship."
         keywords="forensic volunteer, forensic science internship, cyber forensics community, forensic education, ForenClue career"
         image="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKXJQb5UkVJcbG4a0rTFiNdhEa1wfFDfbew92r5tR1XXbYUkW7AbdMR_MSFwgCJg1zsDwpJX3jVns0as8FzPWrcK_SqiR9c-ah5jHmHksFm2AmiHtC46umM02LTfmeBBoxOjTRJnAzl6gW1dLY0AmDpDdQw2tl1L2D0R_hFonlFjnoNf22TNpbh9Hz9Kw/s1884/Screenshot%202026-07-20%20at%2012.06.52%E2%80%AFAM.png"
+        customSchema={volunteerSchemas}
       />
 
       {/* Cyber Grid Background */}
