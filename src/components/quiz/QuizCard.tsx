@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Quiz } from '@/types/quiz';
-import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, Sparkles, Target, Timer, BookOpen, Zap } from 'lucide-react';
+import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, Sparkles, Target, Timer, BookOpen, Zap, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,6 +60,14 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
     return () => clearInterval(interval);
   }, [quiz]);
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/quizzes/${quiz.id}`;
+    navigator.clipboard.writeText(url);
+    alert('Quiz link copied to clipboard!');
+  };
+
   const formatDate = (isoString?: string) => {
     if (!isoString) return '';
     return new Date(isoString).toLocaleDateString('en-US', {
@@ -99,6 +107,13 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
               CONCLUDED
             </span>
           )}
+          <button 
+            onClick={handleShare}
+            className="ml-auto flex items-center justify-center p-1 bg-black/10 hover:bg-black/20 rounded transition-colors"
+            title="Share Quiz Link"
+          >
+            <Share2 size={12} />
+          </button>
         </div>
       ) : (
         <div className="bg-gradient-to-r from-warning/20 via-warning/10 to-transparent px-4 py-1.5 flex items-center justify-between text-warning font-extrabold text-[11px] uppercase tracking-widest border-b border-warning/10">
@@ -111,6 +126,13 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
             <Timer size={13} className="text-warning" />
             <span>{quiz.durationMinutes ? `${quiz.durationMinutes} MINS` : 'SELF-PACED'}</span>
           </span>
+          <button 
+            onClick={handleShare}
+            className="ml-2 flex items-center justify-center p-1 text-warning hover:bg-warning/10 rounded transition-colors"
+            title="Share Quiz Link"
+          >
+            <Share2 size={13} />
+          </button>
         </div>
       )}
 
