@@ -53,8 +53,8 @@ const WEBINARS_DATA: WebinarEvent[] = [
     speaker: {
       name: "Dr. Angela Mathew",
       role: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling",
-      avatar: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png",
-      linkedin: "",
+      avatar: "https://blogger.googleusercontent.com/img/a/AVvXsEgMhEwp4wb0YPNtt3Waxbp44M4TcXqP6YMSqSHBOs_urx6jeljIKME5NJAwCdsAToUl-hZ7I_BhUrkYKLteZAOIoGgbF32UPTrQCpHv7nDqG8_IRU-jj9k5MKzbefVFsEjBE0e5Ii3Vgcg5pRtw-IMZmzHLYEB51Q6dDv6t178TKUKE_k4uOO1xj5xlTN8",
+      linkedin: "https://www.linkedin.com/in/dr-angela-mathew/",
       bio: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling , Forensic & Investigative Psychology | Gold Medalist(2022-2024) | Member - IDA| Fellow-Pierre Fauchard Academy, USA( Asia at Large)"
     },
     poster: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png",

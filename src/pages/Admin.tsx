@@ -36,7 +36,7 @@ export default function Admin() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox'>('overview');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
@@ -46,6 +46,7 @@ export default function Admin() {
   const [courses, setCourses] = useState<any[]>([]);
   const [doubts, setDoubts] = useState<any[]>([]);
   const [podcastEpisodes, setPodcastEpisodes] = useState<any[]>([]);
+  const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [courseLoading, setCourseLoading] = useState(false);
   const [podcastLoading, setPodcastLoading] = useState(false);
   const [newCourse, setNewCourse] = useState({
@@ -886,6 +887,23 @@ export default function Admin() {
       setEmployeeLoading(false);
     }
 
+    // Contact Messages
+    try {
+      const msgsSnap = await getDocs(collection(db, 'contact_messages'));
+      const msgsList: any[] = [];
+      msgsSnap.forEach(docSnap => {
+        msgsList.push({ docId: docSnap.id, ...docSnap.data() });
+      });
+      msgsList.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      });
+      setContactMessages(msgsList);
+    } catch (e) {
+      console.error("Error fetching contact messages:", e);
+    }
+    
     // 8. Quizzes & Challenges
     setQuizLoading(true);
     try {
@@ -1783,11 +1801,12 @@ export default function Admin() {
                 <span className="text-[10px] bg-warning/10 text-warning px-3 py-1 font-mono uppercase tracking-widest rounded-full border border-warning/20">
                   Secure Administrative Station
                 </span>
-                <h1 className="text-4xl md:text-5xl font-heading font-black uppercase tracking-tighter mt-4 text-text-main">
-                  Forenclue <span className="text-warning">Control Deck</span>
+                <h1 className="text-4xl md:text-5xl font-heading font-black uppercase tracking-tighter mt-4 text-text-main flex items-center gap-4">
+                  ForenClue <span className="text-warning">WorkSpace</span>
+                  <span className="hidden sm:inline-block px-3 py-1 bg-warning/10 text-warning text-[12px] font-bold rounded-full animate-pulse tracking-widest border border-warning/20">LIVE STATUS</span>
                 </h1>
-                <p className="text-sm text-text-muted mt-2 font-mono uppercase tracking-widest">
-                  ROOT PRIVILEGES ACTIVE • LEVEL 1 FORENSIC ACCESS
+                <p className="text-sm text-text-muted mt-3 font-mono uppercase tracking-widest flex items-center gap-2">
+                  <Lock size={14} className="text-emerald-500" /> ROOT PRIVILEGES ACTIVE • SESSION ID: FC-{Math.random().toString(36).substring(2, 8).toUpperCase()}
                 </p>
               </div>
 
@@ -1812,7 +1831,23 @@ export default function Admin() {
               
               {/* Workspace Navigation Sidebar */}
               <div className="space-y-2">
-                <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest px-3 mb-2">Systems Controls</p>
+                
+                <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest px-3 mb-2 mt-6">Communications</p>
+                <button 
+                  onClick={() => setActiveTab('inbox')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-between transition-colors ${activeTab === 'inbox' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Mail size={16} /> Contact Inbox
+                  </div>
+                  {contactMessages.filter(m => !m.read).length > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                      {contactMessages.filter(m => !m.read).length}
+                    </span>
+                  )}
+                </button>
+                <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest px-3 mb-2 mt-6">Systems Controls</p>
+
                 <button 
                   onClick={() => setActiveTab('overview')}
                   className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'overview' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
@@ -1873,34 +1908,194 @@ export default function Admin() {
               <div className="lg:col-span-3">
                 
                 {/* 1. OVERVIEW SYSTEM REPORT */}
-                {activeTab === 'overview' && (
+                
+                {/* INBOX SECTION */}
+                {activeTab === 'inbox' && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                     <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
-                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4">Workspace Analytics</h2>
-                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Dynamic Courses</span>
-                          <span className="text-3xl font-heading font-black text-warning">{courses.length}</span>
+                      <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-4 flex items-center gap-2 text-text-main">
+                        <Mail size={20} className="text-warning" /> Contact Messages Inbox
+                      </h2>
+                      <p className="text-sm text-text-muted mb-6">
+                        Messages sent by users from the Contact page.
+                      </p>
+
+                      <div className="space-y-4">
+                        {contactMessages.length === 0 ? (
+                          <div className="text-center p-8 bg-base rounded-xl border border-black/5 dark:border-white/5 text-text-muted">
+                            No messages received yet.
+                          </div>
+                        ) : (
+                          contactMessages.map((msg: any) => (
+                            <div key={msg.docId} className={`p-4 rounded-xl border ${msg.read ? 'bg-base border-black/5 dark:border-white/5' : 'bg-warning/5 border-warning/20'}`}>
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <div className="font-bold text-text-main">{msg.name}</div>
+                                  <a href={`mailto:${msg.email}`} className="text-xs text-warning hover:underline">{msg.email}</a>
+                                </div>
+                                <div className="text-[10px] text-text-muted font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
+                                  {msg.createdAt?.toMillis ? new Date(msg.createdAt.toMillis()).toLocaleString() : 'Recent'}
+                                </div>
+                              </div>
+                              <div className="text-sm text-text-main whitespace-pre-wrap mt-3 bg-black/5 dark:bg-white/5 p-3 rounded-lg border border-black/5 dark:border-white/5">
+                                {msg.message}
+                              </div>
+                              {!msg.read && (
+                                <button 
+                                  onClick={async () => {
+                                    try {
+                                      await setDoc(doc(db, 'contact_messages', msg.docId), { read: true }, { merge: true });
+                                      setContactMessages(prev => prev.map(m => m.docId === msg.docId ? { ...m, read: true } : m));
+                                    } catch(e) { console.error(e) }
+                                  }}
+                                  className="mt-4 px-3 py-1.5 bg-warning/10 text-warning text-xs font-bold uppercase tracking-wider rounded-md hover:bg-warning/20 transition-colors"
+                                >
+                                  Mark as Read
+                                </button>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'overview' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="space-y-6">
+                      {/* Advanced Workspace Analytics */}
+                      <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                           <LayoutGrid size={120} />
                         </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">E-Library Resources</span>
-                          <span className="text-3xl font-heading font-black text-warning">{ebooks.length}</span>
+                        <h2 className="text-xl font-heading font-black uppercase tracking-tight mb-6 flex items-center gap-2">
+                          <LayoutGrid size={20} className="text-warning" /> Workspace Analytics Overview
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <BookOpen size={20} className="text-blue-500" />
+                              <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Active</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{courses.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Core Courses</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <FileText size={20} className="text-emerald-500" />
+                              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Resources</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{ebooks.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">E-Library</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <Radio size={20} className="text-purple-500" />
+                              <span className="text-[10px] font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Media</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{podcastEpisodes.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Podcasts</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <Award size={20} className="text-amber-500" />
+                              <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Issued</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{certificates.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Certificates</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <Users size={20} className="text-rose-500" />
+                              <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Staff</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{adminEmployees.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Employees</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <HelpCircle size={20} className="text-cyan-500" />
+                              <span className="text-[10px] font-bold text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded uppercase tracking-wider">Tests</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{adminQuizzes.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Quizzes</span>
+                            </div>
+                          </div>
+                          <div className="bg-base border border-black/5 dark:border-white/5 p-5 rounded-xl flex flex-col justify-between hover:border-warning/50 transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                              <Mail size={20} className="text-blue-400" />
+                              <span className="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded uppercase tracking-wider">Inbox</span>
+                            </div>
+                            <div>
+                              <span className="text-3xl font-heading font-black text-text-main">{contactMessages.length}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-text-muted block mt-1">Messages</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Podcast Episodes</span>
-                          <span className="text-3xl font-heading font-black text-warning">{podcastEpisodes.length}</span>
-                        </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Customised Copy Keys</span>
-                          <span className="text-3xl font-heading font-black text-warning">{copiedTexts.length}</span>
-                        </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Certificates Issued</span>
-                          <span className="text-3xl font-heading font-black text-warning">{certificates.length}</span>
-                        </div>
-                        <div className="bg-base border border-black/5 dark:border-white/5 p-4 rounded-xl text-center">
-                          <span className="text-xs uppercase tracking-wider text-text-muted block mb-1">Employees Manager</span>
-                          <span className="text-3xl font-heading font-black text-warning">{adminEmployees.length}</span>
+                      </div>
+
+                      {/* Quick Actions Panel */}
+                      <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                        <h2 className="text-lg font-heading font-black uppercase tracking-tight mb-4 text-text-main">
+                          Dynamic Quick Actions
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <button onClick={() => setActiveTab('courses')} className="px-4 py-4 bg-base border border-black/5 dark:border-white/5 hover:border-warning/50 rounded-xl text-left transition flex flex-col gap-3 group">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <BookOpen size={16} />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-text-main block">New Course</span>
+                              <span className="text-[10px] text-text-muted uppercase tracking-widest">Create Module</span>
+                            </div>
+                          </button>
+                          
+                          <button onClick={() => setActiveTab('quizzes')} className="px-4 py-4 bg-base border border-black/5 dark:border-white/5 hover:border-warning/50 rounded-xl text-left transition flex flex-col gap-3 group">
+                            <div className="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <CheckCircle2 size={16} />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-text-main block">New Quiz</span>
+                              <span className="text-[10px] text-text-muted uppercase tracking-widest">Setup Challenge</span>
+                            </div>
+                          </button>
+                          
+                          <button onClick={() => setActiveTab('ebooks')} className="px-4 py-4 bg-base border border-black/5 dark:border-white/5 hover:border-warning/50 rounded-xl text-left transition flex flex-col gap-3 group">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <FileText size={16} />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-text-main block">Upload E-Book</span>
+                              <span className="text-[10px] text-text-muted uppercase tracking-widest">Add Resource</span>
+                            </div>
+                          </button>
+                          
+                          <button onClick={() => setActiveTab('podcast')} className="px-4 py-4 bg-base border border-black/5 dark:border-white/5 hover:border-warning/50 rounded-xl text-left transition flex flex-col gap-3 group">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Radio size={16} />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-text-main block">Publish Podcast</span>
+                              <span className="text-[10px] text-text-muted uppercase tracking-widest">Release Episode</span>
+                            </div>
+                          </button>
                         </div>
                       </div>
                     </div>

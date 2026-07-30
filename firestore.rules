@@ -367,6 +367,11 @@ service cloud.firestore {
     }
 
     // Quiz Attempts & Leaderboards Rule
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdminEmail();
+    }
+
     match /quizAttempts/{attemptId} {
       allow read: if true;
       allow create: if isSignedIn() && isValidQuizAttempt(incoming()) && incoming().userId == request.auth.uid;

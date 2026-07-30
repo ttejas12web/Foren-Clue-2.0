@@ -27,7 +27,7 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
       {/* Top 3 Premium Podium Section */}
       <div className="text-center space-y-2 mb-6">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest">
-          <Sparkles size={14} /> Official Leaderboard
+          <Trophy size={14} /> Official Leaderboard
         </div>
         <h2 className="text-3xl font-black uppercase tracking-tight text-text-main">
           Top 10 Participants
@@ -75,9 +75,7 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                   <h3 className="font-bold text-lg text-text-main line-clamp-1 mb-1">
                     {top2.userName}
                   </h3>
-                  <p className="text-xs text-text-muted mb-4 line-clamp-1">
-                    {top2.userEmail}
-                  </p>
+                  
 
                   <div className="grid grid-cols-2 gap-2 bg-black/40 rounded-xl p-3 border border-white/5">
                     <div>
@@ -125,9 +123,7 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                   <h3 className="font-extrabold text-xl text-text-main line-clamp-1 mb-1">
                     {top1.userName}
                   </h3>
-                  <p className="text-xs text-amber-400/80 mb-4 line-clamp-1 font-medium">
-                    {top1.userEmail}
-                  </p>
+                  
 
                   <div className="grid grid-cols-2 gap-2 bg-amber-500/10 rounded-2xl p-3.5 border border-amber-500/20">
                     <div>
@@ -174,9 +170,7 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                   <h3 className="font-bold text-lg text-text-main line-clamp-1 mb-1">
                     {top3.userName}
                   </h3>
-                  <p className="text-xs text-text-muted mb-4 line-clamp-1">
-                    {top3.userEmail}
-                  </p>
+                  
 
                   <div className="grid grid-cols-2 gap-2 bg-black/40 rounded-xl p-3 border border-white/5">
                     <div>
@@ -235,9 +229,7 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                         <div className="font-bold text-sm text-text-main truncate">
                           {entry.userName}
                         </div>
-                        <div className="text-xs text-text-muted truncate">
-                          {entry.userEmail}
-                        </div>
+                        
                       </div>
                     </div>
 

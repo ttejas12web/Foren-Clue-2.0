@@ -190,14 +190,14 @@ export default function Volunteers() {
 
         {/* Verified Volunteer Directory */}
         <div className="mb-20">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 perspective-[2000px]">
             {activeVolunteers.map((vol, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 15, rotateY: 90 }}
+                whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.08 }}
+                transition={{ delay: idx * 0.08, type: "spring", stiffness: 100, damping: 12 }}
                 className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative group hover:border-warning/40 hover:-translate-y-1.5 hover:shadow-[0_20px_30px_-10px_rgba(0,0,0,0.4),_0_0_25px_rgba(217,119,6,0.12)] transition-all duration-300 shadow-xl flex flex-col items-center text-center justify-between cursor-pointer"
               >
                 {/* Status Indicator */}

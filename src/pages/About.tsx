@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { SEO } from '@/components/layout/SEO';
 
-const TeamCard = ({ member }: { member: any }) => {
+const TeamCard = ({ member, index = 0 }: { member: any, index?: number }) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -36,6 +36,10 @@ const TeamCard = ({ member }: { member: any }) => {
       id={member.name.toLowerCase().replace(/\s+/g, '-')}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
       style={{
         rotateX,
         rotateY,
@@ -196,7 +200,7 @@ export default function About() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
           {team.map((member, i) => (
-            <TeamCard key={i} member={member} />
+            <TeamCard key={i} member={member} index={i} />
           ))}
         </div>
       </div>
