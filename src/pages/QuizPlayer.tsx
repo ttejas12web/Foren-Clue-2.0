@@ -39,6 +39,10 @@ export default function QuizPlayer() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Anti-cheat state
+  const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
+  const [showCheatWarningModal, setShowCheatWarningModal] = useState(false);
+
   // Result state
   const [finalScore, setFinalScore] = useState(0);
   const [timeTakenSec, setTimeTakenSec] = useState(0);
@@ -82,6 +86,47 @@ export default function QuizPlayer() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [quiz, isSubmitted, quizStartedAt]);
+
+  // Anti-Cheat: Tab/Window switching detection
+  useEffect(() => {
+    if (!quiz || isSubmitted || !quizStartedAt || !user) return;
+    
+    if (quiz.isWeeklyChallenge && quiz.scheduledStartTime) {
+      const now = new Date().getTime();
+      const start = new Date(quiz.scheduledStartTime).getTime();
+      if (now < start) return;
+    }
+
+    const handleViolation = () => {
+      setTabSwitchWarnings(prev => {
+        const newWarnings = prev + 1;
+        if (newWarnings >= 3) {
+          handleAutoSubmit();
+        } else {
+          setShowCheatWarningModal(true);
+        }
+        return newWarnings;
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleViolation();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [quiz, isSubmitted, quizStartedAt, user]);
 
   const handleSelectOption = (questionId: string, optionIdx: number) => {
     if (isSubmitted) return;
@@ -890,6 +935,37 @@ export default function QuizPlayer() {
           )}
         </AnimatePresence>
 
+        {/* Anti-cheat Warning Modal */}
+        <AnimatePresence>
+          {showCheatWarningModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-surface border-2 border-red-500/50 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl shadow-red-500/10"
+              >
+                <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 border border-red-500/30 flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle size={32} />
+                </div>
+                <h3 className="text-xl font-black uppercase tracking-wider text-red-500 mb-3">
+                  Warning: Tab Switch Detected
+                </h3>
+                <p className="text-sm text-text-muted mb-6">
+                  Switching tabs or windows during an active quiz is not allowed. 
+                  You have <strong>{3 - tabSwitchWarnings}</strong> warning(s) left. 
+                  If you switch again, your quiz will be automatically submitted.
+                </p>
+                <button
+                  onClick={() => setShowCheatWarningModal(false)}
+                  className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider cursor-pointer transition-colors"
+                >
+                  I Understand
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
