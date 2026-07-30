@@ -661,16 +661,6 @@ async function startServer() {
   let viteDevServer: any = null;
 
   // Serve static files / Vite middleware FIRST
-  if (!isProd) {
-    viteDevServer = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(viteDevServer.middlewares);
-  } else {
-    app.use(express.static(buildPath));
-  }
-
   // Intercept all HTML requests for social media sharing cards & embed previews
   // This must be AFTER static files are handled
   app.get('*', async (req, res, next) => {
@@ -681,6 +671,11 @@ async function startServer() {
     
     // Only intercept paths that don't have a file extension OR specifically .html
     if (req.path.includes('.') && !req.path.endsWith('.html')) {
+        return next();
+    }
+    
+    // Ignore Vite internals and API routes
+    if (req.path.startsWith('/@') || req.path.startsWith('/node_modules/') || req.path.startsWith('/src/') || req.path.startsWith('/api/')) {
         return next();
     }
     
@@ -696,99 +691,342 @@ async function startServer() {
       let html = fs.readFileSync(indexPath, 'utf-8');
       
       let title = 'ForenClue | Forensic EdTech Mastery';
-      let summary = "ForenClue - India's premier forensic science edtech platform. Master forensic analysis, cybersecurity, and investigations.";
-      let image = '/forenclue_og_banner.jpg';
+      let summary = "India's premier forensic science edtech platform. Master forensic analysis, cybersecurity, crime scene investigation, and digital forensics.";
+      let image = '/og/home.png';
       
-      const fullUrl = `https://${req.get('host')}${req.originalUrl}`;
+      const cleanPath = req.path.replace(/\/+$/, '') || '/';
 
       try {
-        if (req.path === '/cases' && req.query.case) {
-          const dbAdmin = getDbAdmin();
-          const caseDoc = await dbAdmin.collection('cases').doc(req.query.case as string).get();
-          if (caseDoc.exists) {
-            const data = caseDoc.data();
-            if (data) {
-              title = data.title ? `${data.title} | ForenClue Archive` : title;
-              summary = data.summary || summary;
-              if (data.image) image = data.image;
-            }
+        if (cleanPath === '/cases') {
+          image = '/og/cases.png';
+          if (req.query.case || req.query.id) {
+            const caseId = String(req.query.case || req.query.id);
+            try {
+              const dbAdmin = getDbAdmin();
+              const caseDoc = await dbAdmin.collection('cases').doc(caseId).get();
+              if (caseDoc.exists) {
+                const data = caseDoc.data();
+                if (data) {
+                  title = data.title ? `${data.title} | ForenClue Archive` : 'Forensic Case Study | ForenClue';
+                  summary = data.summary || data.description || summary;
+                  if (data.image) image = data.image;
+                  else if (data.thumbnail) image = data.thumbnail;
+                }
+              }
+            } catch(e) { console.error('cases db error', e); }
+          } else {
+            title = 'Forensic Case Studies & Investigations | ForenClue';
+            summary = 'Explore real-world criminal case breakdowns, forensic evidence logs, pathology reports, digital footprints, and crime scene reconstructions.';
           }
         } 
-        else if (req.path === '/courses' && req.query.id) {
-           const courseId = Number(req.query.id);
-           // Try to find course in database
-           const dbAdmin = getDbAdmin();
-           const courseDocs = await dbAdmin.collection('courses').where('id', '==', courseId).get();
-           if (!courseDocs.empty) {
-              const data = courseDocs.docs[0].data();
-              if (data) {
-                title = data.title ? `${data.title} | ForenClue` : title;
-                summary = data.description || summary;
-                if (data.thumbnail) image = data.thumbnail;
-                else if (data.image) image = data.image;
+        else if (cleanPath === '/courses') {
+          image = '/og/courses.png';
+          if (req.query.id || req.query.course) {
+            const courseId = Number(req.query.id || req.query.course);
+            try {
+              const dbAdmin = getDbAdmin();
+              const courseDocs = await dbAdmin.collection('courses').where('id', '==', courseId).get();
+              if (!courseDocs.empty) {
+                  const data = courseDocs.docs[0].data();
+                  if (data) {
+                    title = data.title ? `${data.title} | ForenClue` : title;
+                    summary = data.description || summary;
+                    if (data.thumbnail) image = data.thumbnail;
+                    else if (data.image) image = data.image;
+                  }
+              } else {
+                 throw new Error("not found in db");
               }
-           } else {
-             // Let's attempt to use the static compiler constants
-             try {
-               const course = COURSES.find((c: any) => c.id === courseId);
-               if (course) {
-                 title = course.title ? `${course.title} | ForenClue` : title;
-                 summary = course.description || summary;
-                 if (course.thumbnail) image = course.thumbnail;
+            } catch (e) {
+               try {
+                 const course = COURSES.find(c => c.id === courseId);
+                 if (course) {
+                   title = course.title ? `${course.title} | ForenClue` : title;
+                   summary = course.description || summary;
+                   if (course.thumbnail) image = course.thumbnail;
+                 }
+               } catch (fallbackErr) {
+                 console.warn("Could not load dynamic constants fallback", fallbackErr);
                }
-             } catch (e) {
-               console.warn("Could not load dynamic constants fallback", e);
-             }
-           }
+            }
+          } else {
+            title = 'Forensic Science Courses & Training | ForenClue';
+            summary = 'Browse expert-led masterclasses in criminalistics, digital forensics, DNA profiling, cybercrime investigation, and crime scene documentation.';
+          }
         }
-        else if (req.path === '/about') {
+        else if (cleanPath === '/ebooks') {
+          image = '/og/ebooks.png';
+          if (req.query.id || req.query.ebook) {
+            const ebookId = String(req.query.id || req.query.ebook);
+            try {
+              const dbAdmin = getDbAdmin();
+              const ebookDoc = await dbAdmin.collection('ebooks').doc(ebookId).get();
+              if (ebookDoc.exists) {
+                const data = ebookDoc.data();
+                if (data) {
+                  title = data.title ? `${data.title} | ForenClue E-Library` : 'Forensic E-Book | ForenClue';
+                  summary = data.description || data.summary || summary;
+                  if (data.coverImage) image = data.coverImage;
+                  else if (data.thumbnail) image = data.thumbnail;
+                  else if (data.image) image = data.image;
+                }
+              }
+            } catch(e) { console.error('ebooks db error', e); }
+          } else {
+            title = 'ForenClue E-Library & Study Reference Handbooks';
+            summary = 'Access verified scientific forensic handbooks, physical crime scene protocols, laboratory reference manuals, and digital investigation guidebooks.';
+          }
+        }
+        else if (cleanPath === '/podcast') {
+          image = '/og/podcast.png';
+          if (req.query.id) {
+            const podcastId = String(req.query.id);
+            try {
+              const dbAdmin = getDbAdmin();
+              const podDoc = await dbAdmin.collection('podcasts').doc(podcastId).get();
+              if (podDoc.exists) {
+                const data = podDoc.data();
+                if (data) {
+                  title = data.title ? `${data.title} | ForenClue Podcast` : title;
+                  summary = data.description || summary;
+                  if (data.coverImage) image = data.coverImage;
+                  else if (data.thumbnail) image = data.thumbnail;
+                  else if (data.image) image = data.image;
+                }
+              }
+            } catch(e) { console.error('podcast db error', e); }
+          } else {
+            title = 'Forensic Talk | Expert Podcast | ForenClue';
+            summary = 'Listen to in-depth discussions with veteran crime scene investigators, cyber forensic experts, pathologists, and legal scholars.';
+          }
+        }
+        else if (cleanPath === '/webinar') {
+          image = '/og/webinar.png';
+          if (req.query.id) {
+            const webinarId = String(req.query.id);
+            try {
+              const dbAdmin = getDbAdmin();
+              const webDoc = await dbAdmin.collection('webinars').doc(webinarId).get();
+              if (webDoc.exists) {
+                const data = webDoc.data();
+                if (data) {
+                  title = data.title ? `${data.title} | ForenClue Webinar` : title;
+                  summary = data.description || summary;
+                  if (data.bannerImage) image = data.bannerImage;
+                  else if (data.thumbnail) image = data.thumbnail;
+                  else if (data.image) image = data.image;
+                }
+              }
+            } catch(e) { console.error('webinar db error', e); }
+          } else {
+            title = 'Live Forensic Science Masterclasses & Webinars | ForenClue';
+            summary = 'Register for upcoming high-impact live webinars hosted by top forensic experts. Learn digital investigations, trace evidence analytics, and earn certification.';
+          }
+        }
+        else if (cleanPath === '/community' || cleanPath === '/community/my-doubts') {
+          image = '/og/community.png';
+          if (req.query.doubt || req.query.id) {
+            const doubtId = String(req.query.doubt || req.query.id);
+            try {
+              const dbAdmin = getDbAdmin();
+              const doubtDoc = await dbAdmin.collection('doubts').doc(doubtId).get();
+              if (doubtDoc.exists) {
+                const data = doubtDoc.data();
+                if (data) {
+                  title = data.title || data.question ? `${data.title || data.question} | ForenClue Community` : title;
+                  summary = data.description || data.details || summary;
+                  if (data.imageUrl) image = data.imageUrl;
+                }
+              }
+            } catch(e) { console.error('community db error', e); }
+          } else {
+            title = 'Forensic Science Community & Discussion Forum | ForenClue';
+            summary = "Engage in India's premier forensic science peer community. Discuss case studies, clear academic doubts, and network with forensic analysts.";
+          }
+        }
+        else if (cleanPath === '/quizzes') {
+          image = '/og/quizzes.png';
+          title = 'Forensic Quizzes & Weekly Challenges | ForenClue';
+          summary = 'Test your expertise in crime scene protocols, digital evidence, and fingerprint analysis. Compete on live leaderboards and win top rankings!';
+        }
+        else if (cleanPath.startsWith('/quizzes/')) {
+          image = '/og/quizzes.png';
+          const parts = cleanPath.split('/');
+          const quizId = parts[2];
+          const isLeaderboard = parts[3] === 'leaderboard';
+          
+          if (quizId) {
+            let quizTitle = '';
+            let quizDesc = '';
+            try {
+              const dbAdmin = getDbAdmin();
+              const quizDoc = await dbAdmin.collection('quizzes').doc(quizId).get();
+              if (quizDoc.exists) {
+                const data = quizDoc.data();
+                if (data) {
+                  quizTitle = data.title;
+                  quizDesc = data.description;
+                  if (data.thumbnail) image = data.thumbnail;
+                }
+              } else {
+                if (quizId.includes('weekly-challenge-1')) {
+                  quizTitle = 'Crime Scene Investigation Protocol';
+                  quizDesc = 'Test your knowledge on crime scene securing, evidence collection protocols, and chain of custody.';
+                } else if (quizId.includes('weekly-challenge-2')) {
+                  quizTitle = 'Digital Forensics & Malware Analysis';
+                  quizDesc = 'Assess your expertise in digital forensics, volatile memory analysis, and malware identification.';
+                }
+              }
+            } catch(e) { console.error('quiz db error', e); }
+
+            if (isLeaderboard) {
+              title = `Leaderboard: ${quizTitle || quizId} | ForenClue`;
+              summary = `Live scoreboard and rankings for ${quizTitle || quizId}. See top forensic scholars and investigators.`;
+            } else {
+              title = `${quizTitle || quizId} | ForenClue Quiz Challenge`;
+              summary = quizDesc || 'Test your knowledge in this forensic challenge quiz on ForenClue.';
+            }
+          }
+        }
+        else if (cleanPath === '/about') {
+          image = '/og/about.png';
           title = 'About Our Mission & Team | ForenClue';
           summary = 'Meet the expert leaders, academic counselors, and founders behind ForenClue. Discover our mission to transform forensic science edtech and cybersecurity training.';
         }
-        else if (req.path === '/careers') {
-          title = 'Careers & Internships | ForenClue';
+        else if (cleanPath === '/careers') {
+          image = '/og/careers.png';
+          title = 'Careers, Research Roles & Internships | ForenClue';
           summary = 'Join the ForenClue team. Explore career opportunities, hands-on forensic science internships, research roles, and advisory board positions.';
         }
-        else if (req.path === '/services') {
-          title = 'Professional Forensic Services | ForenClue';
-          summary = 'Inquire about corporate and personal forensic investigation services. Professional consultancy in cyber forensics, criminal analysis, and verification studies.';
+        else if (cleanPath === '/services') {
+          image = '/og/services.png';
+          title = 'Professional Forensic Services & Consultancy | ForenClue';
+          summary = 'Corporate and private forensic consultancy, cyber incident response, document authentication, digital evidence analysis, and expert witness support.';
         }
-        else if (req.path === '/ebooks') {
-          title = 'ForenClue E-Library & Handbooks';
-          summary = 'Browse verified scientific forensic handbooks, physical crime scene protocols, and digital study reference manuals in the ForenClue secure E-Library.';
+        else if (cleanPath === '/contact') {
+          image = '/og/contact.png';
+          title = 'Contact ForenClue Support & Inquiries';
+          summary = 'Get in touch with administrative directors, student support coordinators, or corporate partnership divisions for your educational queries.';
         }
-        else if (req.path === '/podcast') {
-          title = 'Forensic Talk Podcast | ForenClue';
-          summary = 'Listen to ForenClue Forensic Talk. Dynamic, deep-dive discussions with veteran crime scene experts, cybersecurity directors, and legal counselors.';
+        else if (cleanPath === '/certificate') {
+          image = '/og/certificate.png';
+          if (req.query.id || req.query.code) {
+            const certId = String(req.query.id || req.query.code);
+            try {
+              const dbAdmin = getDbAdmin();
+              const certDoc = await dbAdmin.collection('certificates').doc(certId).get();
+              if (certDoc.exists) {
+                const data = certDoc.data();
+                if (data) {
+                  title = `Certificate Verification: ${data.studentName || certId} | ForenClue`;
+                  summary = `Verified credential for ${data.courseTitle || 'Forensic Masterclass'} issued to ${data.studentName || 'Student'} by ForenClue.`;
+                  if (data.imageUrl) image = data.imageUrl;
+                }
+              }
+            } catch(e) { console.error('cert db error', e); }
+          } else {
+            title = 'Instant Certificate Verification Portal | ForenClue';
+            summary = 'Instantly authenticate and verify official academic credentials, masterclass badges, and course completion certificates issued by ForenClue.';
+          }
         }
-        else if (req.path === '/webinar') {
-          title = 'Live Forensic Science Masterclasses & Webinars';
-          summary = 'Register for upcoming high-impact live webinars hosted by top forensic experts. Learn digital investigations, trace evidence analytics, and earn certification.';
+        else if (cleanPath === '/employees') {
+          image = '/og/employees.png';
+          if (req.query.badge || req.query.id || req.query.emp) {
+            const empId = String(req.query.badge || req.query.id || req.query.emp);
+            try {
+              const dbAdmin = getDbAdmin();
+              let empDoc = await dbAdmin.collection('employees').doc(empId).get();
+              if (!empDoc.exists) {
+                const query = await dbAdmin.collection('employees').where('employeeId', '==', empId).get();
+                if (!query.empty) empDoc = query.docs[0];
+              }
+              if (empDoc.exists) {
+                const data = empDoc.data();
+                if (data) {
+                  title = `${data.fullName} - ${data.position} | ForenClue Staff`;
+                  summary = `Verified ForenClue badge ${data.employeeId || empId}. ${data.department || ''}.`;
+                  if (data.imageUrl) image = data.imageUrl;
+                }
+              }
+            } catch(e) { console.error('employee db error', e); }
+          } else {
+            title = 'Employee & Staff Verification Board | ForenClue';
+            summary = 'ForenClue official Employee Verification Portal. Search active duty badges, staff credentials, and digital cryptographic ID cards.';
+          }
         }
-        else if (req.path === '/community') {
-          title = 'ForenClue Forensic Community Hub';
-          summary = "Engage in India's premier forensic science and research peer community. Share academic doubts, deliberate active case logs, and network with forensic analysts.";
+        else if (cleanPath === '/simulations') {
+          image = '/og/simulations.png';
+          title = 'Virtual Forensic Science Labs & Simulations | ForenClue';
+          summary = 'Experience realistic 3D virtual laboratory simulations including compound microscopy examination and spectrophotometer absorbance analysis.';
         }
-        else if (req.path === '/contact') {
-          title = 'Contact Forensic Experts | ForenClue Support';
-          summary = 'Get in touch with ForenClue administrative directors, student support coordinators, or business partnership divisions for your educational queries.';
+        else if (cleanPath === '/simulations/microscope') {
+          image = '/og/microscope.png';
+          title = 'Virtual Compound Microscope Simulator | ForenClue';
+          summary = 'Interactive virtual microscope simulator for forensic specimen examination, magnification tuning, focal adjustment, and slide analysis.';
         }
-        else if (req.path === '/certificate') {
-          title = 'Instant Certificate Verification Portal | ForenClue';
-          summary = 'Instantly authenticate and verify official academic credentials, masterclass badges, and course completion certificates issued by the ForenClue Board.';
+        else if (cleanPath === '/simulations/spectrophotometer') {
+          image = '/og/spectrophotometer.png';
+          title = 'UV-Vis Spectrophotometer Simulator | ForenClue';
+          summary = 'Interactive laboratory simulation for forensic chemical absorbance profiling, wavelength calibration, and quantitative analysis.';
         }
-        else if (req.path === '/employees') {
-          title = 'ForenClue Employee Verification Board';
-          summary = 'ForenClue secure Employee Verification Portal. Search active duty badges, credentials, and digital cryptographic ID cards.';
-          image = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgKXJQb5UkVJcbG4a0rTFiNdhEa1wfFDfbew92r5tR1XXbYUkW7AbdMR_MSFwgCJg1zsDwpJX3jVns0as8FzPWrcK_SqiR9c-ah5jHmHksFm2AmiHtC46umM02LTfmeBBoxOjTRJnAzl6gW1dLY0AmDpDdQw2tl1L2D0R_hFonlFjnoNf22TNpbh9Hz9Kw/s1884/Screenshot%202026-07-20%20at%2012.06.52%E2%80%AFAM.png';
+        else if (cleanPath === '/volunteers') {
+          image = '/og/volunteers.png';
+          title = 'Volunteer Network & Youth Forensic Alliance | ForenClue';
+          summary = 'Join the ForenClue volunteer network and contribute to forensic science awareness, community outreach, and research initiatives.';
         }
-        else if (req.path === '/privacy') {
+        else if (cleanPath === '/ambassadors') {
+          image = '/og/ambassadors.png';
+          title = 'Campus Ambassador Program | ForenClue';
+          summary = 'Represent ForenClue at your university or institution as a Campus Ambassador and lead forensic science initiatives in your campus.';
+        }
+        else if (cleanPath === '/privacy') {
+          image = '/og/privacy.png';
           title = 'Privacy Policy | ForenClue';
           summary = 'Understand how ForenClue collects, stores, and protects student data, examination records, and transaction security.';
         }
-        else if (req.path === '/terms') {
+        else if (cleanPath === '/terms') {
+          image = '/og/terms.png';
           title = 'Terms of Service | ForenClue';
           summary = 'Review user terms, educational guidelines, certificate code of conduct, and enrollment conditions for ForenClue.';
+        }
+        else if (cleanPath === '/login') {
+          image = '/og/login.png';
+          title = 'Secure Student & Specialist Login | ForenClue';
+          summary = 'Sign in to access your enrolled forensic courses, certificate dashboard, quiz rankings, and saved study materials.';
+        }
+        else if (cleanPath === '/dashboard') {
+          image = '/og/dashboard.png';
+          title = 'Student & Researcher Dashboard | ForenClue';
+          summary = 'Track your course progress, upcoming masterclasses, quiz leaderboard ranks, and downloaded forensic handbooks.';
+        }
+        else if (cleanPath === '/profile' || cleanPath.startsWith('/profile/')) {
+          image = '/og/profile.png';
+          title = 'Forensic Specialist Profile | ForenClue';
+          summary = 'View earned forensic certifications, achievement badges, community contributions, and active enrollment records.';
+        }
+        else {
+          // Check if this is a single top-level permalink route like /FC-EBOOK-102
+          const seg = cleanPath.slice(1);
+          const reservedRoutes = [
+            'about', 'courses', 'cases', 'careers', 'community', 'services', 
+            'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 
+            'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 
+            'volunteers', 'ambassadors', 'forms', 'simulations', 'quizzes'
+          ];
+          if (seg && !seg.includes('/') && !reservedRoutes.includes(seg.toLowerCase())) {
+            try {
+              const dbAdmin = getDbAdmin();
+              const ebookDoc = await dbAdmin.collection('ebooks').doc(seg).get();
+              if (ebookDoc.exists) {
+                const data = ebookDoc.data();
+                if (data) {
+                  title = data.title ? `${data.title} | ForenClue E-Library` : title;
+                  summary = data.description || data.summary || summary;
+                  image = data.coverImage || data.thumbnail || data.image || '/og/ebooks.png';
+                }
+              }
+            } catch(e) { console.error('permalink fetch error', e); }
+          }
         }
       } catch (dbError) {
         console.error("Error fetching preview metadata:", dbError);
@@ -809,7 +1047,9 @@ async function startServer() {
       let ogImageUrl = image;
       if (ogImageUrl) {
         if (!ogImageUrl.startsWith('http://') && !ogImageUrl.startsWith('https://')) {
-          // Prepend absolute site base url to local relative images
+          if (!ogImageUrl.startsWith('/')) {
+            ogImageUrl = '/' + ogImageUrl;
+          }
           ogImageUrl = `${protocol}://${host}${ogImageUrl}`;
         }
 
@@ -829,7 +1069,7 @@ async function startServer() {
 
       // Standardize mimetype format for crawlers
       let ogImageType = 'image/png';
-      if (ogImageUrl && ogImageUrl.toLowerCase().endsWith('.jpg') || ogImageUrl?.toLowerCase().endsWith('.jpeg')) {
+      if (ogImageUrl && (ogImageUrl.toLowerCase().endsWith('.jpg') || ogImageUrl.toLowerCase().endsWith('.jpeg'))) {
         ogImageType = 'image/jpeg';
       } else if (ogImageUrl && ogImageUrl.toLowerCase().endsWith('.webp')) {
         ogImageType = 'image/webp';
@@ -843,6 +1083,7 @@ async function startServer() {
     <meta name="description" content="${summary.replace(/"/g, '&quot;')}" />
     <link rel="canonical" href="${absoluteUrl}" />
     <link rel="image_src" href="${ogImageUrl}" />
+    <meta property="og:site_name" content="ForenClue" />
     <meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta property="og:description" content="${summary.replace(/"/g, '&quot;')}" />
     <meta property="og:image" content="${ogImageUrl}" />
@@ -851,20 +1092,26 @@ async function startServer() {
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:url" content="${absoluteUrl}" />
-    <meta property="og:type" content="${req.path === '/cases' || req.path === '/courses' ? 'article' : 'website'}" />
+    <meta property="og:type" content="${cleanPath === '/cases' || cleanPath === '/courses' || cleanPath === '/ebooks' ? 'article' : 'website'}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />
     <meta name="twitter:description" content="${summary.replace(/"/g, '&quot;')}" />
     <meta name="twitter:image" content="${ogImageUrl}" />
     `;
 
-      html = html.replace('<head>', `<head>\n${metaTags}`);
-      html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-      html = html.replace(/<meta name="description".*?>/i, ''); // Remove existing static description so no conflict
-
       if (!isProd && viteDevServer) {
         html = await viteDevServer.transformIndexHtml(req.originalUrl, html);
       }
+
+      html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+      html = html.replace(/<meta name="description".*?>/gi, '');
+      html = html.replace(/<meta property="og:.*?".*?>/gi, '');
+      html = html.replace(/<meta name="twitter:.*?".*?>/gi, '');
+      html = html.replace(/<link rel="image_src".*?>/gi, '');
+      
+      html = html.replace('<head>', `<head>\n${metaTags}`);
+
+
 
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
@@ -880,6 +1127,18 @@ async function startServer() {
       }
     }
   });
+
+  if (!isProd) {
+    viteDevServer = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "custom",
+    });
+    app.use(viteDevServer.middlewares);
+  } else {
+    app.use(express.static(buildPath, { index: false }));
+  }
+
+
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -95,7 +95,7 @@ export function SEO({
     setMetaTag('property', 'og:locale', 'en_IN');
 
     // Determine the optimal image URL (override low-res thumbnail parameters if present)
-    let ogImg = 'https://www.forenclue.in/forenclue_og_banner.jpg';
+    let ogImg = 'https://www.forenclue.in/og/home.png';
     if (image) {
       ogImg = image;
     }

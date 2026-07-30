@@ -50,6 +50,7 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "puppeteer": "^25.4.0",
     "tailwind-scrollbar": "^4.0.2"
   }
 }
