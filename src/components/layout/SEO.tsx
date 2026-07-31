@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 interface SEOProps {
   title: string;
@@ -37,230 +37,173 @@ export function SEO({
   breadcrumbs,
   customSchema,
 }: SEOProps) {
-  useEffect(() => {
-    const siteTitle = 'ForenClue | Forensic EdTech Mastery';
-    const formattedTitle = title ? `${title} | ForenClue` : siteTitle;
-    document.title = formattedTitle;
+  const siteTitle = 'ForenClue | Forensic EdTech Mastery';
+  const formattedTitle = title ? `${title} | ForenClue` : siteTitle;
+  const shareTitle = title ? `${title} | Forensic Science Hub` : 'ForenClue - Master Forensic Science & Investigations';
+  const metaKeywords = keywords || 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics';
+  const absoluteCanonicalUrl = `https://www.forenclue.in${canonicalPath}`;
 
-    // Helper to view or update/create meta elements
-    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
-      let element = document.querySelector(`meta[${attrName}="${attrVal}"]`);
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attrName, attrVal);
-        document.head.appendChild(element);
-      }
-      element.setAttribute('content', content);
-    };
+  // Determine optimal image URL
+  let ogImg = 'https://www.forenclue.in/og/home.png';
+  if (image) {
+    ogImg = image;
+  }
 
-    // Helper to find, update, or create link tags (like canonical)
-    const setLinkTag = (rel: string, href: string) => {
-      let element = document.querySelector(`link[rel="${rel}"]`);
-      if (!element) {
-        element = document.createElement('link');
-        element.setAttribute('rel', rel);
-        document.head.appendChild(element);
-      }
-      element.setAttribute('href', href);
-    };
-
-    // Standard Meta Tags
-    setMetaTag('name', 'description', description);
-    setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1');
-    setMetaTag('name', 'content-language', 'en-IN');
-    
-    // Geographic Targeting for Forensic Training Excellence in India and globally
-    setMetaTag('name', 'geo.region', 'IN-DL');
-    setMetaTag('name', 'geo.placename', 'Delhi');
-    setMetaTag('name', 'geo.position', '28.6139;77.2090');
-    setMetaTag('name', 'ICBM', '28.6139, 77.2090');
-
-    if (keywords) {
-      setMetaTag('name', 'keywords', keywords);
+  // Optimize Blogger and Google User Content image parameters to deliver s1200 sizes for social crawlers
+  if (ogImg && ogImg.includes('googleusercontent.com')) {
+    const pathRegex = /\/s\d+(?:-[a-zA-Z0-9_-]+)*\//;
+    if (pathRegex.test(ogImg)) {
+      ogImg = ogImg.replace(pathRegex, '/s1200/');
     } else {
-      setMetaTag('name', 'keywords', 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics');
-    }
-
-    // Canonical link setup
-    const absoluteCanonicalUrl = `https://www.forenclue.in${canonicalPath}`;
-    setLinkTag('canonical', absoluteCanonicalUrl);
-
-    // OpenGraph social preview metadata
-    const shareTitle = title ? `${title} | Forensic Science Hub` : 'ForenClue - Master Forensic Science & Investigations';
-    setMetaTag('property', 'og:title', shareTitle);
-    setMetaTag('property', 'og:description', description);
-    setMetaTag('property', 'og:type', type === 'article' ? 'article' : 'website');
-    setMetaTag('property', 'og:url', absoluteCanonicalUrl);
-    setMetaTag('property', 'og:site_name', 'ForenClue');
-    setMetaTag('property', 'og:locale', 'en_IN');
-
-    // Determine the optimal image URL (override low-res thumbnail parameters if present)
-    let ogImg = 'https://www.forenclue.in/og/home.png';
-    if (image) {
-      ogImg = image;
-    }
-
-    // Proactively optimize Blogger and Google User Content image parameters to deliver ultra-crisp s1200 sizes for social crawlers (Telegram, WhatsApp, etc.)
-    if (ogImg && ogImg.includes('googleusercontent.com')) {
-      const pathRegex = /\/s\d+(?:-[a-zA-Z0-9_-]+)*\//;
-      if (pathRegex.test(ogImg)) {
-        ogImg = ogImg.replace(pathRegex, '/s1200/');
-      } else {
-        const queryRegex = /=s\d+(?:-[a-zA-Z0-9_-]+)*/;
-        if (queryRegex.test(ogImg)) {
-          ogImg = ogImg.replace(queryRegex, '=s1200');
-        }
+      const queryRegex = /=s\d+(?:-[a-zA-Z0-9_-]+)*/;
+      if (queryRegex.test(ogImg)) {
+        ogImg = ogImg.replace(queryRegex, '=s1200');
       }
     }
+  }
 
-    setMetaTag('property', 'og:image', ogImg);
-    setMetaTag('property', 'og:image:secure_url', ogImg);
-    setMetaTag('property', 'og:image:width', '1200');
-    setMetaTag('property', 'og:image:height', '630');
-
-    // Twitter Card social preview metadata
-    setMetaTag('name', 'twitter:card', 'summary_large_image');
-    setMetaTag('name', 'twitter:title', shareTitle);
-    setMetaTag('name', 'twitter:description', description);
-    setMetaTag('name', 'twitter:image', ogImg);
-    setMetaTag('name', 'twitter:site', '@ForenClue');
-    setMetaTag('name', 'twitter:creator', '@ForenClue');
-
-    // Structured Data Graph Architecture (Organizes multiple relational entities)
-    const graphData: any[] = [
-      {
-        '@type': 'EducationalOrganization',
-        '@id': 'https://www.forenclue.in/#organization',
-        'name': 'ForenClue',
-        'url': 'https://www.forenclue.in',
-        'logo': {
-          '@type': 'ImageObject',
-          'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1600/4b5616a4-6069-44a7-ba52-88f965165067.png'
-        },
-        'sameAs': [
-          'https://www.youtube.com/@ForenClue',
-          'https://www.instagram.com/forenclue',
-          'https://t.me/forenclue'
-        ]
+  // Structured Data Graph Architecture
+  const graphData: any[] = [
+    {
+      '@type': 'EducationalOrganization',
+      '@id': 'https://www.forenclue.in/#organization',
+      'name': 'ForenClue',
+      'url': 'https://www.forenclue.in',
+      'logo': {
+        '@type': 'ImageObject',
+        'url': 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7yfh9aP-3k7exKSgvW9ynV7lb9j62shvwJrpkiEi_9yiWUSxntW5Poc-MOXQCA0fd635VLo8C35glEPFtlSByqxDDepzEAX6D5T4SzFX-8fyKDIoo7_wV3EXH6u-UDF6P344Q4RRlRFY-qfqITWnuSXa7feb89eDlR9SCODoodogdY89rBez2K7fOiQI/s1600/4b5616a4-6069-44a7-ba52-88f965165067.png'
       },
-      {
-        '@type': type === 'article' ? 'Article' : type === 'book' ? 'Book' : 'WebPage',
-        '@id': `${absoluteCanonicalUrl}#webpage`,
-        'url': absoluteCanonicalUrl,
-        'name': title || 'ForenClue',
-        'description': description,
-        'isPartOf': { '@id': 'https://www.forenclue.in/#website' },
-        'publisher': { '@id': 'https://www.forenclue.in/#organization' },
-        'image': ogImg,
-        'primaryImageOfPage': {
-          '@type': 'ImageObject',
-          '@id': `${absoluteCanonicalUrl}#primaryimage`,
-          'url': ogImg
-        }
+      'sameAs': [
+        'https://www.youtube.com/@ForenClue',
+        'https://www.instagram.com/forenclue',
+        'https://t.me/forenclue'
+      ]
+    },
+    {
+      '@type': type === 'article' ? 'Article' : type === 'book' ? 'Book' : 'WebPage',
+      '@id': `${absoluteCanonicalUrl}#webpage`,
+      'url': absoluteCanonicalUrl,
+      'name': title || 'ForenClue',
+      'description': description,
+      'isPartOf': { '@id': 'https://www.forenclue.in/#website' },
+      'publisher': { '@id': 'https://www.forenclue.in/#organization' },
+      'image': ogImg,
+      'primaryImageOfPage': {
+        '@type': 'ImageObject',
+        '@id': `${absoluteCanonicalUrl}#primaryimage`,
+        'url': ogImg
       }
-    ];
-
-    // Rich Article Additions
-    if (type === 'article') {
-      const articleNode: any = {
-        '@type': 'BlogPosting',
-        '@id': `${absoluteCanonicalUrl}#article`,
-        'isPartOf': { '@id': `${absoluteCanonicalUrl}#webpage` },
-        'headline': title,
-        'description': description,
-        'image': ogImg,
-        'publisher': { '@id': 'https://www.forenclue.in/#organization' }
-      };
-      if (authorName) {
-        articleNode.author = {
-          '@type': 'Person',
-          'name': authorName
-        };
-      }
-      if (publishDate) {
-        articleNode.datePublished = publishDate;
-      }
-      graphData.push(articleNode);
     }
+  ];
 
-    // Course Rich Schema Additions
-    if (type === 'course' && courseDetails) {
-      graphData.push({
-        '@type': 'Course',
-        '@id': `${absoluteCanonicalUrl}#course`,
-        'name': courseDetails.name,
-        'description': courseDetails.description || description,
-        'provider': {
-          '@id': 'https://www.forenclue.in/#organization'
-        },
-        'category': courseDetails.category || 'Forensic Science',
-        'image': ogImg
-      });
-    }
-
-    // Service Rich Schema Additions
-    if (type === 'service') {
-      graphData.push({
-        '@type': 'Service',
-        '@id': `${absoluteCanonicalUrl}#service`,
-        'name': title,
-        'description': description,
-        'provider': {
-          '@id': 'https://www.forenclue.in/#organization'
-        },
-        'image': ogImg
-      });
-    }
-
-    // FAQPage Structured Data (Highly recommended for high-intent SEO queries)
-    if (faqs && faqs.length > 0) {
-      graphData.push({
-        '@type': 'FAQPage',
-        '@id': `${absoluteCanonicalUrl}#faq`,
-        'mainEntity': faqs.map(faq => ({
-          '@type': 'Question',
-          'name': faq.question,
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': faq.answer
-          }
-        }))
-      });
-    }
-
-    // BreadcrumbList Structured Data (Translates physical page layouts into intuitive breadcrumb trails)
-    if (breadcrumbs && breadcrumbs.length > 0) {
-      graphData.push({
-        '@type': 'BreadcrumbList',
-        '@id': `${absoluteCanonicalUrl}#breadcrumbs`,
-        'itemListElement': breadcrumbs.map((crumb, idx) => ({
-          '@type': 'ListItem',
-          'position': idx + 1,
-          'name': crumb.name,
-          'item': `https://www.forenclue.in${crumb.path}`
-        }))
-      });
-    }
-
-    if (customSchema && customSchema.length > 0) {
-      graphData.push(...customSchema);
-    }
-
-    const jsonLdData = {
-      '@context': 'https://schema.org',
-      '@graph': graphData
+  if (type === 'article') {
+    const articleNode: any = {
+      '@type': 'BlogPosting',
+      '@id': `${absoluteCanonicalUrl}#article`,
+      'isPartOf': { '@id': `${absoluteCanonicalUrl}#webpage` },
+      'headline': title,
+      'description': description,
+      'image': ogImg,
+      'publisher': { '@id': 'https://www.forenclue.in/#organization' }
     };
+    if (authorName) articleNode.author = { '@type': 'Person', 'name': authorName };
+    if (publishDate) articleNode.datePublished = publishDate;
+    graphData.push(articleNode);
+  }
 
-    let scriptTag = document.querySelector('script[type="application/ld+json"]');
-    if (!scriptTag) {
-      scriptTag = document.createElement('script');
-      scriptTag.setAttribute('type', 'application/ld+json');
-      document.head.appendChild(scriptTag);
-    }
-    scriptTag.textContent = JSON.stringify(jsonLdData);
+  if (type === 'course' && courseDetails) {
+    graphData.push({
+      '@type': 'Course',
+      '@id': `${absoluteCanonicalUrl}#course`,
+      'name': courseDetails.name,
+      'description': courseDetails.description || description,
+      'provider': { '@id': 'https://www.forenclue.in/#organization' },
+      'category': courseDetails.category || 'Forensic Science',
+      'image': ogImg
+    });
+  }
 
-  }, [title, description, keywords, canonicalPath, image, type, noindex, authorName, publishDate, courseDetails, faqs, breadcrumbs, customSchema]);
+  if (type === 'service') {
+    graphData.push({
+      '@type': 'Service',
+      '@id': `${absoluteCanonicalUrl}#service`,
+      'name': title,
+      'description': description,
+      'provider': { '@id': 'https://www.forenclue.in/#organization' },
+      'image': ogImg
+    });
+  }
 
-  return null; // Side-effect only component
+  if (faqs && faqs.length > 0) {
+    graphData.push({
+      '@type': 'FAQPage',
+      '@id': `${absoluteCanonicalUrl}#faq`,
+      'mainEntity': faqs.map(faq => ({
+        '@type': 'Question',
+        'name': faq.question,
+        'acceptedAnswer': { '@type': 'Answer', 'text': faq.answer }
+      }))
+    });
+  }
+
+  if (breadcrumbs && breadcrumbs.length > 0) {
+    graphData.push({
+      '@type': 'BreadcrumbList',
+      '@id': `${absoluteCanonicalUrl}#breadcrumbs`,
+      'itemListElement': breadcrumbs.map((crumb, idx) => ({
+        '@type': 'ListItem',
+        'position': idx + 1,
+        'name': crumb.name,
+        'item': `https://www.forenclue.in${crumb.path}`
+      }))
+    });
+  }
+
+  if (customSchema && customSchema.length > 0) {
+    graphData.push(...customSchema);
+  }
+
+  const jsonLdData = {
+    '@context': 'https://schema.org',
+    '@graph': graphData
+  };
+
+  return (
+    <Helmet>
+      <title>{formattedTitle}</title>
+      <meta name="description" content={description} />
+      <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1'} />
+      <meta name="content-language" content="en-IN" />
+      <meta name="keywords" content={metaKeywords} />
+      <meta name="geo.region" content="IN-DL" />
+      <meta name="geo.placename" content="Delhi" />
+      <meta name="geo.position" content="28.6139;77.2090" />
+      <meta name="ICBM" content="28.6139, 77.2090" />
+
+      <link rel="canonical" href={absoluteCanonicalUrl} />
+
+      {/* OpenGraph */}
+      <meta property="og:title" content={shareTitle} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content={type === 'article' ? 'article' : 'website'} />
+      <meta property="og:url" content={absoluteCanonicalUrl} />
+      <meta property="og:site_name" content="ForenClue" />
+      <meta property="og:locale" content="en_IN" />
+      <meta property="og:image" content={ogImg} />
+      <meta property="og:image:secure_url" content={ogImg} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+
+      {/* Twitter Card */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={shareTitle} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={ogImg} />
+      <meta name="twitter:site" content="@ForenClue" />
+      <meta name="twitter:creator" content="@ForenClue" />
+
+      {/* Structured Data */}
+      <script type="application/ld+json">{JSON.stringify(jsonLdData)}</script>
+    </Helmet>
+  );
 }
-
