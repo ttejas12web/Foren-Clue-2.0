@@ -213,7 +213,7 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
                     onClick={() => signInWithGoogle()}
                     className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Lock size={14} /> Login To Enroll
+                    <Lock size={14} /> Login To Attempt
                   </button>
                 )}
               </div>

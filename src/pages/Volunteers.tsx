@@ -190,15 +190,22 @@ export default function Volunteers() {
 
         {/* Verified Volunteer Directory */}
         <div className="mb-20">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 perspective-[2000px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeVolunteers.map((vol, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15, rotateY: 90 }}
-                whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.08, type: "spring", stiffness: 100, damping: 12 }}
-                className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative group hover:border-warning/40 hover:-translate-y-1.5 hover:shadow-[0_20px_30px_-10px_rgba(0,0,0,0.4),_0_0_25px_rgba(217,119,6,0.12)] transition-all duration-300 shadow-xl flex flex-col items-center text-center justify-between cursor-pointer"
+                initial={{ opacity: 0, scale: 0.75, y: 40 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                whileHover={{ scale: 1.03, y: -8 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ 
+                  delay: (idx % 6) * 0.07, 
+                  type: "spring", 
+                  stiffness: 260, 
+                  damping: 18 
+                }}
+                className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 relative group hover:border-warning/50 hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.5),_0_0_30px_rgba(217,119,6,0.18)] transition-all duration-300 shadow-xl flex flex-col items-center text-center justify-between cursor-pointer"
               >
                 {/* Status Indicator */}
                 <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-mono uppercase tracking-wider">

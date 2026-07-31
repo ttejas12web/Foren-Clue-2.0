@@ -45,6 +45,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const Webinars = lazy(() => import('./pages/Webinar')); // Fix potential issue if they aren't matching
 const Simulations = lazy(() => import('./pages/Simulations'));
 const MicroscopeLab = lazy(() => import('./pages/MicroscopeLab'));
+const ComparisonMicroscopeLab = lazy(() => import('./pages/ComparisonMicroscopeLab'));
 const SpectrophotometerLab = lazy(() => import('./pages/SpectrophotometerLab'));
 const Quizzes = lazy(() => import('./pages/Quizzes'));
 const QuizPlayer = lazy(() => import('./pages/QuizPlayer'));
@@ -135,6 +136,7 @@ export default function App() {
                     <Route path="/forms" element={<GoogleForms />} />
                     <Route path="/simulations" element={<DesktopOnly><Simulations /></DesktopOnly>} />
                     <Route path="/simulations/microscope" element={<DesktopOnly><MicroscopeLab /></DesktopOnly>} />
+                    <Route path="/simulations/comparison-microscope" element={<DesktopOnly><ComparisonMicroscopeLab /></DesktopOnly>} />
                     <Route path="/simulations/spectrophotometer" element={<DesktopOnly><SpectrophotometerLab /></DesktopOnly>} />
                     <Route path="/quizzes" element={<Quizzes />} />
                     <Route path="/quizzes/:quizId" element={<QuizPlayer />} />

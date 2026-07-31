@@ -1,11 +1,20 @@
 import { Link } from 'react-router-dom';
-import { Microscope, Beaker, ArrowRight } from 'lucide-react';
+import { Microscope, Columns3, Beaker, ArrowRight } from 'lucide-react';
 
 const SIMULATIONS = [
   {
+    id: 'comparison_microscope',
+    title: 'Forensic Comparison Microscope',
+    description: 'Perform split-screen side-by-side microscopic comparison of evidence vs control samples including fired bullet striations, cartridge breechface marks, and textile fibers.',
+    icon: Columns3,
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
+    path: '/simulations/comparison-microscope'
+  },
+  {
     id: 'microscope',
-    title: 'Virtual Microscope',
-    description: 'Explore various microscopic samples including synthetic fibers, pollen grains, and salt crystals in an interactive 3D environment.',
+    title: 'Virtual Compound Microscope',
+    description: 'Explore various microscopic samples using a compound optical system featuring dual-stage magnification (4x, 10x, 40x, 100x objective lenses) in interactive 3D.',
     icon: Microscope,
     color: 'text-info',
     bg: 'bg-info/10',
@@ -24,7 +33,7 @@ const SIMULATIONS = [
 
 export default function Simulations() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
       <div className="mb-12 text-center">
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-widest text-text-main mb-4">
           Virtual <span className="text-info">Laboratory</span>
@@ -34,7 +43,7 @@ export default function Simulations() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {SIMULATIONS.map((sim) => {
           const Icon = sim.icon;
           return (

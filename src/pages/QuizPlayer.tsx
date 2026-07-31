@@ -260,7 +260,7 @@ export default function QuizPlayer() {
             Please sign in or login to attempt <strong className="text-text-main">{quiz.title}</strong> and record your progress on the leaderboard.
           </p>
           <button
-            onClick={() => navigate('/login', { state: { from: location } })}
+            onClick={() => navigate('/login', { state: { from: location, quizTitle: quiz.title } })}
             className="w-full bg-warning hover:bg-warning-dark text-crust font-black text-sm uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-lg shadow-warning/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             Sign In / Login

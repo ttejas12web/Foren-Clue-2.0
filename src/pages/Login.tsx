@@ -28,6 +28,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || "/dashboard";
+  const quizTitle = (location.state as any)?.quizTitle;
+  const isFromQuiz = from?.includes('/quizzes/');
 
   // Tabs for interactive Sign In vs Create Account
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
@@ -161,6 +163,15 @@ export default function Login() {
           className="lg:col-span-7 bg-surface border border-black/15 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between"
         >
           <div>
+            {(quizTitle || isFromQuiz) && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium flex items-start gap-3 shadow-md">
+                <Lock size={18} className="shrink-0 mt-0.5 text-amber-400" />
+                <p className="leading-relaxed">
+                  Please sign in or login to attempt <strong className="text-white font-bold">{quizTitle || 'Weekly Challenge'}</strong> and record your progress on the leaderboard.
+                </p>
+              </div>
+            )}
+
             {/* Tab switch mechanism: Sign In vs Sign Up */}
             <div className="flex border-b border-black/10 dark:border-white/5 mb-8">
               <button 

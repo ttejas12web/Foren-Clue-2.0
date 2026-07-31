@@ -1,4 +1,11 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+
+declare global {
+  interface Window {
+    debugSEO?: () => void;
+  }
+}
 
 interface SEOProps {
   title: string;
@@ -168,6 +175,32 @@ export function SEO({
     '@graph': graphData
   };
 
+  useEffect(() => {
+    const printSEODebug = () => {
+      const currentTitle = document.title;
+      const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content');
+      const ogDesc = document.querySelector('meta[property="og:description"]')?.getAttribute('content');
+      const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content');
+      const ogUrl = document.querySelector('meta[property="og:url"]')?.getAttribute('content');
+      const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
+
+      console.groupCollapsed(`🔍 [SEO Debugger] ${currentTitle || formattedTitle}`);
+      console.log('📌 Document Title:', currentTitle);
+      console.log('🔗 OpenGraph Title:', ogTitle);
+      console.log('📝 OpenGraph Description:', ogDesc);
+      console.log('🖼️ OpenGraph Image:', ogImage);
+      console.log('🌐 OpenGraph URL:', ogUrl);
+      console.log('🎯 Canonical URL:', canonical);
+      console.groupEnd();
+    };
+
+    window.debugSEO = printSEODebug;
+
+    // Small delay to allow react-helmet-async to reflect tags in DOM
+    const timer = setTimeout(printSEODebug, 150);
+    return () => clearTimeout(timer);
+  }, [formattedTitle, description, ogImg, absoluteCanonicalUrl, shareTitle]);
+
   return (
     <Helmet>
       <title>{formattedTitle}</title>
@@ -207,3 +240,7 @@ export function SEO({
     </Helmet>
   );
 }
+
+export type SEOHeaderProps = SEOProps;
+export const SEOHeader = SEO;
+

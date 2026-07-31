@@ -1,13 +1,89 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
+
+function createForenclueEmbroideryTexture() {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Dark navy blue velvet/leather base
+    ctx.fillStyle = '#0a1128';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Fine fabric texture weave
+    ctx.strokeStyle = '#1e2942';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.width; i += 6) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+    }
+    for (let j = 0; j < canvas.height; j += 6) {
+        ctx.beginPath();
+        ctx.moveTo(0, j);
+        ctx.lineTo(canvas.width, j);
+        ctx.stroke();
+    }
+
+    // Heavy Gold Embroidered Stitched Outer Frame
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 12;
+    ctx.setLineDash([22, 14]);
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    // Solid inner golden thread border
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([]);
+    ctx.strokeRect(36, 36, canvas.width - 72, canvas.height - 72);
+
+    // Cyan accent thread frame
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(46, 46, canvas.width - 92, canvas.height - 92);
+
+    // Forensic Emblems Icon Bar
+    ctx.font = '40px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('🔬   ✦   🧬   ✦   ⚖️', canvas.width / 2, 110);
+
+    // FORENCLUE Raised Embroidery Text
+    ctx.shadowColor = '#d97706';
+    ctx.shadowBlur = 14;
+    ctx.font = '900 86px "Montserrat", "Arial Black", sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText('FORENCLUE', canvas.width / 2, 225);
+
+    ctx.shadowBlur = 0;
+    // Subtitle Threading
+    ctx.font = '700 32px "Montserrat", sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('FORENSIC EDTECH SIMULATION', canvas.width / 2, 320);
+
+    ctx.font = '600 24px monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('AUTHENTICATED LABORATORY INSTRUMENT • FC-9000', canvas.width / 2, 395);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}
 
 export function Microscope3D({ focus, objective, lightIntensity, stageX, stageY }: any) {
     const nosepieceRef = useRef<THREE.Group>(null);
     const stageRef = useRef<THREE.Group>(null);
     const coarseKnobRef = useRef<THREE.Group>(null);
     const fineKnobRef = useRef<THREE.Group>(null);
+
+    const embroideryTexture = useMemo(() => createForenclueEmbroideryTexture(), []);
 
     // Map objectives to nosepiece rotation (Y-axis)
     // Objectives: 4, 10, 40, 100
@@ -106,6 +182,42 @@ export function Microscope3D({ focus, objective, lightIntensity, stageX, stageY 
             <RoundedBox args={[1.4, 1.5, 2.5]} position={[0, 6.8, -0.2]} rotation={[0.0, 0, 0]} radius={0.2} smoothness={4}>
                 <meshPhysicalMaterial {...bodyProps} />
             </RoundedBox>
+
+            {/* ForenClue Gold Embroidery Patch - Left Arm */}
+            <group position={[-0.71, 4.3, -1.2]} rotation={[0.1, -Math.PI / 2, 0]}>
+                <RoundedBox args={[1.8, 1.0, 0.04]} radius={0.03}>
+                    <meshStandardMaterial color="#b45309" metalness={0.9} roughness={0.2} />
+                </RoundedBox>
+                {embroideryTexture && (
+                    <Box args={[1.7, 0.9, 0.05]} position={[0, 0, 0.01]}>
+                        <meshStandardMaterial map={embroideryTexture} roughness={0.6} metalness={0.1} />
+                    </Box>
+                )}
+            </group>
+
+            {/* ForenClue Gold Embroidery Patch - Right Arm */}
+            <group position={[0.71, 4.3, -1.2]} rotation={[0.1, Math.PI / 2, 0]}>
+                <RoundedBox args={[1.8, 1.0, 0.04]} radius={0.03}>
+                    <meshStandardMaterial color="#b45309" metalness={0.9} roughness={0.2} />
+                </RoundedBox>
+                {embroideryTexture && (
+                    <Box args={[1.7, 0.9, 0.05]} position={[0, 0, 0.01]}>
+                        <meshStandardMaterial map={embroideryTexture} roughness={0.6} metalness={0.1} />
+                    </Box>
+                )}
+            </group>
+
+            {/* ForenClue Gold Embroidery Badge - Base Plate */}
+            <group position={[0, 0.61, 2.0]} rotation={[-0.1, 0, 0]}>
+                <RoundedBox args={[2.4, 0.05, 1.0]} radius={0.02}>
+                    <meshStandardMaterial color="#b45309" metalness={0.95} roughness={0.15} />
+                </RoundedBox>
+                {embroideryTexture && (
+                    <Box args={[2.3, 0.06, 0.9]} position={[0, 0.01, 0]}>
+                        <meshStandardMaterial map={embroideryTexture} roughness={0.5} metalness={0.2} />
+                    </Box>
+                )}
+            </group>
 
             {/* Binocular Head */}
             <group position={[0, 7.5, 0.5]} rotation={[0.2, 0, 0]}>

@@ -48,8 +48,9 @@ export default function MicroscopeLab() {
       <div className="w-full h-[50vh] lg:h-full lg:flex-1 relative border-b lg:border-b-0 lg:border-r border-white/10 flex-shrink-0">
         <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
           <Microscope size={20} className="text-info" />
-          <span className="font-bold tracking-widest text-sm uppercase">Virtual Lab 3D</span>
+          <span className="font-bold tracking-widest text-sm uppercase">Compound Microscope 3D</span>
         </div>
+        
         <div className="absolute bottom-4 left-4 z-10 text-xs text-white/40 uppercase tracking-widest pointer-events-none">
           Drag to rotate • Scroll to zoom
         </div>
