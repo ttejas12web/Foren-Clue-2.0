@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Quiz } from '@/types/quiz';
-import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, Sparkles, Target, Timer, BookOpen, Zap, Share2 } from 'lucide-react';
+import { Quiz, QuizAttempt } from '@/types/quiz';
+import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, Sparkles, Target, Timer, BookOpen, Zap, Share2, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,9 +9,10 @@ interface QuizCardProps {
   quiz: Quiz;
   onEnroll?: (quizId: string) => void;
   isEnrolling?: boolean;
+  userAttempt?: QuizAttempt;
 }
 
-export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
+export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardProps) {
   const { user, signInWithGoogle } = useAuth();
   const [status, setStatus] = useState<'UPCOMING' | 'LIVE' | 'ENDED' | 'STANDARD'>('STANDARD');
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -155,6 +156,32 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
           {quiz.description}
         </p>
 
+        {/* Previous Attempt Score Box */}
+        {userAttempt && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-xs my-3 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={16} />
+              </div>
+              <div>
+                <p className="font-bold text-emerald-400 uppercase tracking-wider text-[10px]">Attempted • Previous Score</p>
+                <p className="font-black text-text-main text-sm">
+                  {userAttempt.score} / {userAttempt.totalPoints || quiz.totalPoints} PTS
+                  <span className="text-emerald-400 font-bold ml-1.5 text-xs">
+                    ({Math.round((userAttempt.score / (userAttempt.totalPoints || quiz.totalPoints || 100)) * 100)}%)
+                  </span>
+                </p>
+              </div>
+            </div>
+            {userAttempt.timeTakenSeconds > 0 && (
+              <div className="text-right text-[11px] text-text-muted font-mono hidden sm:block">
+                <p className="font-bold text-text-main">{Math.floor(userAttempt.timeTakenSeconds / 60)}m {userAttempt.timeTakenSeconds % 60}s</p>
+                <p className="text-[10px] opacity-75">{new Date(userAttempt.completedAt).toLocaleDateString()}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Schedule Info for Weekly Challenge */}
         {quiz.isWeeklyChallenge && quiz.scheduledStartTime && (
           <div className="bg-black/40 rounded-xl p-3.5 border border-white/5 space-y-2 text-xs">
@@ -222,7 +249,14 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
             {status === 'LIVE' && (
               <div className="space-y-2">
                 {user ? (
-                  isEnrolled ? (
+                  userAttempt ? (
+                    <Link
+                      to={`/quizzes/${quiz.id}`}
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+                    >
+                      <RotateCcw size={16} /> Reattempt Challenge
+                    </Link>
+                  ) : isEnrolled ? (
                     <Link
                       to={`/quizzes/${quiz.id}`}
                       className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-90 text-white font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
@@ -233,7 +267,7 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
                     <button
                       onClick={() => onEnroll?.(quiz.id)}
                       disabled={isEnrolling}
-                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       Enroll & Attempt Now
                     </button>
@@ -250,12 +284,22 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
             )}
 
             {status === 'ENDED' && (
-              <Link
-                to={`/quizzes/${quiz.id}/leaderboard`}
-                className="w-full bg-surface-dark border border-amber-500/40 hover:bg-amber-500/10 text-amber-400 font-bold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2"
-              >
-                <Trophy size={16} /> View Top 10 Leaderboard
-              </Link>
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                {user && (
+                  <Link
+                    to={`/quizzes/${quiz.id}`}
+                    className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    <RotateCcw size={14} /> Reattempt
+                  </Link>
+                )}
+                <Link
+                  to={`/quizzes/${quiz.id}/leaderboard`}
+                  className="w-full sm:flex-1 bg-surface-dark border border-amber-500/40 hover:bg-amber-500/10 text-amber-400 font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Trophy size={14} /> Leaderboard
+                </Link>
+              </div>
             )}
           </div>
         ) : (
@@ -263,9 +307,22 @@ export function QuizCard({ quiz, onEnroll, isEnrolling }: QuizCardProps) {
           <div className="flex items-center gap-2">
             <Link
               to={`/quizzes/${quiz.id}`}
-              className="flex-1 bg-warning hover:bg-warning/90 text-crust font-black text-sm uppercase tracking-wider py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md shadow-warning/10"
+              className={cn(
+                "flex-1 font-black text-sm uppercase tracking-wider py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md cursor-pointer",
+                userAttempt 
+                  ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20" 
+                  : "bg-warning hover:bg-warning/90 text-crust shadow-warning/10"
+              )}
             >
-              Start Quiz <ArrowRight size={16} />
+              {userAttempt ? (
+                <>
+                  <RotateCcw size={16} /> Reattempt Quiz
+                </>
+              ) : (
+                <>
+                  Start Quiz <ArrowRight size={16} />
+                </>
+              )}
             </Link>
             <Link
               to={`/quizzes/${quiz.id}/leaderboard`}

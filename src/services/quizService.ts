@@ -324,15 +324,112 @@ export async function enrollInQuiz(quizId: string, userId: string): Promise<bool
 
 // Submit Quiz Attempt
 export async function submitQuizAttempt(attempt: QuizAttempt): Promise<string> {
+  const completedAt = attempt.completedAt || new Date().toISOString();
+  const attemptWithTime = { ...attempt, completedAt };
+
+  // 1. Save to Local Storage Cache for instant retrieval
+  if (attempt.userId) {
+    const localKey = `forenclue_quiz_attempts_${attempt.userId}`;
+    try {
+      const existingRaw = localStorage.getItem(localKey);
+      const existing: QuizAttempt[] = existingRaw ? JSON.parse(existingRaw) : [];
+      existing.unshift(attemptWithTime);
+      localStorage.setItem(localKey, JSON.stringify(existing));
+    } catch (e) {
+      console.warn("Failed to cache quiz attempt locally:", e);
+    }
+
+    // 2. Update user profile document in Firestore with total points and quiz history
+    try {
+      const userRef = doc(db, 'users', attempt.userId);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentPoints = userData.totalQuizPoints || 0;
+        const currentHistory = userData.quizHistory || [];
+        const existingQuizScores = userData.quizScores || {};
+        const previousBest = existingQuizScores[attempt.quizId]?.bestScore || 0;
+        
+        await updateDoc(userRef, {
+          totalQuizPoints: currentPoints + attempt.score,
+          [`quizScores.${attempt.quizId}`]: {
+            bestScore: Math.max(previousBest, attempt.score),
+            lastScore: attempt.score,
+            totalPoints: attempt.totalPoints,
+            completedAt
+          },
+          quizHistory: [
+            {
+              quizId: attempt.quizId,
+              score: attempt.score,
+              totalPoints: attempt.totalPoints,
+              timeTakenSeconds: attempt.timeTakenSeconds,
+              completedAt
+            },
+            ...currentHistory
+          ].slice(0, 50)
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to update user profile with quiz points:", e);
+    }
+  }
+
+  // 3. Save to Firestore attempts collection
   try {
-    const docRef = await addDoc(collection(db, ATTEMPTS_COLLECTION), {
-      ...attempt,
-      completedAt: new Date().toISOString()
-    });
+    const docRef = await addDoc(collection(db, ATTEMPTS_COLLECTION), attemptWithTime);
     return docRef.id;
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, ATTEMPTS_COLLECTION);
-    throw err;
+    return `local_${Date.now()}`;
+  }
+}
+
+// Fetch all quiz attempts for a specific user
+export async function fetchUserQuizAttempts(userId: string): Promise<QuizAttempt[]> {
+  if (!userId) return [];
+
+  const localKey = `forenclue_quiz_attempts_${userId}`;
+  let localAttempts: QuizAttempt[] = [];
+  try {
+    const raw = localStorage.getItem(localKey);
+    if (raw) localAttempts = JSON.parse(raw);
+  } catch (e) {
+    console.warn("Failed to parse local quiz attempts", e);
+  }
+
+  try {
+    const attemptsRef = collection(db, ATTEMPTS_COLLECTION);
+    const q = query(attemptsRef, where('userId', '==', userId));
+    const snap = await getDocs(q);
+    const remoteAttempts: QuizAttempt[] = [];
+    snap.forEach((d) => {
+      remoteAttempts.push({ id: d.id, ...d.data() } as QuizAttempt);
+    });
+
+    const mergedMap = new Map<string, QuizAttempt>();
+    remoteAttempts.forEach(a => {
+      const key = a.id || `${a.quizId}_${a.completedAt}`;
+      mergedMap.set(key, a);
+    });
+    localAttempts.forEach(a => {
+      const key = a.id || `${a.quizId}_${a.completedAt}`;
+      if (!mergedMap.has(key)) {
+        mergedMap.set(key, a);
+      }
+    });
+
+    const combined = Array.from(mergedMap.values());
+    combined.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
+    try {
+      localStorage.setItem(localKey, JSON.stringify(combined));
+    } catch {}
+
+    return combined;
+  } catch (err) {
+    console.warn("Falling back to local quiz attempts:", err);
+    return localAttempts;
   }
 }
 

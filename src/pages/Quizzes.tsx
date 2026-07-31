@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Quiz } from '@/types/quiz';
-import { fetchQuizzes, enrollInQuiz } from '@/services/quizService';
+import { Quiz, QuizAttempt } from '@/types/quiz';
+import { fetchQuizzes, enrollInQuiz, fetchUserQuizAttempts } from '@/services/quizService';
 import { QuizCard } from '@/components/quiz/QuizCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Trophy, HelpCircle, CheckCircle2, Target
+  Trophy, HelpCircle, CheckCircle2, Target, Award
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
 
 export default function Quizzes() {
   const { user, signInWithGoogle } = useAuth();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [userAttemptsMap, setUserAttemptsMap] = useState<Record<string, QuizAttempt>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'weekly' | 'practice'>('weekly');
   const [enrollingQuizId, setEnrollingQuizId] = useState<string | null>(null);
@@ -18,12 +19,31 @@ export default function Quizzes() {
 
   useEffect(() => {
     loadQuizzes();
-  }, []);
+  }, [user]);
 
   const loadQuizzes = async () => {
     setLoading(true);
     const data = await fetchQuizzes();
     setQuizzes(data);
+
+    if (user?.uid) {
+      try {
+        const attempts = await fetchUserQuizAttempts(user.uid);
+        const map: Record<string, QuizAttempt> = {};
+        attempts.forEach(att => {
+          // keep the highest score or most recent attempt for each quiz
+          if (!map[att.quizId] || att.score > map[att.quizId].score) {
+            map[att.quizId] = att;
+          }
+        });
+        setUserAttemptsMap(map);
+      } catch (err) {
+        console.warn("Error loading user quiz attempts:", err);
+      }
+    } else {
+      setUserAttemptsMap({});
+    }
+
     setLoading(false);
   };
 
@@ -129,6 +149,7 @@ export default function Quizzes() {
                 quiz={quiz} 
                 onEnroll={handleEnroll}
                 isEnrolling={enrollingQuizId === quiz.id}
+                userAttempt={userAttemptsMap[quiz.id]}
               />
             ))}
           </div>

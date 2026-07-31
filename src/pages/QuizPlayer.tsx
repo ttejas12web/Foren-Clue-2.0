@@ -39,9 +39,10 @@ export default function QuizPlayer() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Anti-cheat state
+  // Anti-cheat & Exit Warning state
   const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
   const [showCheatWarningModal, setShowCheatWarningModal] = useState(false);
+  const [showExitWarningModal, setShowExitWarningModal] = useState(false);
 
   // Result state
   const [finalScore, setFinalScore] = useState(0);
@@ -125,6 +126,34 @@ export default function QuizPlayer() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [quiz, isSubmitted, quizStartedAt, user]);
+
+  // Back Button Navigation & Unload Guard
+  useEffect(() => {
+    if (!quiz || isSubmitted || !quizStartedAt || !user) return;
+
+    // Push state so back button triggers popstate
+    window.history.pushState({ quizActive: true }, '', window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Re-push state to prevent leaving immediately
+      window.history.pushState({ quizActive: true }, '', window.location.href);
+      setShowExitWarningModal(true);
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [quiz, isSubmitted, quizStartedAt, user]);
 
@@ -330,26 +359,37 @@ export default function QuizPlayer() {
         
         {/* Sticky Top Bar: Quiz Header & Live Timer */}
         <div className="sticky top-16 z-30 bg-surface/80 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-black uppercase tracking-wider text-warning bg-warning/10 px-3 py-1 rounded-full border border-warning/20 shadow-sm">
-                {quiz.category}
-              </span>
-              <span className="text-xs font-mono font-bold text-text-muted">
-                Question {currentQuestionIdx + 1} of {quiz.questions.length}
-              </span>
-              <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md shadow-sm">
-                {answeredCount} Answered
-              </span>
-              {flaggedCount > 0 && (
-                <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
-                  <Bookmark size={11} className="fill-current" /> {flaggedCount} Flagged
+          <div className="flex items-center gap-3">
+            {!isSubmitted && (
+              <button
+                onClick={() => setShowExitWarningModal(true)}
+                className="p-2.5 rounded-2xl bg-base border border-black/10 dark:border-white/10 text-text-muted hover:text-red-500 hover:border-red-500/40 hover:bg-red-500/10 transition-all cursor-pointer shrink-0 shadow-sm"
+                title="Exit Quiz Attempt"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-black uppercase tracking-wider text-warning bg-warning/10 px-3 py-1 rounded-full border border-warning/20 shadow-sm">
+                  {quiz.category}
                 </span>
-              )}
+                <span className="text-xs font-mono font-bold text-text-muted">
+                  Question {currentQuestionIdx + 1} of {quiz.questions.length}
+                </span>
+                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md shadow-sm">
+                  {answeredCount} Answered
+                </span>
+                {flaggedCount > 0 && (
+                  <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
+                    <Bookmark size={11} className="fill-current" /> {flaggedCount} Flagged
+                  </span>
+                )}
+              </div>
+              <h1 className="font-heading font-black text-lg sm:text-xl text-text-main line-clamp-1 tracking-tight">
+                {quiz.title}
+              </h1>
             </div>
-            <h1 className="font-heading font-black text-lg sm:text-xl text-text-main line-clamp-1 tracking-tight">
-              {quiz.title}
-            </h1>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -962,6 +1002,52 @@ export default function QuizPlayer() {
                 >
                   I Understand
                 </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Exit / Leave Quiz Warning Modal */}
+        <AnimatePresence>
+          {showExitWarningModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-surface border border-black/15 dark:border-white/15 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle size={24} />
+                </div>
+
+                <div className="space-y-1.5 mb-6">
+                  <h3 className="text-xl font-heading font-black tracking-tight text-text-main">
+                    Leave Quiz?
+                  </h3>
+                  <p className="text-text-muted text-xs leading-relaxed">
+                    Your current progress will not be saved.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowExitWarningModal(false)}
+                    className="flex-1 py-3 rounded-xl bg-warning hover:bg-warning-dark text-crust font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                  >
+                    Keep Solving
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowExitWarningModal(false);
+                      setIsSubmitted(true);
+                      navigate('/quizzes');
+                    }}
+                    className="flex-1 py-3 rounded-xl border border-black/10 dark:border-white/10 text-text-muted hover:text-red-500 hover:border-red-500/30 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Leave
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}
