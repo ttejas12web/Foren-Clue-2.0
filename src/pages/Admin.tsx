@@ -1645,7 +1645,7 @@ export default function Admin() {
   };
 
   return (
-    <div className="pt-24 pb-16 min-h-screen bg-base relative overflow-hidden text-text-main">
+    <div className="pt-6 sm:pt-8 pb-16 min-h-screen bg-base relative overflow-hidden text-text-main">
       {/* Dynamic Background decor */}
       <div className="absolute top-0 left-0 w-full h-[36rem] bg-surface z-0 border-b border-black/10 dark:border-white/5 opacity-50">
         <div className="absolute inset-0 bg-grid-white/[0.015] bg-[size:24px_24px]"></div>

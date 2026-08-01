@@ -103,6 +103,10 @@ export function Navbar() {
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
+
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
   
   return (
     <nav className="print:hidden fixed top-0 left-0 right-0 z-50 bg-crust/90 backdrop-blur-md border-b border-black/10 dark:border-white/10">

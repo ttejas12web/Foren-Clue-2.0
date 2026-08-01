@@ -1,8 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Mail, MapPin, Youtube, Linkedin, Instagram, ArrowRight, ExternalLink } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 export function Footer() {
+  const location = useLocation();
+
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
   return (
     <footer className="print:hidden bg-crust border-t border-black/10 dark:border-white/10 pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

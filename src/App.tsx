@@ -4,7 +4,7 @@
  */
 
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Routes, Route, useParams, Navigate } from 'react-router-dom';
+import { Routes, Route, useParams, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ScrollToTop } from './components/layout/ScrollToTop';
@@ -12,6 +12,7 @@ import { FloatingWhatsAppButton } from './components/ui/FloatingWhatsAppButton';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleOneTap } from './components/ui/GoogleOneTap';
 import { DesktopOnly } from './components/layout/DesktopOnly';
+import { cn } from './lib/utils';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
@@ -71,6 +72,58 @@ function RootShareResolver() {
   return <Navigate to={`/ebooks?id=${id}`} replace />;
 }
 
+function AppMain() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  return (
+    <>
+      <Navbar />
+      <main className={cn("flex-grow", !isAdmin && "pt-20")}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/cases" element={<Cases />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/community/my-doubts" element={<MyDoubts />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/ebooks" element={<EBooks />} />
+            <Route path="/files" element={<Files />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/podcast" element={<Podcast />} />
+            <Route path="/certificate" element={<CertificateVerification />} />
+            <Route path="/webinar" element={<Webinar />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/volunteers" element={<Volunteers />} />
+            <Route path="/ambassadors" element={<CampusAmbassadors />} />
+            <Route path="/forms" element={<GoogleForms />} />
+            <Route path="/simulations" element={<DesktopOnly><Simulations /></DesktopOnly>} />
+            <Route path="/simulations/microscope" element={<DesktopOnly><MicroscopeLab /></DesktopOnly>} />
+            <Route path="/simulations/comparison-microscope" element={<DesktopOnly><ComparisonMicroscopeLab /></DesktopOnly>} />
+            <Route path="/simulations/spectrophotometer" element={<DesktopOnly><SpectrophotometerLab /></DesktopOnly>} />
+            <Route path="/quizzes" element={<Quizzes />} />
+            <Route path="/quizzes/:quizId" element={<QuizPlayer />} />
+            <Route path="/quizzes/:quizId/leaderboard" element={<QuizLeaderboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/:id" element={<RootShareResolver />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
+      <Footer />
+    </>
+  );
+}
+
 export default function App() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -108,52 +161,7 @@ export default function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/player/:courseId" element={<CoursePlayer />} />
-          <Route path="*" element={
-            <>
-              <Navbar />
-              <main className="flex-grow pt-20">
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/courses" element={<Courses />} />
-                    <Route path="/cases" element={<Cases />} />
-                    <Route path="/careers" element={<Careers />} />
-                    <Route path="/community" element={<Community />} />
-                    <Route path="/community/my-doubts" element={<MyDoubts />} />
-                    <Route path="/services" element={<Services />} />
-                    <Route path="/ebooks" element={<EBooks />} />
-                    <Route path="/files" element={<Files />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/podcast" element={<Podcast />} />
-                    <Route path="/certificate" element={<CertificateVerification />} />
-                    <Route path="/webinar" element={<Webinar />} />
-                    <Route path="/employees" element={<Employees />} />
-                    <Route path="/volunteers" element={<Volunteers />} />
-                    <Route path="/ambassadors" element={<CampusAmbassadors />} />
-                    <Route path="/forms" element={<GoogleForms />} />
-                    <Route path="/simulations" element={<DesktopOnly><Simulations /></DesktopOnly>} />
-                    <Route path="/simulations/microscope" element={<DesktopOnly><MicroscopeLab /></DesktopOnly>} />
-                    <Route path="/simulations/comparison-microscope" element={<DesktopOnly><ComparisonMicroscopeLab /></DesktopOnly>} />
-                    <Route path="/simulations/spectrophotometer" element={<DesktopOnly><SpectrophotometerLab /></DesktopOnly>} />
-                    <Route path="/quizzes" element={<Quizzes />} />
-                    <Route path="/quizzes/:quizId" element={<QuizPlayer />} />
-                    <Route path="/quizzes/:quizId/leaderboard" element={<QuizLeaderboard />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/profile/:userId" element={<Profile />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/:id" element={<RootShareResolver />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </main>
-              <Footer />
-            </>
-          } />
+          <Route path="*" element={<AppMain />} />
         </Routes>
       </Suspense>
     </div>

@@ -657,26 +657,39 @@ async function startServer() {
   });
 
 
-  // Vite middleware for development
+  // Vite middleware for development or static file server for production
   let viteDevServer: any = null;
 
-  // Serve static files / Vite middleware FIRST
-  // Intercept all HTML requests for social media sharing cards & embed previews
-  // This must be AFTER static files are handled
+  if (!isProd) {
+    viteDevServer = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "custom",
+    });
+    app.use(viteDevServer.middlewares);
+  } else {
+    // Serve static files from dist first (built JavaScript, CSS, images, assets)
+    app.use(express.static(buildPath, { index: false }));
+  }
+
+  // SPA HTML Fallback & Dynamic Social Meta Tags Handler
+  // Intercept GET HTML requests for social media sharing cards & embed previews
+  // This MUST be AFTER static assets are handled
   app.get('*', async (req, res, next) => {
     // We only want to handle GET requests for HTML, and avoid assets
     if (req.method !== 'GET') {
       return next();
     }
     
-    // Only intercept paths that don't have a file extension OR specifically .html
-    if (req.path.includes('.') && !req.path.endsWith('.html')) {
-        return next();
-    }
-    
-    // Ignore Vite internals and API routes
-    if (req.path.startsWith('/@') || req.path.startsWith('/node_modules/') || req.path.startsWith('/src/') || req.path.startsWith('/api/')) {
-        return next();
+    // Ignore API routes, Vite internals, static asset directories, or non-HTML file extensions
+    if (
+      req.path.startsWith('/api/') ||
+      req.path.startsWith('/assets/') ||
+      req.path.startsWith('/src/') ||
+      req.path.startsWith('/node_modules/') ||
+      req.path.startsWith('/@') ||
+      (req.path.includes('.') && !req.path.endsWith('.html'))
+    ) {
+      return res.status(404).send('Asset not found');
     }
     
     const indexPath = isProd 
@@ -684,7 +697,7 @@ async function startServer() {
       : path.join(process.cwd(), 'index.html');
 
     if (!fs.existsSync(indexPath)) {
-      return next();
+      return res.status(404).send('index.html not found');
     }
 
     try {
@@ -1127,18 +1140,6 @@ async function startServer() {
       }
     }
   });
-
-  if (!isProd) {
-    viteDevServer = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "custom",
-    });
-    app.use(viteDevServer.middlewares);
-  } else {
-    app.use(express.static(buildPath, { index: false }));
-  }
-
-
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
