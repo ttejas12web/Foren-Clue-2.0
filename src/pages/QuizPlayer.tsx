@@ -7,7 +7,7 @@ import {
   Clock, CheckCircle2, AlertTriangle, ArrowRight, ArrowLeft, 
   Trophy, ShieldCheck, HelpCircle, Lock, RefreshCw, Sparkles,
   Bookmark, EyeOff, LayoutGrid, Keyboard, RotateCcw, Share2, Filter,
-  X, Check, Flame, Award, Zap
+  X, Check, Flame, Award, Zap, Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -278,22 +278,151 @@ export default function QuizPlayer() {
 
   // Auth Guard
   if (!user) {
+    const formattedDate = quiz.scheduledStartTime
+      ? new Date(quiz.scheduledStartTime).toLocaleString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : quiz.createdAt
+      ? new Date(quiz.createdAt).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
     return (
-      <div className="min-h-screen bg-background text-text-main flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-surface border border-black/10 dark:border-white/10 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-full bg-warning/10 text-warning border border-warning/30 flex items-center justify-center mx-auto">
-            <Lock size={28} />
+      <div className="min-h-screen bg-background text-text-main flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <SEO 
+          title={`Enroll in ${quiz.title} | ForenClue`}
+          description={`Sign in or create an account to enroll in ${quiz.title} and attempt the quiz.`}
+        />
+
+        <div className="max-w-lg w-full bg-surface border border-amber-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-6 shadow-2xl relative z-10">
+          {/* Badge Header */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold uppercase tracking-widest mx-auto">
+            <Trophy size={14} className="animate-pulse" />
+            <span>Quiz Session Enrollment</span>
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">Login Required</h2>
-          <p className="text-text-muted text-sm leading-relaxed">
-            Please sign in or login to attempt <strong className="text-text-main">{quiz.title}</strong> and record your progress on the leaderboard.
-          </p>
-          <button
-            onClick={() => navigate('/login', { state: { from: location, quizTitle: quiz.title } })}
-            className="w-full bg-warning hover:bg-warning-dark text-crust font-black text-sm uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-lg shadow-warning/20 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            Sign In / Login
-          </button>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-heading font-black text-white uppercase tracking-tight leading-tight">
+              {quiz.title}
+            </h1>
+            {quiz.description && (
+              <p className="text-xs sm:text-sm text-text-muted line-clamp-2 leading-relaxed">
+                {quiz.description}
+              </p>
+            )}
+          </div>
+
+          {/* Session Date & Quiz Info Box */}
+          <div className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3 text-left">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+                <Calendar size={20} />
+              </div>
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted block">
+                  Scheduled Quiz Session Date
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-amber-300">
+                  {formattedDate}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-center">
+              <div className="p-2 rounded-xl bg-surface/60 border border-white/5">
+                <span className="block text-[10px] font-mono text-text-muted">DURATION</span>
+                <span className="text-xs font-bold text-white">{quiz.durationMinutes || 15} Mins</span>
+              </div>
+              <div className="p-2 rounded-xl bg-surface/60 border border-white/5">
+                <span className="block text-[10px] font-mono text-text-muted">POINTS</span>
+                <span className="text-xs font-bold text-amber-400">{quiz.totalPoints || 100} PTS</span>
+              </div>
+              <div className="p-2 rounded-xl bg-surface/60 border border-white/5">
+                <span className="block text-[10px] font-mono text-text-muted">CATEGORY</span>
+                <span className="text-xs font-bold text-white truncate block">{quiz.category || 'General'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Enrollment Message */}
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs sm:text-sm leading-relaxed text-center font-medium">
+            <p>
+              Please <strong>sign in</strong> or <strong>create an account</strong> to enroll for this quiz session, attempt the challenge, and record your score on the live leaderboard.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3 pt-1">
+            <button
+              onClick={() => navigate('/login', { 
+                state: { 
+                  from: location, 
+                  quizTitle: quiz.title,
+                  scheduledStartTime: quiz.scheduledStartTime,
+                  createdAt: quiz.createdAt,
+                  category: quiz.category,
+                  durationMinutes: quiz.durationMinutes,
+                  isWeeklyChallenge: quiz.isWeeklyChallenge
+                } 
+              })}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black text-sm uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Lock size={16} />
+              <span>Sign In / Login to Enroll & Attempt</span>
+            </button>
+
+            <button
+              onClick={async () => {
+                try {
+                  await signInWithGoogle();
+                } catch (e) {
+                  navigate('/login', { 
+                    state: { 
+                      from: location, 
+                      quizTitle: quiz.title,
+                      scheduledStartTime: quiz.scheduledStartTime,
+                      createdAt: quiz.createdAt,
+                      category: quiz.category,
+                      durationMinutes: quiz.durationMinutes
+                    } 
+                  });
+                }
+              }}
+              className="w-full bg-surface hover:bg-surface/80 border border-white/10 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>Quick 1-Click Google Sign In</span>
+            </button>
+
+            <Link
+              to="/quizzes"
+              className="block text-xs font-bold text-text-muted hover:text-amber-400 transition-colors text-center pt-2"
+            >
+              ← Explore All Available Quizzes
+            </Link>
+          </div>
         </div>
       </div>
     );

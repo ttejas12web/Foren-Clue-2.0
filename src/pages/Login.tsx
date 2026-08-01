@@ -20,7 +20,11 @@ import {
   Award, 
   Activity,
   AlertCircle,
-  User as UserIcon
+  User as UserIcon,
+  Calendar,
+  Trophy,
+  Sparkles,
+  Clock
 } from 'lucide-react';
 
 export default function Login() {
@@ -29,7 +33,34 @@ export default function Login() {
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || "/dashboard";
   const quizTitle = (location.state as any)?.quizTitle;
+  const scheduledStartTime = (location.state as any)?.scheduledStartTime;
+  const createdAt = (location.state as any)?.createdAt;
+  const category = (location.state as any)?.category;
+  const durationMinutes = (location.state as any)?.durationMinutes;
   const isFromQuiz = from?.includes('/quizzes/');
+
+  const quizDateFormatted = scheduledStartTime
+    ? new Date(scheduledStartTime).toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : createdAt
+    ? new Date(createdAt).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
 
   // Tabs for interactive Sign In vs Create Account
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
@@ -164,11 +195,44 @@ export default function Login() {
         >
           <div>
             {(quizTitle || isFromQuiz) && (
-              <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-medium flex items-start gap-3 shadow-md">
-                <Lock size={18} className="shrink-0 mt-0.5 text-amber-400" />
-                <p className="leading-relaxed">
-                  Please sign in or login to attempt <strong className="text-white font-bold">{quizTitle || 'Weekly Challenge'}</strong> and record your progress on the leaderboard.
+              <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-surface to-amber-500/5 border border-amber-500/30 text-text-main shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none text-amber-400">
+                  <Trophy size={80} />
+                </div>
+
+                <div className="flex items-center gap-2 text-amber-400 font-mono text-[11px] uppercase tracking-widest font-bold mb-1.5">
+                  <Sparkles size={14} className="animate-pulse" />
+                  <span>Quiz Session Enrollment</span>
+                </div>
+
+                <h3 className="text-base sm:text-lg font-black text-white mb-2 leading-snug">
+                  {quizTitle || 'Forensic Quiz Challenge'}
+                </h3>
+
+                <p className="text-xs sm:text-sm text-text-muted leading-relaxed mb-3 font-medium">
+                  Please sign in or create an account to enroll for this quiz session, attempt the challenge, and record your progress on the live leaderboard.
                 </p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-white/10 text-xs">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/40 border border-amber-500/20 text-amber-300 font-semibold">
+                    <Calendar size={13} className="text-amber-400" />
+                    <span>Session Date: {quizDateFormatted}</span>
+                  </div>
+
+                  {durationMinutes && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/40 border border-white/10 text-gray-300 font-medium">
+                      <Clock size={13} className="text-amber-400" />
+                      <span>{durationMinutes} Mins</span>
+                    </div>
+                  )}
+
+                  {category && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/40 border border-white/10 text-gray-300 font-medium">
+                      <Award size={13} className="text-amber-400" />
+                      <span>{category}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
