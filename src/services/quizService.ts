@@ -117,6 +117,55 @@ export const SAMPLE_QUIZZES: Quiz[] = [
     ]
   },
   {
+    id: 'weekly-challenge-0',
+    title: 'Weekly Challenge #0: Forensic Ballistics & Firearms Identification',
+    description: 'Concluded weekly challenge covering striation pattern comparison, gunshot residue (GSR) analysis, and caliber measurements. Available now for self-paced practice!',
+    category: 'Forensic Ballistics',
+    isWeeklyChallenge: true,
+    scheduledStartTime: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
+    scheduledEndTime: new Date(Date.now() - 86400000 * 3).toISOString(), // Ended 3 days ago
+    durationMinutes: 12,
+    totalPoints: 100,
+    passingScore: 70,
+    enrolledUserIds: [],
+    createdBy: 'ForenClue Team',
+    createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+    questions: [
+      {
+        id: 'b1',
+        question: 'What microscopic instrument is essential for comparing striations on two fired bullets side-by-side?',
+        options: ['Scanning Electron Microscope', 'Comparison Microscope', 'Stereo Microscope', 'Polarizing Light Microscope'],
+        correctAnswerIndex: 1,
+        explanation: 'A comparison microscope consists of two microscopes linked by an optical bridge, allowing side-by-side comparison of lands and grooves.',
+        points: 25
+      },
+      {
+        id: 'b2',
+        question: 'Which elements are primarily tested for in chemical analysis of Gunshot Residue (GSR)?',
+        options: ['Lead, Barium, Antimony', 'Iron, Copper, Zinc', 'Sodium, Potassium, Chloride', 'Carbon, Hydrogen, Oxygen'],
+        correctAnswerIndex: 0,
+        explanation: 'GSR primers typically contain Lead (Pb), Barium (Ba), and Antimony (Sb), detected via SEM-EDS or ICP-MS.',
+        points: 25
+      },
+      {
+        id: 'b3',
+        question: 'The spiral grooves cut into the interior barrel of a firearm to impart spin on a bullet are known as:',
+        options: ['Caliber', 'Rifling (Lands & Grooves)', 'Bore gauge', 'Firing pin impression'],
+        correctAnswerIndex: 1,
+        explanation: 'Rifling consists of helical lands and grooves cut inside the barrel to stabilize the bullet in flight.',
+        points: 25
+      },
+      {
+        id: 'b4',
+        question: 'What automated database is used by firearm examiners to compare digitized bullet and cartridge casing impressions?',
+        options: ['CODIS', 'NIBIN (National Integrated Ballistic Information Network)', 'AFIS', 'NCIC'],
+        correctAnswerIndex: 1,
+        explanation: 'NIBIN is the national database system maintained for ballistics evidence matching.',
+        points: 25
+      }
+    ]
+  },
+  {
     id: 'quiz-general-1',
     title: 'Crime Scene Investigation Fundamentals',
     description: 'Standard practice quiz covering chain of custody, crime scene perimeter securing, 7 S\'s of CSI, and evidence collection protocol.',
@@ -253,15 +302,42 @@ export const SAMPLE_LEADERBOARD_SEED: QuizAttempt[] = [
   }
 ];
 
-// Helper to force challenges to be upcoming and configure enrollment
+// Helper to check if a weekly challenge has completed/passed its scheduled date and time
+export function isWeeklyChallengeExpired(quiz: Quiz): boolean {
+  if (!quiz.isWeeklyChallenge) return false;
+  if (!quiz.scheduledStartTime && !quiz.scheduledEndTime) return false;
+
+  const now = Date.now();
+  if (quiz.scheduledEndTime) {
+    return now > new Date(quiz.scheduledEndTime).getTime();
+  }
+  if (quiz.scheduledStartTime) {
+    const start = new Date(quiz.scheduledStartTime).getTime();
+    const durationMs = (quiz.durationMinutes || 15) * 60000;
+    return now > (start + durationMs);
+  }
+  return false;
+}
+
+// Helper to force sample challenges to have scheduled times if missing
 function applyQuizOverrides(quiz: Quiz): Quiz {
   if (quiz.id === 'weekly-challenge-1') {
-    quiz.scheduledStartTime = new Date(Date.now() + 86400000 * 2).toISOString();
-    quiz.scheduledEndTime = new Date(Date.now() + 86400000 * 5).toISOString();
+    if (!quiz.scheduledStartTime) {
+      quiz.scheduledStartTime = new Date(Date.now() + 86400000 * 2).toISOString();
+      quiz.scheduledEndTime = new Date(Date.now() + 86400000 * 5).toISOString();
+    }
     quiz.isEnrollmentOpen = true;
   } else if (quiz.id === 'weekly-challenge-2') {
-    quiz.scheduledStartTime = new Date(Date.now() + 86400000 * 4).toISOString();
-    quiz.scheduledEndTime = new Date(Date.now() + 86400000 * 7).toISOString();
+    if (!quiz.scheduledStartTime) {
+      quiz.scheduledStartTime = new Date(Date.now() + 86400000 * 4).toISOString();
+      quiz.scheduledEndTime = new Date(Date.now() + 86400000 * 7).toISOString();
+    }
+    quiz.isEnrollmentOpen = false;
+  } else if (quiz.id === 'weekly-challenge-0') {
+    if (!quiz.scheduledStartTime) {
+      quiz.scheduledStartTime = new Date(Date.now() - 86400000 * 7).toISOString();
+      quiz.scheduledEndTime = new Date(Date.now() - 86400000 * 3).toISOString();
+    }
     quiz.isEnrollmentOpen = false;
   }
   return quiz;

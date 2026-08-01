@@ -104,8 +104,8 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
             </span>
           )}
           {status === 'ENDED' && (
-            <span className="bg-black/60 text-white/70 px-2 py-0.5 rounded-full text-[10px]">
-              CONCLUDED
+            <span className="bg-black/90 text-amber-300 font-mono px-2 py-0.5 rounded-full text-[10px] font-black border border-amber-500/30">
+              CONCLUDED • PRACTICE MODE
             </span>
           )}
           <button 
@@ -285,14 +285,20 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
 
             {status === 'ENDED' && (
               <div className="flex flex-col sm:flex-row items-center gap-2">
-                {user && (
-                  <Link
-                    to={`/quizzes/${quiz.id}`}
-                    className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md"
-                  >
-                    <RotateCcw size={14} /> Reattempt
-                  </Link>
-                )}
+                <Link
+                  to={`/quizzes/${quiz.id}`}
+                  className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
+                >
+                  {userAttempt ? (
+                    <>
+                      <RotateCcw size={14} /> Reattempt Practice
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={14} /> Start Practice Quiz
+                    </>
+                  )}
+                </Link>
                 <Link
                   to={`/quizzes/${quiz.id}/leaderboard`}
                   className="w-full sm:flex-1 bg-surface-dark border border-amber-500/40 hover:bg-amber-500/10 text-amber-400 font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"

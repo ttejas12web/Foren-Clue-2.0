@@ -6,7 +6,7 @@ import {
   Award, HelpCircle, CheckCircle2, ShieldAlert, Zap, Timer, Users
 } from 'lucide-react';
 import { Quiz } from '@/types/quiz';
-import { fetchQuizzes } from '@/services/quizService';
+import { fetchQuizzes, isWeeklyChallengeExpired } from '@/services/quizService';
 import { cn } from '@/lib/utils';
 
 export function UpcomingQuizSection() {
@@ -17,8 +17,8 @@ export function UpcomingQuizSection() {
     async function loadQuizzes() {
       try {
         const allQuizzes = await fetchQuizzes();
-        // Filter for weekly challenges
-        const weekly = allQuizzes.filter(q => q.isWeeklyChallenge);
+        // Filter for active/upcoming weekly challenges (not yet expired)
+        const weekly = allQuizzes.filter(q => q.isWeeklyChallenge && !isWeeklyChallengeExpired(q));
         setWeeklyQuizzes(weekly);
       } catch (err) {
         console.error("Failed to load upcoming quizzes:", err);

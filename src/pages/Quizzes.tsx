@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Quiz, QuizAttempt } from '@/types/quiz';
-import { fetchQuizzes, enrollInQuiz, fetchUserQuizAttempts } from '@/services/quizService';
+import { fetchQuizzes, enrollInQuiz, fetchUserQuizAttempts, isWeeklyChallengeExpired } from '@/services/quizService';
 import { QuizCard } from '@/components/quiz/QuizCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Trophy, HelpCircle, CheckCircle2, Target, Award
+  Trophy, HelpCircle, CheckCircle2, Target, Award, Sparkles, BookOpen
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
 
@@ -62,17 +62,19 @@ export default function Quizzes() {
     setEnrollingQuizId(null);
   };
 
-  const filteredQuizzes = quizzes.filter(quiz => {
-    return activeTab === 'weekly' ? quiz.isWeeklyChallenge : !quiz.isWeeklyChallenge;
-  });
+  // Active / Upcoming Weekly Challenges (not yet expired)
+  const activeWeeklyChallenges = quizzes.filter(q => q.isWeeklyChallenge && !isWeeklyChallengeExpired(q));
 
-  const weeklyChallenges = quizzes.filter(q => q.isWeeklyChallenge);
+  // Practice Quizzes includes standard practice quizzes + concluded weekly challenges whose date and time has passed
+  const practiceQuizzes = quizzes.filter(q => !q.isWeeklyChallenge || isWeeklyChallengeExpired(q));
+
+  const filteredQuizzes = activeTab === 'weekly' ? activeWeeklyChallenges : practiceQuizzes;
 
   return (
     <div className="min-h-screen bg-background text-text-main py-12 px-4 sm:px-6 lg:px-8">
       <SEO 
         title="Forensic Quizzes & Weekly Challenges | ForenClue"
-        description="Participate in weekly forensic science quiz challenges, test your knowledge, compete on live leaderboards, and claim top 10 rankings!"
+        description="Participate in weekly forensic science quiz challenges, test your knowledge, compete on live leaderboards, and access concluded challenges for continuous practice!"
       />
 
       <div className="max-w-7xl mx-auto space-y-12">
@@ -91,7 +93,7 @@ export default function Quizzes() {
             </h1>
 
             <p className="text-text-muted text-base sm:text-lg leading-relaxed">
-              Enrolled participants compete live on scheduled dates and times. Test your forensic expertise, conquer the clock, and secure your place on the <strong className="text-amber-400">Top 10 Leaderboard</strong>!
+              Enrolled participants compete live during active challenge dates. Once a weekly challenge concludes, it is automatically preserved in <strong className="text-amber-400">Practice Quizzes</strong> for endless future practice!
             </p>
 
             {enrollSuccessMsg && (
@@ -113,7 +115,7 @@ export default function Quizzes() {
                   : 'text-text-muted hover:text-text-main'
               }`}
             >
-              <Trophy size={15} /> Weekly Challenges ({weeklyChallenges.length})
+              <Trophy size={15} /> Active Challenges ({activeWeeklyChallenges.length})
             </button>
 
             <button
@@ -124,9 +126,16 @@ export default function Quizzes() {
                   : 'text-text-muted hover:text-text-main'
               }`}
             >
-              <Target size={15} /> Practice Quizzes ({quizzes.filter(q => !q.isWeeklyChallenge).length})
+              <Target size={15} /> Practice Quizzes ({practiceQuizzes.length})
             </button>
           </div>
+
+          {activeTab === 'practice' && (
+            <div className="flex items-center gap-2 text-xs font-mono text-amber-400/90 bg-amber-500/10 px-3.5 py-1.5 rounded-xl border border-amber-500/20">
+              <BookOpen size={14} />
+              <span>Includes concluded weekly challenges moved for self-paced practice</span>
+            </div>
+          )}
         </div>
 
         {/* Quizzes List Grid */}

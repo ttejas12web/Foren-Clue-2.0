@@ -32,7 +32,7 @@ export default function QuizPlayer() {
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
   const [reviewFilter, setReviewFilter] = useState<'all' | 'incorrect' | 'flagged'>('all');
 
-  // Timer state
+  // Timer & Session state
   const [timeRemainingSec, setTimeRemainingSec] = useState<number>(0);
   const [quizStartedAt, setQuizStartedAt] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -276,31 +276,31 @@ export default function QuizPlayer() {
     );
   }
 
+  const formattedDate = quiz.scheduledStartTime
+    ? new Date(quiz.scheduledStartTime).toLocaleString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : quiz.createdAt
+    ? new Date(quiz.createdAt).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
   // Auth Guard
   if (!user) {
-    const formattedDate = quiz.scheduledStartTime
-      ? new Date(quiz.scheduledStartTime).toLocaleString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : quiz.createdAt
-      ? new Date(quiz.createdAt).toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : new Date().toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        });
-
     return (
       <div className="min-h-screen bg-background text-text-main flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
         {/* Ambient Glow */}

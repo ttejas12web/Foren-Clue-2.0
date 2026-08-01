@@ -7,11 +7,6 @@ export function FloatingWhatsAppButton() {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
 
-  // Hide WhatsApp floating button in admin workspace
-  if (location.pathname.startsWith('/admin')) {
-    return null;
-  }
-
   useEffect(() => {
     // Show after 1s
     const timer = setTimeout(() => {
@@ -22,6 +17,11 @@ export function FloatingWhatsAppButton() {
       clearTimeout(timer);
     };
   }, []);
+
+  // Hide WhatsApp floating button in admin workspace
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
