@@ -3,10 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   Clock, Sparkles, ArrowLeft, Calendar, User, 
   Linkedin, Play, ExternalLink, Star, MessageSquare, Send, Check,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ThumbsUp
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
 import { motion, AnimatePresence } from 'motion/react';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Feedback {
   id: string;
@@ -160,8 +163,11 @@ const WEBINARS_DATA: WebinarEvent[] = [
 export default function Webinar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedEventId = searchParams.get('event');
+  const { user } = useAuth();
   
   const [localEvents, setLocalEvents] = useState<WebinarEvent[]>(WEBINARS_DATA);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [submittingFeedback, setSubmittingFeedback] = useState<boolean>(false);
   
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -189,11 +195,71 @@ export default function Webinar() {
   // Active event mapping
   const currentEvent = localEvents.find(e => e.id === selectedEventId);
 
+  // Auto-fill user name when available
+  useEffect(() => {
+    if (user?.displayName && !newFeedback.name) {
+      setNewFeedback(prev => ({ ...prev, name: user.displayName || '' }));
+    }
+  }, [user]);
+
+  // Load Firestore feedbacks for current event on change (Approved Feedbacks Only)
+  useEffect(() => {
+    if (!currentEvent) return;
+
+    const fetchFirestoreFeedbacks = async () => {
+      try {
+        const q = query(
+          collection(db, 'webinar_feedbacks'),
+          where('eventId', '==', currentEvent.id)
+        );
+        const querySnapshot = await getDocs(q);
+        const dbFeedbacks: Feedback[] = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          // Only display approved feedbacks publicly
+          if (data.approved === true || data.status === 'approved') {
+            dbFeedbacks.push({
+              id: docSnap.id,
+              name: data.name || 'Anonymous Participant',
+              role: data.role || 'Verified Participant',
+              rating: Number(data.rating) || 5,
+              text: data.text || '',
+              date: data.date || 'Recently',
+              verified: true
+            });
+          }
+        });
+
+        setLocalEvents(prevEvents => prevEvents.map(ev => {
+          if (ev.id === currentEvent.id) {
+            const initialFeedbacks = WEBINARS_DATA.find(w => w.id === currentEvent.id)?.feedbacks || [];
+            const existingIds = new Set(initialFeedbacks.map(f => f.id));
+            const newFromDb = dbFeedbacks.filter(f => !existingIds.has(f.id));
+            return {
+              ...ev,
+              feedbacks: [...newFromDb, ...initialFeedbacks]
+            };
+          }
+          return ev;
+        }));
+      } catch (err) {
+        console.warn('Could not fetch Firestore webinar feedbacks:', err);
+      }
+    };
+
+    fetchFirestoreFeedbacks();
+  }, [currentEvent?.id]);
+
   // Auto-scrolling and page title coordination
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setFeedbackSuccess(false);
-    setNewFeedback({ name: '', role: '', rating: 5, text: '' });
+    setNewFeedback({
+      name: user?.displayName || '',
+      role: '',
+      rating: 5,
+      text: ''
+    });
   }, [selectedEventId]);
 
   const selectEvent = (eventId: string | null) => {
@@ -204,39 +270,56 @@ export default function Webinar() {
     }
   };
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFeedback.name.trim() || !newFeedback.text.trim() || !currentEvent) return;
 
+    setSubmittingFeedback(true);
+
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const feedbackObj: Feedback = {
       id: `fb-user-${Date.now()}`,
       name: newFeedback.name,
       role: newFeedback.role || 'Verified Participant',
       rating: newFeedback.rating,
       text: newFeedback.text,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      date: dateStr,
       verified: true
     };
 
-    // Update the event with the new feedback item
-    const updatedEvents = localEvents.map(ev => {
-      if (ev.id === currentEvent.id) {
-        return {
-          ...ev,
-          feedbacks: [feedbackObj, ...ev.feedbacks]
-        };
-      }
-      return ev;
-    });
+    // Save to Firestore for Admin Review & Approval
+    try {
+      await addDoc(collection(db, 'webinar_feedbacks'), {
+        eventId: currentEvent.id,
+        eventSequence: currentEvent.sequence,
+        eventName: currentEvent.title,
+        name: newFeedback.name,
+        role: newFeedback.role || 'Verified Participant',
+        rating: newFeedback.rating,
+        text: newFeedback.text,
+        createdAt: new Date().toISOString(),
+        date: dateStr,
+        approved: false,
+        status: 'pending',
+        verified: true
+      });
+    } catch (err) {
+      console.warn('Failed to persist feedback to Firestore:', err);
+    }
 
-    setLocalEvents(updatedEvents);
     setFeedbackSuccess(true);
-    setNewFeedback({ name: '', role: '', rating: 5, text: '' });
+    setNewFeedback({
+      name: user?.displayName || '',
+      role: '',
+      rating: 5,
+      text: ''
+    });
+    setSubmittingFeedback(false);
 
     // Success fadeout timer
     setTimeout(() => {
       setFeedbackSuccess(false);
-    }, 4000);
+    }, 5000);
   };
 
   return (
@@ -284,8 +367,20 @@ export default function Webinar() {
                 <span>Return to Webinars</span>
               </button>
 
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono bg-warning/10 border border-warning/30 text-warning px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+              <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href="#session-feedback-form"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('session-feedback-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-black bg-warning hover:bg-warning/90 px-4 py-2.5 rounded-xl cursor-pointer shadow-md shadow-warning/10 active:scale-95 transition-all"
+                >
+                  <MessageSquare size={14} />
+                  <span>Give Session Feedback</span>
+                </a>
+
+                <span className="text-[10px] font-mono bg-warning/10 border border-warning/30 text-warning px-3 py-2 rounded-full font-bold uppercase tracking-wider">
                   Webinar Series &bull; Session {currentEvent.sequence}
                 </span>
               </div>
@@ -353,6 +448,132 @@ export default function Webinar() {
                     </span>
                     <span>Session {currentEvent.sequence}</span>
                   </div>
+                </div>
+
+                {/* INTERACTIVE SESSION FEEDBACK SUBMISSION FORM */}
+                <div id="session-feedback-form" className="bg-crust border border-warning/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-4">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-black uppercase text-text-main tracking-tight">
+                        Submit Session Feedback
+                      </h3>
+                      <p className="text-xs text-text-muted">
+                        Have you attended or watched "{currentEvent.title}"? Share your experience and rating with the ForenClue community.
+                      </p>
+                    </div>
+                  </div>
+
+                  {feedbackSuccess ? (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-3"
+                    >
+                      <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+                        <Check size={24} />
+                      </div>
+                      <h4 className="font-extrabold text-base text-emerald-400 uppercase tracking-wider">
+                        Thank You! Feedback Submitted for Review
+                      </h4>
+                      <p className="text-xs text-text-muted max-w-md mx-auto">
+                        Your review for "{currentEvent.title}" has been submitted to the admin team. It will appear publicly on this page once verified and approved.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleFeedbackSubmit} className="space-y-5">
+                      {/* Interactive Rating Selector */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-mono uppercase tracking-wider text-text-muted">
+                          Rate This Session <span className="text-warning">*</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setNewFeedback({ ...newFeedback, rating: star })}
+                              onMouseEnter={() => setHoverRating(star)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              className="p-1 focus:outline-none transition-transform hover:scale-125 cursor-pointer"
+                              title={`${star} Star${star > 1 ? 's' : ''}`}
+                            >
+                              <Star 
+                                size={22} 
+                                className={
+                                  star <= (hoverRating || newFeedback.rating)
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "text-zinc-600"
+                                } 
+                              />
+                            </button>
+                          ))}
+                          <span className="text-xs font-mono text-warning font-bold ml-2">
+                            {hoverRating || newFeedback.rating} / 5 Stars
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Full Name */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-mono uppercase tracking-wider text-text-muted">
+                            Full Name <span className="text-warning">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newFeedback.name}
+                            onChange={(e) => setNewFeedback({ ...newFeedback, name: e.target.value })}
+                            placeholder="e.g. Dr. Priya Sharma"
+                            className="w-full bg-surface border border-black/15 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs text-text-main focus:border-warning focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        {/* College / Organization */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-mono uppercase tracking-wider text-text-muted">
+                            University / Organization / Role
+                          </label>
+                          <input
+                            type="text"
+                            value={newFeedback.role}
+                            onChange={(e) => setNewFeedback({ ...newFeedback, role: e.target.value })}
+                            placeholder="e.g. NFSU Gandhinagar / Forensic Science Student"
+                            className="w-full bg-surface border border-black/15 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs text-text-main focus:border-warning focus:outline-none transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Feedback Comment */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-mono uppercase tracking-wider text-text-muted">
+                          Your Session Feedback & Takeaways <span className="text-warning">*</span>
+                        </label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={newFeedback.text}
+                          onChange={(e) => setNewFeedback({ ...newFeedback, text: e.target.value })}
+                          placeholder="Share your thoughts on speaker insights, key learnings, or feedback on Seminar 2 topics..."
+                          className="w-full bg-surface border border-black/15 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs text-text-main focus:border-warning focus:outline-none transition-colors resize-none"
+                        />
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                        <span className="text-[10px] text-text-muted font-mono">
+                          * Submissions are verified and displayed publicly.
+                        </span>
+                        <button
+                          type="submit"
+                          disabled={submittingFeedback}
+                          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-warning hover:bg-warning/90 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-warning/15 cursor-pointer"
+                        >
+                          <Send size={14} />
+                          <span>{submittingFeedback ? 'Submitting...' : 'Submit Session Feedback'}</span>
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
 
                 {/* FEEDBACKS AND TESTIMONIALS SECTION */}
@@ -706,7 +927,7 @@ export default function Webinar() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
                         {/* Webinar Sequence Number Overlay */}
-                        <div className="absolute top-2.5 left-2.5">
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-2">
                           <span className="text-[9px] font-mono font-black uppercase bg-warning text-crust px-2.5 py-1 rounded-md shadow">
                             WEBINAR {item.sequence}
                           </span>
@@ -737,14 +958,16 @@ export default function Webinar() {
                     <div className="border-t border-black/5 dark:border-white/5 pt-4 mt-5 flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <User size={11} className="text-text-muted" />
-                        <span className="text-[10px] text-text-muted font-mono line-clamp-1 max-w-[120px]">
+                        <span className="text-[10px] text-text-muted font-mono line-clamp-1 max-w-[100px]">
                           {item.speaker.name}
                         </span>
                       </div>
 
-                      <span className="text-[9px] font-black uppercase tracking-wider text-warning flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        Explore Session
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-warning flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                          Explore Session <Play size={10} className="fill-warning" />
+                        </span>
+                      </div>
                     </div>
 
                   </div>

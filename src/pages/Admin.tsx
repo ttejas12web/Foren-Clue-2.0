@@ -7,7 +7,8 @@ import {
   Settings, CheckCircle2, AlertCircle, FileText, Upload, 
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
   Globe, Edit3, MessageSquare, Radio, Award,
-  Users, RefreshCw, ShieldCheck, Database, Fingerprint, ClipboardList
+  Users, RefreshCw, ShieldCheck, Database, Fingerprint, ClipboardList,
+  Star
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from 'firebase/firestore';
@@ -35,8 +36,12 @@ export default function Admin() {
   const [btnLoading, setBtnLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox'>('overview');
+  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox' | 'feedbacks'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox' | 'feedbacks'>('overview');
+
+  const [webinarFeedbacks, setWebinarFeedbacks] = useState<any[]>([]);
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false);
+  const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'pending' | 'approved'>('pending');
 
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [editingEbookId, setEditingEbookId] = useState<string | null>(null);
@@ -913,6 +918,49 @@ export default function Admin() {
       console.error("Error fetching quizzes:", e);
     } finally {
       setQuizLoading(false);
+    }
+
+    // 9. Seminar / Webinar Feedbacks
+    setFeedbacksLoading(true);
+    try {
+      const fbSnap = await getDocs(collection(db, 'webinar_feedbacks'));
+      const fbList: any[] = [];
+      fbSnap.forEach(docSnap => {
+        fbList.push({ docId: docSnap.id, ...docSnap.data() });
+      });
+      fbList.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+      setWebinarFeedbacks(fbList);
+    } catch (e) {
+      console.error("Error fetching webinar feedbacks:", e);
+    } finally {
+      setFeedbacksLoading(false);
+    }
+  };
+
+  const handleApproveFeedback = async (docId: string) => {
+    try {
+      await setDoc(doc(db, 'webinar_feedbacks', docId), { approved: true, status: 'approved' }, { merge: true });
+      setWebinarFeedbacks(prev => prev.map(f => f.docId === docId ? { ...f, approved: true, status: 'approved' } : f));
+    } catch (e) {
+      console.error("Error approving feedback:", e);
+      alert("Failed to approve feedback.");
+    }
+  };
+
+  const handleDeleteFeedback = async (docId: string, authorName: string) => {
+    if (!window.confirm(`Are you sure you want to delete the session feedback submission from "${authorName}"?`)) {
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'webinar_feedbacks', docId));
+      setWebinarFeedbacks(prev => prev.filter(f => f.docId !== docId));
+    } catch (e) {
+      console.error("Error deleting feedback:", e);
+      alert("Failed to delete feedback.");
     }
   };
 
@@ -1846,6 +1894,20 @@ export default function Admin() {
                     </span>
                   )}
                 </button>
+
+                <button 
+                  onClick={() => setActiveTab('feedbacks')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-between transition-colors ${activeTab === 'feedbacks' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageSquare size={16} /> Seminar Feedbacks
+                  </div>
+                  {webinarFeedbacks.filter(f => !f.approved).length > 0 && (
+                    <span className="bg-amber-500 text-black font-extrabold text-[10px] px-2 py-0.5 rounded-full">
+                      {webinarFeedbacks.filter(f => !f.approved).length} Pending
+                    </span>
+                  )}
+                </button>
                 <p className="text-[10px] font-mono text-text-muted uppercase tracking-widest px-3 mb-2 mt-6">Systems Controls</p>
 
                 <button 
@@ -1955,6 +2017,154 @@ export default function Admin() {
                               )}
                             </div>
                           ))
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* SEMINAR FEEDBACKS APPROVAL SECTION */}
+                {activeTab === 'feedbacks' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-black/10 dark:border-white/10">
+                        <div>
+                          <h2 className="text-xl font-heading font-black uppercase tracking-tight flex items-center gap-2 text-text-main">
+                            <MessageSquare size={20} className="text-warning" /> Seminar Session Feedbacks Manager
+                          </h2>
+                          <p className="text-sm text-text-muted mt-1">
+                            Review, verify, and approve participant feedbacks submitted from webinar / seminar pages.
+                          </p>
+                        </div>
+
+                        {/* Filter Tabs */}
+                        <div className="flex items-center bg-base border border-black/10 dark:border-white/10 rounded-xl p-1 gap-1">
+                          <button
+                            onClick={() => setFeedbackFilter('pending')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              feedbackFilter === 'pending' ? 'bg-warning text-crust' : 'text-text-muted hover:text-text-main'
+                            }`}
+                          >
+                            Pending ({webinarFeedbacks.filter(f => !f.approved).length})
+                          </button>
+                          <button
+                            onClick={() => setFeedbackFilter('approved')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              feedbackFilter === 'approved' ? 'bg-warning text-crust' : 'text-text-muted hover:text-text-main'
+                            }`}
+                          >
+                            Approved ({webinarFeedbacks.filter(f => f.approved).length})
+                          </button>
+                          <button
+                            onClick={() => setFeedbackFilter('all')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              feedbackFilter === 'all' ? 'bg-warning text-crust' : 'text-text-muted hover:text-text-main'
+                            }`}
+                          >
+                            All ({webinarFeedbacks.length})
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Feedbacks List */}
+                      <div className="space-y-4">
+                        {feedbacksLoading ? (
+                          <div className="text-center py-12 text-text-muted flex items-center justify-center gap-2 font-mono text-xs">
+                            <Loader2 className="animate-spin text-warning" size={18} /> Loading seminar feedbacks...
+                          </div>
+                        ) : webinarFeedbacks.filter(f => {
+                          if (feedbackFilter === 'pending') return !f.approved;
+                          if (feedbackFilter === 'approved') return f.approved;
+                          return true;
+                        }).length === 0 ? (
+                          <div className="text-center py-12 border border-dashed border-black/10 dark:border-white/10 rounded-xl text-text-muted font-mono text-xs">
+                            No seminar feedbacks found for filter: <span className="text-warning font-bold uppercase">{feedbackFilter}</span>
+                          </div>
+                        ) : (
+                          webinarFeedbacks
+                            .filter(f => {
+                              if (feedbackFilter === 'pending') return !f.approved;
+                              if (feedbackFilter === 'approved') return f.approved;
+                              return true;
+                            })
+                            .map((item) => (
+                              <div 
+                                key={item.docId} 
+                                className={`p-5 rounded-2xl border transition-all ${
+                                  !item.approved 
+                                    ? 'bg-amber-500/5 border-amber-500/30 shadow-lg shadow-amber-500/5' 
+                                    : 'bg-base border-black/5 dark:border-white/5'
+                                }`}
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 border-b border-black/5 dark:border-white/5 pb-3">
+                                  <div>
+                                    <span className="text-[10px] font-mono font-bold uppercase bg-warning/10 text-warning px-2.5 py-0.5 rounded-md border border-warning/20">
+                                      {item.eventName || `Session ${item.eventSequence || 'Webinar'}`}
+                                    </span>
+                                    <h4 className="font-extrabold text-sm text-text-main mt-1.5 flex items-center gap-2">
+                                      {item.name}
+                                      <span className="text-xs font-normal text-text-muted font-mono">
+                                        &bull; {item.role || 'Participant'}
+                                      </span>
+                                    </h4>
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    {/* Star Rating Display */}
+                                    <div className="flex items-center gap-0.5 bg-black/5 dark:bg-white/5 px-2.5 py-1 rounded-lg">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          size={12}
+                                          className={i < (item.rating || 5) ? 'fill-amber-400 text-amber-400' : 'text-zinc-600'}
+                                        />
+                                      ))}
+                                    </div>
+
+                                    {/* Approval Status Badge */}
+                                    {item.approved ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-md">
+                                        <CheckCircle2 size={12} /> Approved & Live
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-md">
+                                        <AlertCircle size={12} /> Pending Verification
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-xs text-text-main leading-relaxed bg-surface/50 p-3.5 rounded-xl border border-black/5 dark:border-white/5">
+                                  "{item.text}"
+                                </p>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-2">
+                                  <span className="text-[10px] font-mono text-text-muted">
+                                    Submitted: {item.date || item.createdAt || 'Recently'}
+                                  </span>
+
+                                  <div className="flex items-center gap-2">
+                                    {!item.approved && (
+                                      <button
+                                        onClick={() => handleApproveFeedback(item.docId)}
+                                        className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                                      >
+                                        <CheckCircle2 size={14} />
+                                        <span>Approve & Publish</span>
+                                      </button>
+                                    )}
+
+                                    <button
+                                      onClick={() => handleDeleteFeedback(item.docId, item.name)}
+                                      className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-xs uppercase tracking-wider rounded-lg transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <Trash2 size={13} />
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
                         )}
                       </div>
                     </div>

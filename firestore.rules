@@ -352,6 +352,13 @@ service cloud.firestore {
       allow update, delete: if isAdminEmail();
     }
 
+    // Webinar Feedbacks Rule
+    match /webinar_feedbacks/{feedbackId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdminEmail();
+    }
+
     // Google Forms Rule
     match /google_forms/{formId} {
       allow read: if true;

@@ -141,26 +141,50 @@ export default function About() {
       />
 
       <div className="max-w-4xl mx-auto mb-24 text-left">
-        <h1 className="text-4xl md:text-5xl font-heading font-black mb-12 uppercase tracking-tight text-center">
+        <motion.h1 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl md:text-5xl font-heading font-black mb-12 uppercase tracking-tight text-center"
+        >
           About <span className="text-warning">ForenClue</span>
-        </h1>
+        </motion.h1>
 
-        <div className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden rounded-xl">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden rounded-xl"
+        >
           <div className="absolute top-0 left-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
           <p className="text-base text-text-muted leading-relaxed relative z-10">
             Founded in 2025, ForenClue is a dedicated Forensic Science and Cybersecurity EdTech platform, officially registered under MSME Udyam, Government of India. We are committed to empowering students, educators, researchers, and professionals through practical learning, expert-led content, real-world case studies, research resources, and industry-focused skill development. By bridging the gap between academic knowledge and real-world investigation practices, ForenClue aims to nurture the next generation of skilled forensic and cybersecurity professionals equipped to meet the evolving challenges of the digital and investigative landscape.
           </p>
-        </div>
+        </motion.div>
         
-        <div className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden"
+        >
           <div className="absolute top-0 right-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
           <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest">Our Vision</h2>
           <p className="text-lg text-text-muted leading-relaxed relative z-10">
             At ForenClue, we envision a future where top-tier forensic education is democratized and accessible to every passionate student. We aim to bridge the gap between theoretical knowledge and real-world application, cultivating a new generation of investigators equipped to solve the challenges of modern crime and digital forensics globally.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-surface p-8 border border-black/10 dark:border-white/10 mb-12 relative overflow-hidden"
+        >
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-warning/5 rounded-full blur-[50px] -z-10"></div>
           <h2 className="text-2xl font-heading font-bold mb-4 text-warning uppercase tracking-widest">Our Mission</h2>
           <p className="text-lg text-text-muted leading-relaxed mb-6 relative z-10">
@@ -184,10 +208,16 @@ export default function About() {
               <span><strong className="text-text-main">Career Advancement:</strong> Offering certifications and pathways that actively boost professional profiles.</span>
             </li>
           </ul>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="max-w-7xl mx-auto perspective-[2000px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto perspective-[2000px]"
+      >
         <h2 className="text-3xl font-heading font-black mb-12 text-center">Meet Our Leaders</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
@@ -195,7 +225,7 @@ export default function About() {
             <TeamCard key={i} member={member} index={i} />
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

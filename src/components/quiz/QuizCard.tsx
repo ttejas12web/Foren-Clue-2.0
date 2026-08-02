@@ -4,6 +4,7 @@ import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, 
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { RippleButton, RippleWrapper } from '@/components/ui/RippleButton';
 
 interface QuizCardProps {
   quiz: Quiz;
@@ -227,21 +228,21 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
                       <CheckCircle2 size={16} /> Enrolled (Starts Soon)
                     </div>
                   ) : (
-                    <button
+                    <RippleButton
                       onClick={() => onEnroll?.(quiz.id)}
                       disabled={isEnrolling}
-                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-md cursor-pointer"
                     >
                       {isEnrolling ? 'Enrolling...' : 'Enroll For Challenge'}
-                    </button>
+                    </RippleButton>
                   )
                 ) : (
-                  <button
+                  <RippleButton
                     onClick={() => signInWithGoogle()}
-                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all shadow-md cursor-pointer"
                   >
                     <Lock size={14} /> Login To Attempt
-                  </button>
+                  </RippleButton>
                 )}
               </div>
             )}
@@ -250,93 +251,105 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
               <div className="space-y-2">
                 {user ? (
                   userAttempt ? (
-                    <Link
-                      to={`/quizzes/${quiz.id}`}
-                      className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
-                    >
-                      <RotateCcw size={16} /> Reattempt Challenge
-                    </Link>
+                    <RippleWrapper className="rounded-xl">
+                      <Link
+                        to={`/quizzes/${quiz.id}`}
+                        className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+                      >
+                        <RotateCcw size={16} /> Reattempt Challenge
+                      </Link>
+                    </RippleWrapper>
                   ) : isEnrolled ? (
-                    <Link
-                      to={`/quizzes/${quiz.id}`}
-                      className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-90 text-white font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
-                    >
-                      Attempt Challenge Now <ArrowRight size={16} />
-                    </Link>
+                    <RippleWrapper className="rounded-xl">
+                      <Link
+                        to={`/quizzes/${quiz.id}`}
+                        className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:opacity-90 text-white font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
+                      >
+                        Attempt Challenge Now <ArrowRight size={16} />
+                      </Link>
+                    </RippleWrapper>
                   ) : (
-                    <button
+                    <RippleButton
                       onClick={() => onEnroll?.(quiz.id)}
                       disabled={isEnrolling}
                       className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       Enroll & Attempt Now
-                    </button>
+                    </RippleButton>
                   )
                 ) : (
-                  <button
+                  <RippleButton
                     onClick={() => signInWithGoogle()}
                     className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     Login To Attempt
-                  </button>
+                  </RippleButton>
                 )}
               </div>
             )}
 
             {status === 'ENDED' && (
               <div className="flex flex-col sm:flex-row items-center gap-2">
-                <Link
-                  to={`/quizzes/${quiz.id}`}
-                  className="w-full sm:flex-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
-                >
-                  {userAttempt ? (
-                    <>
-                      <RotateCcw size={14} /> Reattempt Practice
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={14} /> Start Practice Quiz
-                    </>
-                  )}
-                </Link>
-                <Link
-                  to={`/quizzes/${quiz.id}/leaderboard`}
-                  className="w-full sm:flex-1 bg-surface-dark border border-amber-500/40 hover:bg-amber-500/10 text-amber-400 font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
-                >
-                  <Trophy size={14} /> Leaderboard
-                </Link>
+                <RippleWrapper className="w-full sm:flex-1 rounded-xl">
+                  <Link
+                    to={`/quizzes/${quiz.id}`}
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
+                  >
+                    {userAttempt ? (
+                      <>
+                        <RotateCcw size={14} /> Reattempt Practice
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={14} /> Start Practice Quiz
+                      </>
+                    )}
+                  </Link>
+                </RippleWrapper>
+                <RippleWrapper className="w-full sm:flex-1 rounded-xl">
+                  <Link
+                    to={`/quizzes/${quiz.id}/leaderboard`}
+                    className="w-full bg-surface-dark border border-amber-500/40 hover:bg-amber-500/10 text-amber-400 font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Trophy size={14} /> Leaderboard
+                  </Link>
+                </RippleWrapper>
               </div>
             )}
           </div>
         ) : (
           /* Standard Practice Quiz */
           <div className="flex items-center gap-2">
-            <Link
-              to={`/quizzes/${quiz.id}`}
-              className={cn(
-                "flex-1 font-black text-sm uppercase tracking-wider py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md cursor-pointer",
-                userAttempt 
-                  ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20" 
-                  : "bg-warning hover:bg-warning/90 text-crust shadow-warning/10"
-              )}
-            >
-              {userAttempt ? (
-                <>
-                  <RotateCcw size={16} /> Reattempt Quiz
-                </>
-              ) : (
-                <>
-                  Start Quiz <ArrowRight size={16} />
-                </>
-              )}
-            </Link>
-            <Link
-              to={`/quizzes/${quiz.id}/leaderboard`}
-              className="p-3 bg-surface dark:bg-black/40 border border-black/10 dark:border-white/10 hover:border-warning/50 text-warning rounded-xl transition-all"
-              title="View Leaderboard"
-            >
-              <Trophy size={18} />
-            </Link>
+            <RippleWrapper className="flex-1 rounded-xl">
+              <Link
+                to={`/quizzes/${quiz.id}`}
+                className={cn(
+                  "w-full font-black text-sm uppercase tracking-wider py-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 shadow-md cursor-pointer block",
+                  userAttempt 
+                    ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20" 
+                    : "bg-warning hover:bg-warning/90 text-crust shadow-warning/10"
+                )}
+              >
+                {userAttempt ? (
+                  <>
+                    <RotateCcw size={16} /> Reattempt Quiz
+                  </>
+                ) : (
+                  <>
+                    Start Quiz <ArrowRight size={16} />
+                  </>
+                )}
+              </Link>
+            </RippleWrapper>
+            <RippleWrapper className="rounded-xl">
+              <Link
+                to={`/quizzes/${quiz.id}/leaderboard`}
+                className="p-3 bg-surface dark:bg-black/40 border border-black/10 dark:border-white/10 hover:border-warning/50 text-warning rounded-xl transition-all flex items-center justify-center"
+                title="View Leaderboard"
+              >
+                <Trophy size={18} />
+              </Link>
+            </RippleWrapper>
           </div>
         )}
       </div>
