@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -280,14 +281,20 @@ export default function EBooks() {
 
   return (
     <div className="pt-8 pb-20 min-h-screen bg-base relative overflow-hidden text-text-main font-sans">
-      <SEO 
-        title="Academic eLibrary - Reference Textbook Vault"
-        description="Access standard academic forensic medicine textbooks, handwritten toxicology notes, national eligibility solved papers, and standard extraction protocols."
+      <SEOManager 
+        collectionName="ebooks"
+        docId={selectedResource?.id}
+        initialData={selectedResource}
+        fallbackTitle={selectedResource ? `${selectedResource.title} | ForenClue eLibrary` : "Academic eLibrary - Reference Textbook Vault"}
+        fallbackDescription={selectedResource ? (selectedResource.description || selectedResource.summary) : "Access standard academic forensic medicine textbooks, handwritten toxicology notes, national eligibility solved papers, and standard extraction protocols."}
         keywords="forensic library, forenclue, forensic textbooks, toxicological revision keys, UGC NET papers"
-        canonicalPath="/ebooks"
+        canonicalPath={selectedResource ? `/ebooks?id=${selectedResource.id}` : "/ebooks"}
+        fallbackImage={selectedResource?.coverImage || selectedResource?.thumbnail || "/images/og/library.png"}
+        type={selectedResource ? "book" : "website"}
         breadcrumbs={[
           { name: 'Home', path: '/' },
-          { name: 'eLibrary', path: '/ebooks' }
+          { name: 'eLibrary', path: '/ebooks' },
+          ...(selectedResource ? [{ name: selectedResource.title, path: `/ebooks?id=${selectedResource.id}` }] : [])
         ]}
         faqs={[
           { question: "What resources are in the ForenClue eLibrary?", answer: "Our library hosts digital forensic medicine manuals, toxicological revision notes, previous UGC NET exam paper solutions, and active lab extraction protocols." },

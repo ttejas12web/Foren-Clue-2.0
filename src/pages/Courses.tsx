@@ -1,6 +1,7 @@
 import { EvidenceMarker } from "@/components/ui/EvidenceMarker";
 import { motion, AnimatePresence } from 'motion/react';
 import { SEO } from "@/components/layout/SEO";
+import { SEOManager } from "@/components/layout/SEOManager";
 import { MicroscopeViewer } from "@/components/ui/ThreeDElement";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, setDoc, getDoc, arrayUnion, arrayRemove, serverTimestamp, updateDoc, collection, onSnapshot, increment, query, where, getDocs } from "firebase/firestore";
@@ -518,18 +519,26 @@ export default function Courses() {
 
   return (
     <div className="py-20 px-4 max-w-7xl mx-auto">
-      <SEO 
-        title={selectedCourse ? `${selectedCourse.title} - Forensic Course` : "Professional Forensic Science & Investigation Courses"}
-        description={selectedCourse ? (selectedCourse.description || `Master forensic skills in ${selectedCourse.title} with expert instruction.`) : "Browse professional forensic science training courses. Master questioning protocols, DNA fingerprinting, cybercrime analysis, and trace evidence logging."}
+      <SEOManager 
+        collectionName="courses"
+        docId={selectedCourse?.id}
+        initialData={selectedCourse}
+        fallbackTitle={selectedCourse ? `${selectedCourse.title} - Forensic Course` : "Professional Forensic Science & Investigation Courses"}
+        fallbackDescription={selectedCourse ? (selectedCourse.description || `Master forensic skills in ${selectedCourse.title} with expert instruction.`) : "Browse professional forensic science training courses. Master questioning protocols, DNA fingerprinting, cybercrime analysis, and trace evidence logging."}
         keywords={selectedCourse ? `${selectedCourse.title.toLowerCase()}, forensic course, learn forensics, certifed forensic training` : "forensic courses online, forensic certificates, learn forensics, crime scene investigation training, fingerprint lifting course, forenclue courses"}
         canonicalPath={selectedCourse ? `/courses?id=${selectedCourse.id}` : "/courses"}
+        fallbackImage={selectedCourse?.image || selectedCourse?.thumbnail || "/images/og/courses.png"}
         type={selectedCourse ? "course" : "website"}
-        courseDetails={selectedCourse ? {
-          name: selectedCourse.title,
-          description: selectedCourse.description,
-          provider: "ForenClue",
-          category: selectedCourse.category
-        } : undefined}
+        customSchema={selectedCourse ? [{
+          "@context": "https://schema.org",
+          "@type": "Course",
+          "name": selectedCourse.title,
+          "description": selectedCourse.description,
+          "provider": {
+            "@type": "Organization",
+            "name": "ForenClue"
+          }
+        }] : undefined}
         breadcrumbs={[
           { name: 'Home', path: '/' },
           { name: 'Courses', path: '/courses' },

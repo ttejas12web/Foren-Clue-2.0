@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 import { ResilientImage, resolveFileUrl } from '@/lib/localFileStore';
 
 const PODCAST_INFO = {
@@ -279,12 +280,15 @@ export default function Podcast() {
 
   return (
     <div className="min-h-screen bg-[#121212] text-white pb-28 font-sans selection:bg-green-500/30 selection:text-green-200 pl-0 md:pl-2">
-      <SEO 
-        title={currentEpisode ? `${currentEpisode.title} | ForenClue Podcast` : "ForenClue Podcast - Auditory Forensic Learning"} 
-        description={currentEpisode ? (currentEpisode.description || `Listen to ${currentEpisode.title} on ForenClue. Forensic audio guides and UGC NET exam notes.`) : "Dive deep into the world of forensic science, competitive exams (UGC NET & FACT), and criminal case studies. An auditory learning experience designed for aspiring forensic experts."}
+      <SEOManager 
+        collectionName="podcasts"
+        docId={currentEpisode?.id}
+        initialData={currentEpisode}
+        fallbackTitle={currentEpisode ? `${currentEpisode.title} | ForenClue Podcast` : "ForenClue Podcast - Auditory Forensic Learning"} 
+        fallbackDescription={currentEpisode ? (currentEpisode.description || `Listen to ${currentEpisode.title} on ForenClue. Forensic audio guides and UGC NET exam notes.`) : "Dive deep into the world of forensic science, competitive exams (UGC NET & FACT), and criminal case studies. An auditory learning experience designed for aspiring forensic experts."}
         keywords={currentEpisode ? `${currentEpisode.title.toLowerCase()}, forensic science podcast, audio revision notes` : "podcast, forensic science podcast, neet cracker, ugc net, forensic audio notes"}
         canonicalPath={currentEpisode ? `/podcast?episode=${currentEpisode.id}` : "/podcast"}
-        image={currentEpisode?.coverImage || "https://forenclue.in/forenclue_og_banner.jpg"}
+        fallbackImage={currentEpisode?.coverImage || currentEpisode?.thumbnail || "/images/og/podcast.png"}
         breadcrumbs={[
           { name: 'Home', path: '/' },
           { name: 'Podcast', path: '/podcast' },

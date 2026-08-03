@@ -4,7 +4,7 @@ import { Quiz, LeaderboardEntry } from '@/types/quiz';
 import { fetchQuizById, fetchQuizzes, fetchLeaderboard } from '@/services/quizService';
 import { LeaderboardPodium } from '@/components/quiz/LeaderboardPodium';
 import { Trophy, ArrowLeft, RefreshCw, Sparkles, Award } from 'lucide-react';
-import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 
 export default function QuizLeaderboard() {
   const { quizId } = useParams<{ quizId: string }>();
@@ -45,10 +45,14 @@ export default function QuizLeaderboard() {
 
   return (
     <div className="min-h-screen bg-background text-text-main py-12 px-4 sm:px-6 lg:px-8">
-      <SEO 
-        title={`Quiz Leaderboard - ${selectedQuiz?.title || 'ForenClue'}`}
-        description="Official Top 10 Leaderboard rankings for ForenClue weekly quiz challenges and practice tests."
-        image={selectedQuiz?.thumbnail || "https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc"}
+      <SEOManager 
+        collectionName="quizzes"
+        docId={selectedQuiz?.id || quizId}
+        initialData={selectedQuiz}
+        fallbackTitle={`Quiz Leaderboard - ${selectedQuiz?.title || 'ForenClue'}`}
+        fallbackDescription="Official Top 10 Leaderboard rankings for ForenClue weekly quiz challenges and practice tests."
+        fallbackImage={selectedQuiz?.thumbnail}
+        canonicalPath={`/quizzes/${selectedQuiz?.id || quizId}/leaderboard`}
       />
 
       <div className="max-w-6xl mx-auto space-y-10">

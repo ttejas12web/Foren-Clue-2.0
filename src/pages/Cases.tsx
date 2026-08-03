@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { EvidenceMarker } from '@/components/ui/EvidenceMarker';
 import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 import { 
   Loader2, Sparkles, X, Box, FileText, ChevronRight, Clock, 
   MapPin, Microscope, Info, Search, Filter, Brain, Dna, 
@@ -42,6 +44,7 @@ interface CaseFile {
 }
 
 export default function Cases() {
+  const { slug } = useParams<{ slug?: string }>();
   const { user, isAdmin } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -222,15 +225,19 @@ export default function Cases() {
   useEffect(() => {
     if (dbCases.length > 0) {
       const params = new URLSearchParams(window.location.search);
-      const sharedCaseId = params.get('case');
+      const sharedCaseId = params.get('case') || slug;
       if (sharedCaseId) {
-        const found = dbCases.find(c => c.id === sharedCaseId);
+        const found = dbCases.find(c => 
+          c.id === sharedCaseId || 
+          c.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') === sharedCaseId ||
+          c.tag?.toLowerCase() === sharedCaseId.toLowerCase()
+        );
         if (found) {
           setSelectedCase(found);
         }
       }
     }
-  }, [dbCases]);
+  }, [dbCases, slug]);
 
   const handleCopyLink = (e: React.MouseEvent, caseId: string, caseTitle: string, caseSummary: string) => {
     e.stopPropagation(); // prevent opening the modal when clicking share!
@@ -333,12 +340,16 @@ export default function Cases() {
 
   return (
     <div className="min-h-screen bg-base py-24 pb-32">
-      <SEO 
-        title={selectedCase ? `${selectedCase.title} - Investigative Case Study` : "Solved Cases & Investigative Case Studies"}
-        description={selectedCase ? (selectedCase.summary || `Review the forensic investigation of ${selectedCase.title}. Analysis and evidence breakdown.`) : "Study real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."}
+      <SEOManager 
+        collectionName="cases"
+        docId={selectedCase?.id}
+        slug={slug}
+        initialData={selectedCase}
+        fallbackTitle={selectedCase ? `${selectedCase.title} - Investigative Case Study` : "Solved Cases & Investigative Case Studies"}
+        fallbackDescription={selectedCase ? (selectedCase.summary || `Review the forensic investigation of ${selectedCase.title}. Analysis and evidence breakdown.`) : "Study real-world forensic crime case studies. Examine trace evidence logging, ballistic reconstruction reports, and digital crime summaries."}
         keywords={selectedCase ? `${selectedCase.title.toLowerCase()}, solved forensic case, case archive, crime investigation report` : "solved forensic cases, crime case studies, dactyloscopy case studies, criminalistics research archive, forenclue cases"}
-        canonicalPath={selectedCase ? `/cases?case=${selectedCase.id}` : "/cases"}
-        image={selectedCase?.image}
+        canonicalPath={selectedCase ? `/cases?case=${selectedCase.id}` : slug ? `/case-studies/${slug}` : "/cases"}
+        fallbackImage={selectedCase?.image || "/images/og/case-studies.png"}
         type={selectedCase ? "article" : "website"}
         authorName={selectedCase?.createdBy || "ForenClue Forensic Expert"}
         breadcrumbs={[

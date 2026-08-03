@@ -86,6 +86,8 @@ function AppMain() {
             <Route path="/about" element={<About />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/cases" element={<Cases />} />
+            <Route path="/cases/:slug" element={<Cases />} />
+            <Route path="/case-studies/:slug" element={<Cases />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/community" element={<Community />} />
             <Route path="/community/my-doubts" element={<MyDoubts />} />

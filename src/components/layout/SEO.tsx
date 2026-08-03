@@ -50,10 +50,15 @@ export function SEO({
   const metaKeywords = keywords || 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics';
   const absoluteCanonicalUrl = `https://www.forenclue.in${canonicalPath}`;
 
-  // Determine optimal image URL
-  let ogImg = 'https://www.forenclue.in/og/home.png';
+  // Determine optimal image URL (must be absolute for social crawlers)
+  let ogImg = 'https://www.forenclue.in/images/og/home.png';
   if (image) {
-    ogImg = image;
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      ogImg = image;
+    } else {
+      const cleanPath = image.startsWith('/') ? image : `/${image}`;
+      ogImg = `https://www.forenclue.in${cleanPath}`;
+    }
   }
 
   // Optimize Blogger and Google User Content image parameters to deliver s1200 sizes for social crawlers
@@ -243,4 +248,7 @@ export function SEO({
 
 export type SEOHeaderProps = SEOProps;
 export const SEOHeader = SEO;
+
+export { SEOManager } from './SEOManager';
+export type { SEOManagerProps } from './SEOManager';
 

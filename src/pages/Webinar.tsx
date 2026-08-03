@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, ThumbsUp
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -345,11 +346,15 @@ export default function Webinar() {
             className="w-full max-w-5xl mx-auto space-y-8 relative z-10"
             id={`webinar-screen-${currentEvent.id}`}
           >
-            <SEO 
-              title={`Webinar: ${currentEvent.title}`}
-              description={`${currentEvent.subtitle || ''} Direct video capture, speaker credentials, and student feedbacks.`}
+            <SEOManager 
+              collectionName="webinars"
+              docId={currentEvent?.id}
+              initialData={currentEvent}
+              fallbackTitle={`Webinar: ${currentEvent.title}`}
+              fallbackDescription={`${currentEvent.subtitle || ''} Direct video capture, speaker credentials, and student feedbacks.`}
               keywords={`${(currentEvent.tags || []).join(', ')}, forenclue, digital forensics webinar`}
               canonicalPath={`/webinar?id=${currentEvent.id}`}
+              fallbackImage={currentEvent?.bannerImage || currentEvent?.thumbnail || "/images/og/webinars.png"}
               breadcrumbs={[
                 { name: 'Home', path: '/' },
                 { name: 'Webinars', path: '/webinar' },
@@ -791,11 +796,13 @@ export default function Webinar() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-5xl mx-auto space-y-12 relative z-10"
           >
-            <SEO 
-              title="Webinars & Virtual Training Masterclasses"
-              description="Register for live forensic workshops, browse professional video lectures, and master legal investigation frameworks directly from verified practitioners."
+            <SEOManager 
+              collectionName="webinars"
+              fallbackTitle="Webinars & Virtual Training Masterclasses"
+              fallbackDescription="Register for live forensic workshops, browse professional video lectures, and master legal investigation frameworks directly from verified practitioners."
               keywords="Delhi Police forensics, finger print analysis webinars, forensics genetic lectures, cybersecurity events, forenclue webinars"
               canonicalPath="/webinar"
+              fallbackImage="/images/og/webinars.png"
               breadcrumbs={[
                 { name: 'Home', path: '/' },
                 { name: 'Webinars', path: '/webinar' }

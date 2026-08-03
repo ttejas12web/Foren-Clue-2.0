@@ -7,6 +7,7 @@
   "scripts": {
     "sitemap": "tsx scripts/generate-sitemap.mjs",
     "og-images": "node scripts/generate-og-images.mjs",
+    "verify-og": "node scripts/verify-og-images.mjs",
     "dev": "tsx server.ts",
     "build": "npm run clean && npm run og-images && npm run sitemap && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",

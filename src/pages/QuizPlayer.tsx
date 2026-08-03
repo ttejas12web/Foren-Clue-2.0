@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
+import { SEOManager } from '@/components/layout/SEOManager';
 import { ConfettiAnimation } from '@/components/quiz/ConfettiAnimation';
 
 export default function QuizPlayer() {
@@ -306,10 +307,13 @@ export default function QuizPlayer() {
         {/* Ambient Glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <SEO 
-          title={`Enroll in ${quiz.title} | ForenClue`}
-          description={`Sign in or create an account to enroll in ${quiz.title} and attempt the quiz.`}
-          image={quiz.thumbnail || "https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc"}
+        <SEOManager 
+          collectionName="quizzes"
+          docId={quizId}
+          initialData={quiz}
+          fallbackTitle={`Enroll in ${quiz?.title || 'Quiz'} | ForenClue`}
+          fallbackDescription={`Sign in or create an account to enroll in ${quiz?.title || 'this quiz'} and attempt the quiz.`}
+          fallbackImage={quiz?.thumbnail}
         />
 
         <div className="max-w-lg w-full bg-surface border border-amber-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-6 shadow-2xl relative z-10">
@@ -479,10 +483,13 @@ export default function QuizPlayer() {
 
   return (
     <div className="min-h-screen bg-background text-text-main py-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <SEO 
-        title={`${quiz.title} | ForenClue Quiz`} 
-        description={quiz.description} 
-        image={quiz.thumbnail || "https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc"}
+      <SEOManager 
+        collectionName="quizzes"
+        docId={quizId}
+        initialData={quiz}
+        fallbackTitle={`${quiz?.title || 'Quiz'} | ForenClue Quiz`} 
+        fallbackDescription={quiz?.description} 
+        fallbackImage={quiz?.thumbnail}
       />
       
       {/* Premium Ambient Background Glows */}
