@@ -132,9 +132,9 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-start gap-3 text-sm text-text-muted">
                 <Mail size={16} className="text-warning shrink-0 mt-0.5" />
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-1">
                   <a href="mailto:support@forenclue.in" className="hover:text-warning transition-colors">support@forenclue.in</a>
-                  <a href="mailto:forenclue@gmail.com" className="hover:text-warning transition-colors text-xs opacity-75">forenclue@gmail.com</a>
+                  <a href="mailto:forenclue@gmail.com" className="hover:text-warning transition-colors">forenclue@gmail.com</a>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm text-text-muted">

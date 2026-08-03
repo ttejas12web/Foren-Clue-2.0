@@ -773,10 +773,10 @@ async function startServer() {
         else if (cleanPath === '/quizzes') {
           title = 'Forensic Quiz Challenge | ForenClue';
           summary = 'Practice forensic science through quizzes, challenges and competitions.';
-          image = '/images/og/quiz.png';
+          image = 'https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc';
         }
         else if (cleanPath.startsWith('/quizzes/')) {
-          image = '/images/og/quiz.png';
+          image = 'https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc';
           const parts = cleanPath.split('/');
           const quizId = parts[2];
           const isLeaderboard = parts[3] === 'leaderboard';

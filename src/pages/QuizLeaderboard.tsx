@@ -48,6 +48,7 @@ export default function QuizLeaderboard() {
       <SEO 
         title={`Quiz Leaderboard - ${selectedQuiz?.title || 'ForenClue'}`}
         description="Official Top 10 Leaderboard rankings for ForenClue weekly quiz challenges and practice tests."
+        image={selectedQuiz?.thumbnail || "https://blogger.googleusercontent.com/img/a/AVvXsEiXMiCkHlkWl9vHmGjtsn6113NX1jyQ_kIhbSjsc9cJ0MgWfcYleBpWKmE5xVnTWnyMw83g8fu1Jys-b_l_-Es0eN5Z0fJ2h0OVYUC3jXaqU5BZN6pwwujsqF67nl6-8lA5wc2FDD5jNAY8Case5iNpAYniw5zHrUGi51FsxQFtv8z33y0BoA6eQpZx4xc"}
       />
 
       <div className="max-w-6xl mx-auto space-y-10">
