@@ -51,8 +51,8 @@ const WEBINARS_DATA: WebinarEvent[] = [
     subtitle: "Insights into Forensic Odontology and Criminal Profiling with Dr. Angela Mathew.",
     date: "August 01, 2026",
     time: "08:00 PM IST",
-    description: "Join us for an upcoming session on Forensic Odontology and Criminal Profiling by renowned expert Dr. Angela Mathew.",
-    fullDetails: "Upcoming session Details: 'Beyond The Smiles'. Join Dr. Angela Mathew as she delves into Forensic Odontology, Criminal Profiling, and Investigative Psychology.",
+    description: "Session on Forensic Odontology and Criminal Profiling by renowned expert Dr. Angela Mathew.",
+    fullDetails: "Session Details: 'Beyond The Smiles'. Join Dr. Angela Mathew as she delves into Forensic Odontology, Criminal Profiling, and Investigative Psychology.",
     speaker: {
       name: "Dr. Angela Mathew",
       role: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling",
@@ -61,7 +61,7 @@ const WEBINARS_DATA: WebinarEvent[] = [
       bio: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling , Forensic & Investigative Psychology | Gold Medalist(2022-2024) | Member - IDA| Fellow-Pierre Fauchard Academy, USA( Asia at Large)"
     },
     poster: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjC8OssiOJ4AHrnFMj8XrEz4-2WzvQqBvhsg4ztM5HnSlunwKoH6ZIAnDh8eL9wCjiWXy5tT7CwKs9HSrZUzE2l9ph6oefi97nIraWGguJ5L-aMsDEmadDi3LpiBiUir1xgBr8xyrrAGQrElx1Szy-x7Ob4NO_iEiWmFpuAJFBb5ihvG0_HRXC58Gujzzo/s1524/Forensic%20Odontologist%20%20Dental%20Surgeon%20%20Certified%20Professional%20in%20Criminal%20Profiling,%20Forensic%20&%20Investigative%20Psychology%20%20Gold%20Medalist%20(2022-2024)%20%20Member%20-%20IDA%20Fellow-Pierre%20Fauchard%20Academy,%20US.png",
-    tags: ["Forensic Odontology", "Criminal Profiling", "Upcoming"],
+    tags: ["Forensic Odontology", "Criminal Profiling", "Recent Event"],
     feedbacks: []
   },
   {
@@ -433,7 +433,7 @@ export default function Webinar() {
                         />
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <span className="bg-warning text-crust font-bold px-4 py-2 rounded-lg text-sm uppercase tracking-wider">
-                            Event Upcoming
+                            Recent Event
                           </span>
                         </div>
                       </>

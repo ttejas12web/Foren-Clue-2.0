@@ -282,13 +282,13 @@ The ForenClue Curriculum Board
               </div>
 
               <div className="space-y-4">
-                {/* 3D Touchable View Upcoming Event Button */}
+                {/* 3D Touchable View Recent Event Button */}
                 <Link 
                   to="/webinar?event=beyond-the-smiles"
                   className="group relative w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-warning hover:bg-warning-dark text-crust font-black uppercase tracking-wider rounded-xl text-xs sm:text-sm shadow-[0_6px_0_0_#9a3412] hover:shadow-[0_4px_0_0_#9a3412] active:shadow-[0_0px_0_0_#9a3412] active:translate-y-[6px] border border-amber-500/20 transition-all text-center cursor-pointer font-sans"
                 >
                   <Video size={16} className="text-crust" />
-                  <span>View Upcoming Event</span>
+                  <span>View Recent Event</span>
                 </Link>
               </div>
 
