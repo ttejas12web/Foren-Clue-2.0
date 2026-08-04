@@ -8,7 +8,7 @@ import {
   ExternalLink, LogOut, Loader2, Sparkles, HelpCircle, 
   Globe, Edit3, MessageSquare, Radio, Award,
   Users, RefreshCw, ShieldCheck, Database, Fingerprint, ClipboardList,
-  Star
+  Star, Building2, MapPin
 } from 'lucide-react';
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from 'firebase/firestore';
@@ -17,6 +17,8 @@ import { ResilientImage, uploadFileResilient } from '@/lib/localFileStore';
 import { cn } from '@/lib/utils';
 import { Quiz, QuizQuestion } from '@/types/quiz';
 import { fetchQuizzes as fetchAdminQuizzes, saveQuiz, deleteQuiz } from '@/services/quizService';
+import { College, CollegeCourse } from '@/types/college';
+import { fetchColleges as fetchAdminColleges, saveCollege as saveAdminCollege, deleteCollege as deleteAdminCollege } from '@/services/collegeService';
 
 
 const getLocalDatetimeString = (dateObj: Date | string | number) => {
@@ -36,8 +38,48 @@ export default function Admin() {
   const [btnLoading, setBtnLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox' | 'feedbacks'
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'inbox' | 'feedbacks'>('overview');
+  // Active Tab: 'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'colleges' | 'inbox' | 'feedbacks'
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'ebooks' | 'texts' | 'doubts' | 'podcast' | 'certificates' | 'employees' | 'quizzes' | 'colleges' | 'inbox' | 'feedbacks'>('overview');
+
+  // Colleges Management State
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [collegesLoading, setCollegesLoading] = useState(false);
+  const [editingCollegeId, setEditingCollegeId] = useState<string | null>(null);
+  const [deleteConfirmCollegeId, setDeleteConfirmCollegeId] = useState<string | null>(null);
+  const [collegeSaveSuccess, setCollegeSaveSuccess] = useState('');
+
+  const [collegeForm, setCollegeForm] = useState({
+    name: '',
+    shortName: '',
+    country: 'India',
+    state: '',
+    city: '',
+    type: 'Government' as College['type'],
+    website: '',
+    logo: '',
+    bannerImage: '',
+    description: '',
+    feesRange: '',
+    admissionProcess: '',
+    accreditation: '',
+    contactEmail: '',
+    contactPhone: '',
+    address: '',
+    ranking: '',
+    facilities: '',
+    featured: false,
+    coursesOffered: [
+      {
+        name: 'B.Sc. Forensic Science',
+        degreeLevel: 'Bachelor' as CollegeCourse['degreeLevel'],
+        duration: '3 Years',
+        eligibility: '10+2 Science Stream (Min 50%)',
+        estimatedFees: '₹40,000 / year',
+        mode: 'Full-time' as CollegeCourse['mode'],
+        specializations: ['Fingerprint Science', 'Toxicology']
+      }
+    ]
+  });
 
   const [webinarFeedbacks, setWebinarFeedbacks] = useState<any[]>([]);
   const [feedbacksLoading, setFeedbacksLoading] = useState(false);
@@ -938,6 +980,213 @@ export default function Admin() {
       console.error("Error fetching webinar feedbacks:", e);
     } finally {
       setFeedbacksLoading(false);
+    }
+
+    // 10. Colleges & Universities
+    setCollegesLoading(true);
+    try {
+      const colList = await fetchAdminColleges();
+      setColleges(colList);
+    } catch (e) {
+      console.error("Error fetching colleges collection:", e);
+    } finally {
+      setCollegesLoading(false);
+    }
+  };
+
+  // College Course Handlers for Admin Form
+  const handleAddCollegeCourseRow = () => {
+    setCollegeForm(prev => ({
+      ...prev,
+      coursesOffered: [
+        ...prev.coursesOffered,
+        {
+          name: '',
+          degreeLevel: 'Master',
+          duration: '2 Years',
+          eligibility: '',
+          estimatedFees: '',
+          mode: 'Full-time',
+          specializations: []
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveCollegeCourseRow = (index: number) => {
+    if (collegeForm.coursesOffered.length <= 1) {
+      alert("At least one course offering is required for a college.");
+      return;
+    }
+    setCollegeForm(prev => ({
+      ...prev,
+      coursesOffered: prev.coursesOffered.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleCollegeCourseChange = (index: number, field: keyof CollegeCourse, value: any) => {
+    setCollegeForm(prev => {
+      const updated = [...prev.coursesOffered];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, coursesOffered: updated };
+    });
+  };
+
+  const handleCollegeCourseSpecsChange = (index: number, specsString: string) => {
+    const specs = specsString.split(',').map(s => s.trim()).filter(Boolean);
+    setCollegeForm(prev => {
+      const updated = [...prev.coursesOffered];
+      updated[index] = { ...updated[index], specializations: specs };
+      return { ...prev, coursesOffered: updated };
+    });
+  };
+
+  const handleResetCollegeForm = () => {
+    setEditingCollegeId(null);
+    setCollegeForm({
+      name: '',
+      shortName: '',
+      country: 'India',
+      state: '',
+      city: '',
+      type: 'Government',
+      website: '',
+      logo: '',
+      bannerImage: '',
+      description: '',
+      feesRange: '',
+      admissionProcess: '',
+      accreditation: '',
+      contactEmail: '',
+      contactPhone: '',
+      address: '',
+      ranking: '',
+      facilities: '',
+      featured: false,
+      coursesOffered: [
+        {
+          name: 'B.Sc. Forensic Science',
+          degreeLevel: 'Bachelor',
+          duration: '3 Years',
+          eligibility: '10+2 Science Stream (Min 50%)',
+          estimatedFees: '₹40,000 / year',
+          mode: 'Full-time',
+          specializations: ['Fingerprint Science', 'Toxicology']
+        }
+      ]
+    });
+  };
+
+  const handleAdminEditCollege = (col: College) => {
+    setEditingCollegeId(col.id);
+    setCollegeForm({
+      name: col.name || '',
+      shortName: col.shortName || '',
+      country: col.country || 'India',
+      state: col.state || '',
+      city: col.city || '',
+      type: col.type || 'Government',
+      website: col.website || '',
+      logo: col.logo || '',
+      bannerImage: col.bannerImage || '',
+      description: col.description || '',
+      feesRange: col.feesRange || '',
+      admissionProcess: col.admissionProcess || '',
+      accreditation: col.accreditation || '',
+      contactEmail: col.contactEmail || '',
+      contactPhone: col.contactPhone || '',
+      address: col.address || '',
+      ranking: col.ranking || '',
+      facilities: Array.isArray(col.facilities) ? col.facilities.join(', ') : '',
+      featured: !!col.featured,
+      coursesOffered: col.coursesOffered && col.coursesOffered.length > 0 ? col.coursesOffered.map(c => ({
+        name: c.name || '',
+        degreeLevel: c.degreeLevel || 'Bachelor',
+        duration: c.duration || '',
+        eligibility: c.eligibility || '',
+        estimatedFees: c.estimatedFees || '',
+        mode: c.mode || 'Full-time',
+        specializations: c.specializations || []
+      })) : [
+        {
+          name: 'B.Sc. Forensic Science',
+          degreeLevel: 'Bachelor',
+          duration: '3 Years',
+          eligibility: '',
+          estimatedFees: '',
+          mode: 'Full-time',
+          specializations: []
+        }
+      ]
+    });
+  };
+
+  const handleAdminSaveCollege = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMsg('');
+    setErrMsg('');
+
+    if (!collegeForm.name || !collegeForm.city || !collegeForm.country) {
+      setErrMsg("Please provide College/University Name, City, and Country.");
+      return;
+    }
+
+    try {
+      const facilitiesList = collegeForm.facilities
+        .split(',')
+        .map(f => f.trim())
+        .filter(Boolean);
+
+      const payload: Partial<College> & { id?: string } = {
+        name: collegeForm.name,
+        shortName: collegeForm.shortName,
+        country: collegeForm.country,
+        state: collegeForm.state,
+        city: collegeForm.city,
+        type: collegeForm.type,
+        website: collegeForm.website,
+        logo: collegeForm.logo,
+        bannerImage: collegeForm.bannerImage,
+        description: collegeForm.description,
+        feesRange: collegeForm.feesRange,
+        admissionProcess: collegeForm.admissionProcess,
+        accreditation: collegeForm.accreditation,
+        contactEmail: collegeForm.contactEmail,
+        contactPhone: collegeForm.contactPhone,
+        address: collegeForm.address,
+        ranking: collegeForm.ranking,
+        facilities: facilitiesList,
+        featured: collegeForm.featured,
+        coursesOffered: collegeForm.coursesOffered
+      };
+
+      if (editingCollegeId) {
+        payload.id = editingCollegeId;
+      }
+
+      await saveAdminCollege(payload);
+      setSuccessMsg(editingCollegeId ? `College "${collegeForm.name}" updated successfully!` : `New College "${collegeForm.name}" published to directory!`);
+      handleResetCollegeForm();
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Failed to save college record: ${err.message}`);
+    }
+  };
+
+  const handleAdminDeleteCollege = async (id: string, name: string) => {
+    // Security Mandate: Ask double confirmation before destructive modification of admin data!
+    const firstConfirm = window.confirm(`WARNING: You are about to delete the college/university record for "${name}". Do you want to proceed?`);
+    if (!firstConfirm) return;
+
+    const secondConfirm = window.confirm(`DOUBLE CONFIRMATION: Are you absolutely sure you want to permanently delete "${name}" from Firestore? This action cannot be undone.`);
+    if (!secondConfirm) return;
+
+    try {
+      await deleteAdminCollege(id);
+      setSuccessMsg(`College record "${name}" deleted.`);
+      fetchCollections();
+    } catch (err: any) {
+      setErrMsg(`Failed to delete college: ${err.message}`);
     }
   };
 
@@ -1957,6 +2206,12 @@ export default function Admin() {
                   className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'quizzes' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
                 >
                   <Award size={16} /> Quizzes & Challenges
+                </button>
+                <button 
+                  onClick={() => setActiveTab('colleges')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-3 transition-colors ${activeTab === 'colleges' ? 'bg-warning text-crust' : 'bg-surface hover:bg-surface/80 text-text-muted hover:text-text-main border border-black/5 dark:border-white/5'}`}
+                >
+                  <Building2 size={16} /> Colleges Directory
                 </button>
                 <Link 
                   to="/forms"
@@ -4157,6 +4412,505 @@ export default function Admin() {
                                 >
                                   <Trash2 size={14} />
                                 </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 10. COLLEGES & UNIVERSITIES DIRECTORY MANAGER */}
+                {activeTab === 'colleges' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+                    
+                    {/* Header */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-xl font-heading font-black uppercase tracking-tight text-text-main flex items-center gap-2">
+                          <Building2 size={22} className="text-warning" /> Colleges & Universities Directory Manager
+                        </h2>
+                        <p className="text-xs text-text-muted mt-1">
+                          Add, edit, or update forensic science colleges, universities, and courses offered across the globe.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {editingCollegeId && (
+                          <button
+                            onClick={handleResetCollegeForm}
+                            className="px-4 py-2 border border-black/10 dark:border-white/10 text-text-muted hover:text-text-main rounded-xl text-xs font-bold transition-colors"
+                          >
+                            Cancel Editing
+                          </button>
+                        )}
+                        <button
+                          onClick={fetchCollections}
+                          className="px-4 py-2 bg-surface hover:bg-surface/80 text-text-main border border-black/10 dark:border-white/10 rounded-xl text-xs font-bold transition-colors flex items-center gap-2"
+                        >
+                          <RefreshCw size={14} className={collegesLoading ? "animate-spin text-warning" : ""} /> Refresh List
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add / Edit Form */}
+                    <form onSubmit={handleAdminSaveCollege} className="bg-surface border border-warning/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-4">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-warning flex items-center gap-2">
+                          <Plus size={16} /> {editingCollegeId ? `Edit College Record (${collegeForm.name})` : "Add New College / University"}
+                        </h3>
+                        {editingCollegeId && (
+                          <span className="text-xs font-mono text-warning bg-warning/10 px-2.5 py-1 rounded-full border border-warning/20">
+                            Editing ID: {editingCollegeId}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Form Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">College / University Name *</label>
+                          <input
+                            type="text"
+                            value={collegeForm.name}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, name: e.target.value })}
+                            placeholder="e.g. National Forensic Sciences University"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Short Name / Abbreviation</label>
+                          <input
+                            type="text"
+                            value={collegeForm.shortName}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, shortName: e.target.value })}
+                            placeholder="e.g. NFSU Gandhinagar"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Country *</label>
+                          <input
+                            type="text"
+                            value={collegeForm.country}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, country: e.target.value })}
+                            placeholder="e.g. India, United States, United Kingdom"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">State / Region</label>
+                          <input
+                            type="text"
+                            value={collegeForm.state}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, state: e.target.value })}
+                            placeholder="e.g. Gujarat, Delhi, California, Scotland"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">City *</label>
+                          <input
+                            type="text"
+                            value={collegeForm.city}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, city: e.target.value })}
+                            placeholder="e.g. Gandhinagar, New Delhi, London"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Institution Type</label>
+                          <select
+                            value={collegeForm.type}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, type: e.target.value as College['type'] })}
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          >
+                            <option value="Government">Government / Public</option>
+                            <option value="Institute of National Importance">Institute of National Importance</option>
+                            <option value="Private">Private University</option>
+                            <option value="Deemed University">Deemed University</option>
+                            <option value="Autonomous">Autonomous Institute</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Official Website URL</label>
+                          <input
+                            type="url"
+                            value={collegeForm.website}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, website: e.target.value })}
+                            placeholder="https://nfsu.ac.in"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Accreditation / Affiliation</label>
+                          <input
+                            type="text"
+                            value={collegeForm.accreditation}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, accreditation: e.target.value })}
+                            placeholder="e.g. NAAC A++ | UGC Approved | FEPAC"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Estimated Fee Structure Range</label>
+                          <input
+                            type="text"
+                            value={collegeForm.feesRange}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, feesRange: e.target.value })}
+                            placeholder="e.g. ₹60,000 - ₹80,000 / semester"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Ranking / Highlights</label>
+                          <input
+                            type="text"
+                            value={collegeForm.ranking}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, ranking: e.target.value })}
+                            placeholder="e.g. NIRF Top 50 | #1 Forensic Univ"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1 md:col-span-3">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Campus Facilities (Comma-separated)</label>
+                          <input
+                            type="text"
+                            value={collegeForm.facilities}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, facilities: e.target.value })}
+                            placeholder="e.g. Ballistics Range, DNA Fingerprinting Center, 3D Crime Scene Simulator, Cyber Lab, Library, Hostel"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Campus Banner Image URL</label>
+                          <input
+                            type="url"
+                            value={collegeForm.bannerImage}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, bannerImage: e.target.value })}
+                            placeholder="https://images.unsplash.com/..."
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Logo Image URL</label>
+                          <input
+                            type="url"
+                            value={collegeForm.logo}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, logo: e.target.value })}
+                            placeholder="https://images.unsplash.com/..."
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Description & Admissions */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">College Overview & Description</label>
+                          <textarea
+                            rows={3}
+                            value={collegeForm.description}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, description: e.target.value })}
+                            placeholder="Detailed background about the institute, departments, and research infrastructure..."
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Admission Process & Entrance Exams</label>
+                          <textarea
+                            rows={3}
+                            value={collegeForm.admissionProcess}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, admissionProcess: e.target.value })}
+                            placeholder="e.g. National Forensic Admission Test (NFAT) conducted annually followed by counseling..."
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contact Info */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Contact Email</label>
+                          <input
+                            type="email"
+                            value={collegeForm.contactEmail}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, contactEmail: e.target.value })}
+                            placeholder="admissions@nfsu.ac.in"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Contact Phone</label>
+                          <input
+                            type="text"
+                            value={collegeForm.contactPhone}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, contactPhone: e.target.value })}
+                            placeholder="+91 79 23977100"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-text-muted">Campus Address</label>
+                          <input
+                            type="text"
+                            value={collegeForm.address}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, address: e.target.value })}
+                            placeholder="Sector 9, Gandhinagar, Gujarat 382007"
+                            className="w-full bg-background border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-text-main outline-none focus:border-warning"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Featured Checkbox */}
+                      <div className="pt-2">
+                        <label className="flex items-center gap-3 cursor-pointer text-xs font-bold text-text-main">
+                          <input
+                            type="checkbox"
+                            checked={collegeForm.featured}
+                            onChange={(e) => setCollegeForm({ ...collegeForm, featured: e.target.checked })}
+                            className="w-4 h-4 rounded text-warning focus:ring-warning border-black/20"
+                          />
+                          <span>Pin as Featured Premier College on Top of Directory</span>
+                        </label>
+                      </div>
+
+                      {/* Dynamic Courses Manager */}
+                      <div className="space-y-4 pt-4 border-t border-black/10 dark:border-white/10">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-black uppercase tracking-widest text-warning flex items-center gap-2">
+                            <BookOpen size={16} /> Courses Offered ({collegeForm.coursesOffered.length})
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAddCollegeCourseRow}
+                            className="px-3 py-1.5 bg-warning/10 text-warning hover:bg-warning hover:text-crust rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                          >
+                            <Plus size={14} /> Add Course Row
+                          </button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {collegeForm.coursesOffered.map((course, cIdx) => (
+                            <div key={cIdx} className="bg-background border border-black/10 dark:border-white/10 rounded-2xl p-4 space-y-3 relative">
+                              <div className="flex items-center justify-between pb-2 border-b border-black/5 dark:border-white/5">
+                                <span className="text-[10px] font-mono text-warning font-bold">Course Offering #{cIdx + 1}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveCollegeCourseRow(cIdx)}
+                                  className="text-red-400 hover:text-red-500 text-xs font-bold flex items-center gap-1"
+                                >
+                                  <Trash2 size={13} /> Remove
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                <div className="md:col-span-2">
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Course Name</label>
+                                  <input
+                                    type="text"
+                                    value={course.name}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'name', e.target.value)}
+                                    placeholder="e.g. B.Sc. Forensic Science"
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                    required
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Degree Level</label>
+                                  <select
+                                    value={course.degreeLevel}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'degreeLevel', e.target.value)}
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  >
+                                    <option value="Bachelor">Bachelor</option>
+                                    <option value="Master">Master</option>
+                                    <option value="Doctorate">Doctorate</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Certificate">Certificate</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Duration</label>
+                                  <input
+                                    type="text"
+                                    value={course.duration}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'duration', e.target.value)}
+                                    placeholder="e.g. 3 Years / 2 Years"
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Eligibility Criteria</label>
+                                  <input
+                                    type="text"
+                                    value={course.eligibility || ''}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'eligibility', e.target.value)}
+                                    placeholder="e.g. 10+2 with PCB/PCM (Min 60%)"
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Estimated Fees</label>
+                                  <input
+                                    type="text"
+                                    value={course.estimatedFees || ''}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'estimatedFees', e.target.value)}
+                                    placeholder="e.g. ₹65,000 / semester"
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Study Mode</label>
+                                  <select
+                                    value={course.mode || 'Full-time'}
+                                    onChange={(e) => handleCollegeCourseChange(cIdx, 'mode', e.target.value)}
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  >
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Part-time">Part-time</option>
+                                    <option value="Distance / Online">Distance / Online</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                  </select>
+                                </div>
+
+                                <div className="md:col-span-4">
+                                  <label className="text-[9px] font-mono uppercase text-text-muted">Specializations (Comma-separated)</label>
+                                  <input
+                                    type="text"
+                                    value={course.specializations ? course.specializations.join(', ') : ''}
+                                    onChange={(e) => handleCollegeCourseSpecsChange(cIdx, e.target.value)}
+                                    placeholder="e.g. Dactyloscopy, Fingerprint Science, DNA Profiling, Toxicology"
+                                    className="w-full bg-surface border border-black/10 rounded-lg p-2 text-xs font-bold text-text-main outline-none focus:border-warning"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Submit Actions */}
+                      <div className="pt-4 flex items-center justify-end gap-3 border-t border-black/10 dark:border-white/10">
+                        <button
+                          type="button"
+                          onClick={handleResetCollegeForm}
+                          className="px-5 py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-text-muted hover:text-text-main text-xs font-bold transition-colors"
+                        >
+                          Reset Form
+                        </button>
+
+                        <button
+                          type="submit"
+                          className="px-8 py-2.5 bg-warning text-crust font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:bg-warning/90 transition-all flex items-center gap-2"
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>{editingCollegeId ? "Update College Record" : "Publish College to Directory"}</span>
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* Listed Colleges Directory */}
+                    <div className="bg-surface border border-black/10 dark:border-white/5 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-4">
+                        <div>
+                          <h3 className="text-base font-black uppercase tracking-tight text-text-main">
+                            Live College Directory Records ({colleges.length})
+                          </h3>
+                          <p className="text-xs text-text-muted">Currently active universities and institutes published in the database.</p>
+                        </div>
+                      </div>
+
+                      {collegesLoading ? (
+                        <div className="py-12 text-center text-xs text-text-muted flex justify-center items-center gap-2">
+                          <Loader2 size={20} className="animate-spin text-warning" /> Loading directory records...
+                        </div>
+                      ) : colleges.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-text-muted bg-background rounded-2xl border border-black/5">
+                          No colleges added yet. Use the form above to publish your first college.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {colleges.map((col) => (
+                            <div
+                              key={col.id}
+                              className="bg-background border border-black/10 dark:border-white/10 rounded-2xl p-5 space-y-3 hover:border-warning/40 transition-colors relative"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="px-2.5 py-0.5 rounded bg-warning/10 text-warning font-black text-[10px] uppercase">
+                                      {col.type}
+                                    </span>
+                                    {col.featured && (
+                                      <span className="px-2 py-0.5 rounded bg-warning text-crust font-black text-[9px] uppercase">
+                                        Featured
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h4 className="text-sm font-black text-text-main mt-1">
+                                    {col.name}
+                                  </h4>
+                                  <p className="text-xs text-warning font-bold flex items-center gap-1 mt-0.5">
+                                    <MapPin size={12} /> {col.city}, {col.state ? `${col.state}, ` : ''}{col.country}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    onClick={() => handleAdminEditCollege(col)}
+                                    className="p-2 border border-black/10 dark:border-white/10 text-warning hover:bg-warning/10 rounded-lg text-xs font-bold transition-colors"
+                                    title="Edit College Record"
+                                  >
+                                    <Edit3 size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleAdminDeleteCollege(col.id, col.name)}
+                                    className="p-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-bold transition-colors"
+                                    title="Delete College Record (Double Confirm Security)"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="text-xs text-text-muted pt-2 border-t border-black/5 dark:border-white/5 flex flex-wrap items-center justify-between gap-2 font-semibold">
+                                <span>{col.coursesOffered.length} Courses Offered</span>
+                                {col.website && (
+                                  <a
+                                    href={col.website.startsWith('http') ? col.website : `https://${col.website}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-warning hover:underline flex items-center gap-1"
+                                  >
+                                    <Globe size={12} /> Official Portal <ExternalLink size={10} />
+                                  </a>
+                                )}
                               </div>
                             </div>
                           ))}

@@ -384,5 +384,11 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidQuizAttempt(incoming()) && incoming().userId == request.auth.uid;
       allow update, delete: if isAdminEmail();
     }
+
+    // Colleges & Universities Directory
+    match /colleges/{collegeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdminEmail();
+    }
   }
 }

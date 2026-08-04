@@ -257,9 +257,30 @@
         "answers": { "type": "object" }
       },
       "required": ["quizId", "userId", "score"]
+    },
+    "College": {
+      "title": "College or University",
+      "description": "Global directory of forensic science colleges and universities",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "country": { "type": "string" },
+        "state": { "type": "string" },
+        "city": { "type": "string" },
+        "type": { "type": "string" },
+        "website": { "type": "string" },
+        "description": { "type": "string" },
+        "coursesOffered": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "country", "city"]
     }
   },
   "firestore": {
+    "/colleges/{collegeId}": {
+      "schema": "College",
+      "description": "Global directory of forensic science colleges and universities"
+    },
     "/quizzes/{quizId}": {
       "schema": "Quiz",
       "description": "Administrator created quizzes and weekly challenges"

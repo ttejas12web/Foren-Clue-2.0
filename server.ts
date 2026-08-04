@@ -733,7 +733,7 @@ async function startServer() {
                   else if (data.thumbnail) image = data.thumbnail;
                 }
               }
-            } catch(e) { console.error('cases db error', e); }
+            } catch(e) { /* ignore preview fetch errors if server admin SDK credentials are missing */ }
           } else {
             title = 'Forensic Case Studies | ForenClue';
             summary = 'Explore real criminal investigations, forensic evidence analysis and crime scene reconstruction.';
@@ -759,7 +759,7 @@ async function startServer() {
                   if (data.imageUrl) image = data.imageUrl;
                 }
               }
-            } catch(e) { console.error('community db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'ForenClue Community';
             summary = "Join India's fastest growing forensic science community.";
@@ -803,7 +803,7 @@ async function startServer() {
                   quizDesc = 'Assess your expertise in digital forensics, volatile memory analysis, and malware identification.';
                 }
               }
-            } catch(e) { console.error('quiz db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
 
             if (isLeaderboard) {
               title = `Leaderboard: ${quizTitle || quizId} | ForenClue`;
@@ -831,7 +831,7 @@ async function startServer() {
                   else if (data.image) image = data.image;
                 }
               }
-            } catch(e) { console.error('ebooks db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'Forensic E-Library | ForenClue';
             summary = 'Digital forensic books, journals, research papers and educational resources.';
@@ -854,7 +854,7 @@ async function startServer() {
                   else if (data.image) image = data.image;
                 }
               }
-            } catch(e) { console.error('podcast db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'ForenClue Podcast';
             summary = 'Listen to forensic science discussions, criminal investigations and expert interviews.';
@@ -877,7 +877,7 @@ async function startServer() {
                   else if (data.image) image = data.image;
                 }
               }
-            } catch(e) { console.error('webinar db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'Forensic Webinars | ForenClue';
             summary = 'Attend expert webinars on forensic science, cyber security and criminal investigation.';
@@ -915,7 +915,7 @@ async function startServer() {
                   if (data.imageUrl) image = data.imageUrl;
                 }
               }
-            } catch(e) { console.error('cert db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'Verify Certificate | ForenClue';
             summary = 'Verify official ForenClue certificates instantly.';
@@ -940,7 +940,7 @@ async function startServer() {
                   if (data.imageUrl) image = data.imageUrl;
                 }
               }
-            } catch(e) { console.error('employee db error', e); }
+            } catch(e) { /* ignore preview fetch errors */ }
           } else {
             title = 'Verify ID Card | ForenClue';
             summary = 'Verify official ForenClue volunteer, ambassador and member ID cards.';
@@ -1040,10 +1040,11 @@ async function startServer() {
           // Check if this is a single top-level permalink route like /FC-EBOOK-102
           const seg = cleanPath.slice(1);
           const reservedRoutes = [
-            'about', 'courses', 'cases', 'careers', 'community', 'services', 
+            'about', 'courses', 'cases', 'case-studies', 'careers', 'community', 'services', 
             'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 
-            'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 
-            'volunteers', 'ambassadors', 'forms', 'simulations', 'quizzes'
+            'login', 'admin', 'podcast', 'certificate', 'webinar', 'webinars', 'employees', 
+            'volunteers', 'ambassadors', 'campus-ambassadors', 'forms', 'simulations', 'quizzes',
+            'colleges', 'idcard', 'team', 'library', 'resources'
           ];
           if (seg && !seg.includes('/') && !reservedRoutes.includes(seg.toLowerCase())) {
             try {
@@ -1057,7 +1058,9 @@ async function startServer() {
                   image = data.coverImage || data.thumbnail || data.image || '/images/og/library.png';
                 }
               }
-            } catch(e) { console.error('permalink fetch error', e); }
+            } catch(e) {
+              // Ignore preview fetch errors if server admin SDK credentials are missing
+            }
           }
         }
       } catch (dbError) {

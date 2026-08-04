@@ -51,6 +51,7 @@ const SpectrophotometerLab = lazy(() => import('./pages/SpectrophotometerLab'));
 const Quizzes = lazy(() => import('./pages/Quizzes'));
 const QuizPlayer = lazy(() => import('./pages/QuizPlayer'));
 const QuizLeaderboard = lazy(() => import('./pages/QuizLeaderboard'));
+const Colleges = lazy(() => import('./pages/Colleges'));
 
 function PageLoader() {
   return (
@@ -64,7 +65,7 @@ function RootShareResolver() {
   const { id } = useParams();
   const reserved = [
     'about', 'courses', 'cases', 'careers', 'community', 'services', 
-    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 'volunteers', 'ambassadors', 'forms', 'simulations'
+    'ebooks', 'files', 'contact', 'privacy', 'terms', 'profile', 'dashboard', 'login', 'admin', 'podcast', 'certificate', 'webinar', 'employees', 'volunteers', 'ambassadors', 'forms', 'simulations', 'colleges', 'college'
   ];
   if (id && reserved.includes(id.toLowerCase())) {
     return <Navigate to={`/${id}`} replace />;
@@ -111,6 +112,10 @@ function AppMain() {
             <Route path="/quizzes" element={<Quizzes />} />
             <Route path="/quizzes/:quizId" element={<QuizPlayer />} />
             <Route path="/quizzes/:quizId/leaderboard" element={<QuizLeaderboard />} />
+            <Route path="/colleges" element={<Colleges />} />
+            <Route path="/colleges/:id" element={<Colleges />} />
+            <Route path="/college" element={<Colleges />} />
+            <Route path="/college/:id" element={<Colleges />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/dashboard" element={<Dashboard />} />
