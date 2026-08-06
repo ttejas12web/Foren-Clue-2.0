@@ -6,10 +6,11 @@
   "main": "server.ts",
   "scripts": {
     "sitemap": "tsx scripts/generate-sitemap.mjs",
+    "rss": "node scripts/generate-rss.mjs",
     "og-images": "node scripts/generate-og-images.mjs",
     "verify-og": "node scripts/verify-og-images.mjs",
     "dev": "tsx server.ts",
-    "build": "npm run clean && npm run og-images && npm run sitemap && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run clean && npm run og-images && npm run sitemap && npm run rss && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",

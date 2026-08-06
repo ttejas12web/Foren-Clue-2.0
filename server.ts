@@ -85,6 +85,30 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // RSS Feed Endpoint
+  app.get("/rss.xml", (req, res) => {
+    const rssFile = path.join(process.cwd(), "public", "rss.xml");
+    if (fs.existsSync(rssFile)) {
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.sendFile(rssFile);
+    } else {
+      res.status(404).send("RSS feed not found");
+    }
+  });
+
+  // Sitemap Endpoint
+  app.get("/sitemap.xml", (req, res) => {
+    const sitemapFile = path.join(process.cwd(), "public", "sitemap.xml");
+    if (fs.existsSync(sitemapFile)) {
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.sendFile(sitemapFile);
+    } else {
+      res.status(404).send("Sitemap not found");
+    }
+  });
+
   // RESTORE AND SEED VERIFICATION DATABASES
   app.post("/api/restore-verification-database", async (req, res) => {
     try {

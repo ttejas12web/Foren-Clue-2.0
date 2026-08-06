@@ -3,127 +3,153 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.forenclue.in/</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/about</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/courses</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/cases</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/careers</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/community</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/services</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/ebooks</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/contact</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/privacy</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/terms</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/podcast</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/certificate</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/webinar</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/volunteers</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/ambassadors</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/simulations</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/simulations/microscope</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/simulations/spectrophotometer</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/quizzes</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.forenclue.in/cases?case=7zginSRdYquhC2LMcLt4</loc>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg_UKZNii29eAa-uQaYMtM_7fOi0_0zuCydMZlgGXOgiWdxelMRpv90X51FRCgdEfX0EZphJ3x_L_r17OEM7LdQ9z-J9eRi2nd3EnWv9Gi3mtbAOlLPJZMKL-1Atd5_gqnPLrppUbtNdWN7TSENz3KtvlsflA6JU73kRdnVFY0Gb8KAFJfXsZeuCQS3FEI/s1411/1000135835.png</image:loc>
+      <image:title>Blue drum case </image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2BS7tMKcJkke8xbFTtnW16gjL6WhDcVZYLW7GRL0snoVGn9ydd1lbZauAAPLrhQKjnw1xSuNNh2MB4akL3P1_l4qC3gvD_T7L2FUus3ClpATzbGnIwSR3UxmFxq6kwSlqNDBdx4OsPx6EzGh6GrTIjDASFy5F42KBQAtA3rCA20JvA-uf8cqsMvxCzBk/s1200/1000135836.jpg</image:loc>
+      <image:title>Blue drum case  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjfAlgoDWtw7qlj2DxqgPsD7FiXQvlE_bz3keWEqWdAuA1ud1P_Lh3i0RDLKrUG45KGmnozu5xiHkX1JuWoof_XTVr0XI0AV9MePLQ38moPpMjlwAijOjVjJssdqpBs3zseOVGK3AOh4n6JK7Q_34GO06_peSxXQTOcJwxHW7NKTjSGiuiQtuMtkoOm_ns/s1092/1000135629.jpg</image:loc>
+      <image:title>Blue drum case  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDF7IM59__ZCyFULFQsa1AK2aUFQBAZYq9QF8S_39zz-WiYqVOZ-JcRH5maXDG0OWlRHUiv2SGKK87R8HP1FztLDCruW8QTromc79E91I6RwGPhYBB000L7VRft8h2K4D74K9s7oZwrmv_r7-Lk_kH4fZTiKqAESzbGgzViLpFvjmNZkBl2ic64LxQa7s/s4160/1000135603.jpg</image:loc>
+      <image:title>Blue drum case  - Case File Evidence</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjaZd13_5OnjH44bEDH5w-WHLVHDl9jo2Vl3gZ9anlEasYZhrTJ5aenbKLC1PvnqM7EI7qx_NXU89jNkHun1oMBAa66LuAKq7j_wJ5cY5mHQoFy0sD3MvKwTlMN3hoF06XT7sEsQhp_iC5IpBgbM22RlzXWqcm6a9xqdqkeGHcWxdEwyod0FNjsbuQOIHk/s4032/1000135624.jpg</image:loc>
+      <image:title>Blue drum case  - Case File Evidence</image:title>
+    </image:image>
+  </url>
+  <url>
     <loc>https://www.forenclue.in/cases?case=BM8hzVrzEb42MLk7FWTq</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -149,7 +175,7 @@
   </url>
   <url>
     <loc>https://www.forenclue.in/cases?case=BprgCwTwfXk8V4vK6mga</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -175,7 +201,7 @@
   </url>
   <url>
     <loc>https://www.forenclue.in/cases?case=q4VuU446EOPQzNDeBxHc</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -196,14 +222,14 @@
     </image:image>
   </url>
   <url>
-    <loc>https://www.forenclue.in/quizzes/4SYkYdDZ5QAED0LTJxxa</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <loc>https://www.forenclue.in/quizzes/eBEE3lDJeS1xzYGSPq7g</loc>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.forenclue.in/quizzes/quiz-general-1</loc>
-    <lastmod>2026-07-30T16:56:13.397Z</lastmod>
+    <lastmod>2026-08-06T07:19:01.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

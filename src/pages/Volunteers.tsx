@@ -12,6 +12,11 @@ const activeVolunteers = [
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhofilNlkbJWvjAxFLk9i72sbgVT_2SwexBeXssxgZYH1EwiuEsAHceh5ESFONKrPOrvk1n7daXMe8lRVtXMpCtk20vWJC1BdHzG3V3sfQDuiBMD2E4WQYnge_a-ECnx6TSOjMB4s4ZFiEjPZM2WmCMhTeGN6mLT2Qjg333AwuyDoyapc3Vi8u_U6WcF4c/s1280/WhatsApp%20Image%202026-07-21%20at%2019.05.19.jpeg'
   },
   { 
+    name: 'Mayur Hangda', 
+    role: 'Forensic Research Associate', 
+    id: 'FC-VOL-2026-020'
+  },
+  { 
     name: 'Kalyani Kumari', 
     role: 'Forensic Research Associate', 
     id: 'FC-VOL-2026-024',
