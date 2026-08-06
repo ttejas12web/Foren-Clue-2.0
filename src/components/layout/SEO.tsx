@@ -44,14 +44,14 @@ export function SEO({
   breadcrumbs,
   customSchema,
 }: SEOProps) {
-  const siteTitle = 'ForenClue | Forensic EdTech Mastery';
+  const siteTitle = 'ForenClue | Your Partner In Forensic Precision';
   const formattedTitle = title ? `${title} | ForenClue` : siteTitle;
   const shareTitle = title ? `${title} | Forensic Science Hub` : 'ForenClue - Master Forensic Science & Investigations';
   const metaKeywords = keywords || 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics';
   const absoluteCanonicalUrl = `https://www.forenclue.in${canonicalPath}`;
 
   // Determine optimal image URL (must be absolute for social crawlers)
-  let ogImg = 'https://www.forenclue.in/images/og/home.png';
+  let ogImg = 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0';
   if (image) {
     if (image.startsWith('http://') || image.startsWith('https://')) {
       ogImg = image;

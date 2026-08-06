@@ -9,10 +9,10 @@ export interface RouteSEOConfig {
 }
 
 export const DEFAULT_SEO: RouteSEOConfig = {
-  title: 'ForenClue | Forensic EdTech Mastery',
+  title: 'ForenClue | Your Partner In Forensic Precision',
   description: "India's premier forensic science edtech platform. Master forensic analysis, cybersecurity, crime scene investigation, and digital forensics with expert masterclasses.",
   keywords: 'forensic science, forensic courses, crime scene investigation, forenclue, digital forensics, forensic career, learn finger print lifting, india forensics',
-  image: 'https://www.forenclue.in/og/home.png',
+  image: 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0',
   type: 'website',
   badge: 'Certified Learning & Investigations',
   tag: 'FORENSIC EDTECH PLATFORM'

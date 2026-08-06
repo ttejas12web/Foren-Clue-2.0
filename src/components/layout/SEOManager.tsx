@@ -38,9 +38,9 @@ export function SEOManager({
   docId,
   slug,
   initialData,
-  fallbackTitle = 'ForenClue | Forensic EdTech Mastery',
+  fallbackTitle = 'ForenClue | Your Partner In Forensic Precision',
   fallbackDescription = 'Master Forensic Science with interactive crime scene simulations, quizzes, case studies, and e-books.',
-  fallbackImage = '/images/og/home.png',
+  fallbackImage = 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0',
   keywords,
   canonicalPath = '',
   type = 'website',
@@ -147,7 +147,7 @@ export function SEOManager({
       resolvedImage = `https://www.forenclue.in${clean}`;
     }
   } else {
-    resolvedImage = 'https://www.forenclue.in/images/og/home.png';
+    resolvedImage = 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0';
   }
 
   const resolvedAuthor = data.createdBy || data.author || authorName || 'ForenClue Forensic Experts';

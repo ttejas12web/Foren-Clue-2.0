@@ -729,17 +729,17 @@ async function startServer() {
     try {
       let html = fs.readFileSync(indexPath, 'utf-8');
       
-      let title = "ForenClue | India's Premier Forensic EdTech Platform";
+      let title = "ForenClue | Your Partner In Forensic Precision";
       let summary = "India's leading platform for forensic science education, cyber forensics, crime scene investigation, digital investigation, research, certifications and practical learning.";
-      let image = '/images/og/home.png';
+      let image = 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0';
       
       const cleanPath = req.path.replace(/\/+$/, '') || '/';
 
       try {
         if (cleanPath === '/' || cleanPath === '') {
-          title = "ForenClue | India's Premier Forensic EdTech Platform";
+          title = "ForenClue | Your Partner In Forensic Precision";
           summary = "India's leading platform for forensic science education, cyber forensics, crime scene investigation, digital investigation, research, certifications and practical learning.";
-          image = '/images/og/home.png';
+          image = 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0';
         }
         else if (cleanPath === '/cases' || cleanPath === '/case-studies') {
           image = '/images/og/case-studies.png';
