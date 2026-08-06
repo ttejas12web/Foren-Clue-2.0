@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -23,7 +23,10 @@ const getRuntimeConfig = () => {
 };
 
 const app = initializeApp(getRuntimeConfig());
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+const dbDatabaseId = (firebaseConfig as any).firestoreDatabaseId;
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true
+}, dbDatabaseId);
 
 // Initialize Firebase Auth explicitly with browserLocalPersistence to bypass the buggy indexedDB persistence 
 // inside sandboxed/restricted iframe preview environments. This avoids the "INTERNAL ASSERTION FAILED: Pending promise was never set" error.

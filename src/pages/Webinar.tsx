@@ -40,6 +40,8 @@ interface WebinarEvent {
     bio: string;
   };
   poster: string;
+  bannerImage?: string;
+  thumbnail?: string;
   tags: string[];
   feedbacks: Feedback[];
 }
@@ -354,7 +356,7 @@ export default function Webinar() {
               fallbackDescription={`${currentEvent.subtitle || ''} Direct video capture, speaker credentials, and student feedbacks.`}
               keywords={`${(currentEvent.tags || []).join(', ')}, forenclue, digital forensics webinar`}
               canonicalPath={`/webinar?id=${currentEvent.id}`}
-              fallbackImage={currentEvent?.bannerImage || currentEvent?.thumbnail || "/images/og/webinars.png"}
+              fallbackImage={currentEvent?.bannerImage || currentEvent?.poster || currentEvent?.thumbnail || "/images/og/webinars.png"}
               breadcrumbs={[
                 { name: 'Home', path: '/' },
                 { name: 'Webinars', path: '/webinar' },

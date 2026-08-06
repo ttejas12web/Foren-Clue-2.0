@@ -23,6 +23,10 @@ export interface Quiz {
   questions: QuizQuestion[];
   createdAt?: string;
   createdBy?: string;
+  thumbnail?: string;
+  coverImage?: string;
+  bannerImage?: string;
+  image?: string;
 }
 
 export interface QuizAttempt {

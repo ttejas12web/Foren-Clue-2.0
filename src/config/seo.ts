@@ -121,9 +121,9 @@ export const ROUTE_SEO_CONFIG: Record<string, RouteSEOConfig> = {
   },
   '/quizzes': {
     title: 'Forensic Quizzes & Weekly Challenges | ForenClue',
-    description: 'Test your expertise in crime scene protocols, digital evidence, and fingerprint analysis. Compete on live leaderboards and win top rankings!',
+    description: 'Test your forensic science knowledge through interactive quizzes, challenges, and practical assessments. Learn, compete, and sharpen your investigative skills with ForenClue.',
     keywords: 'forensic quiz, weekly forensic challenge, crime scene protocol quiz, digital evidence leaderboard',
-    image: 'https://www.forenclue.in/og/quizzes.png',
+    image: 'https://blogger.googleusercontent.com/img/a/AVvXsEg_OeYXV0qnZe42fjD2ty2vBNDGqhWPnOjQBOiWFbkDcCaUa0Pl5sJyixMvmxEhAKoLMU9A4A2bjvxrpEuGG_jKX7q2su81OGr9eSt3DUWNwQVufTdGQI_NSKBcZduRx-7jyn3dMmQVb4o6Qom_9Ul2qen9YS8c-h2W5PTda-U8x6JsAasJG_3lHFitvX0',
     type: 'website',
     badge: 'Live Leaderboards & Scoring',
     tag: 'QUIZZES & CHALLENGES'

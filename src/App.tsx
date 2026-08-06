@@ -16,42 +16,63 @@ import { cn } from './lib/utils';
 
 import { Loader2, WifiOff } from 'lucide-react';
 
-const Home = lazy(() => import('./pages/Home'));
-const About = lazy(() => import('./pages/About'));
-const Courses = lazy(() => import('./pages/Courses'));
-const Cases = lazy(() => import('./pages/Cases'));
-const Careers = lazy(() => import('./pages/Careers'));
-const Community = lazy(() => import('./pages/Community'));
-const Services = lazy(() => import('./pages/Services'));
-const EBooks = lazy(() => import('./pages/EBooks'));
-const Files = lazy(() => import('./pages/Files'));
-const Contact = lazy(() => import('./pages/Contact'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Podcast = lazy(() => import('./pages/Podcast'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const CoursePlayer = lazy(() => import('./pages/CoursePlayer'));
-const MyDoubts = lazy(() => import('./pages/MyDoubts'));
-const Login = lazy(() => import('./pages/Login'));
-const Admin = lazy(() => import('./pages/Admin'));
-const CertificateVerification = lazy(() => import('./pages/CertificateVerification'));
-const Webinar = lazy(() => import('./pages/Webinar'));
-const Employees = lazy(() => import('./pages/Employees'));
-const Volunteers = lazy(() => import('./pages/Volunteers'));
-const CampusAmbassadors = lazy(() => import('./pages/CampusAmbassadors'));
-const GoogleForms = lazy(() => import('./pages/GoogleForms'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (error: any) {
+      console.warn('Failed to load route chunk, attempting automatic reload...', error);
+      const reloadedKey = 'chunk_error_reloaded';
+      const lastReload = sessionStorage.getItem(reloadedKey);
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem(reloadedKey, String(now));
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+}
 
-const Webinars = lazy(() => import('./pages/Webinar')); // Fix potential issue if they aren't matching
-const Simulations = lazy(() => import('./pages/Simulations'));
-const MicroscopeLab = lazy(() => import('./pages/MicroscopeLab'));
-const ComparisonMicroscopeLab = lazy(() => import('./pages/ComparisonMicroscopeLab'));
-const SpectrophotometerLab = lazy(() => import('./pages/SpectrophotometerLab'));
-const Quizzes = lazy(() => import('./pages/Quizzes'));
-const QuizPlayer = lazy(() => import('./pages/QuizPlayer'));
-const QuizLeaderboard = lazy(() => import('./pages/QuizLeaderboard'));
-const Colleges = lazy(() => import('./pages/Colleges'));
+const Home = lazyWithRetry(() => import('./pages/Home'));
+const About = lazyWithRetry(() => import('./pages/About'));
+const Courses = lazyWithRetry(() => import('./pages/Courses'));
+const Cases = lazyWithRetry(() => import('./pages/Cases'));
+const Careers = lazyWithRetry(() => import('./pages/Careers'));
+const Community = lazyWithRetry(() => import('./pages/Community'));
+const Services = lazyWithRetry(() => import('./pages/Services'));
+const EBooks = lazyWithRetry(() => import('./pages/EBooks'));
+const Files = lazyWithRetry(() => import('./pages/Files'));
+const Contact = lazyWithRetry(() => import('./pages/Contact'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Podcast = lazyWithRetry(() => import('./pages/Podcast'));
+const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
+const CoursePlayer = lazyWithRetry(() => import('./pages/CoursePlayer'));
+const MyDoubts = lazyWithRetry(() => import('./pages/MyDoubts'));
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const Admin = lazyWithRetry(() => import('./pages/Admin'));
+const CertificateVerification = lazyWithRetry(() => import('./pages/CertificateVerification'));
+const Webinar = lazyWithRetry(() => import('./pages/Webinar'));
+const Employees = lazyWithRetry(() => import('./pages/Employees'));
+const Volunteers = lazyWithRetry(() => import('./pages/Volunteers'));
+const CampusAmbassadors = lazyWithRetry(() => import('./pages/CampusAmbassadors'));
+const GoogleForms = lazyWithRetry(() => import('./pages/GoogleForms'));
+const PrivacyPolicy = lazyWithRetry(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazyWithRetry(() => import('./pages/TermsOfService'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
+
+const Webinars = lazyWithRetry(() => import('./pages/Webinar'));
+const Simulations = lazyWithRetry(() => import('./pages/Simulations'));
+const MicroscopeLab = lazyWithRetry(() => import('./pages/MicroscopeLab'));
+const ComparisonMicroscopeLab = lazyWithRetry(() => import('./pages/ComparisonMicroscopeLab'));
+const SpectrophotometerLab = lazyWithRetry(() => import('./pages/SpectrophotometerLab'));
+const Quizzes = lazyWithRetry(() => import('./pages/Quizzes'));
+const QuizPlayer = lazyWithRetry(() => import('./pages/QuizPlayer'));
+const QuizLeaderboard = lazyWithRetry(() => import('./pages/QuizLeaderboard'));
+const Colleges = lazyWithRetry(() => import('./pages/Colleges'));
 
 function PageLoader() {
   return (

@@ -521,13 +521,13 @@ export default function Courses() {
     <div className="py-20 px-4 max-w-7xl mx-auto">
       <SEOManager 
         collectionName="courses"
-        docId={selectedCourse?.id}
+        docId={selectedCourse?.id ? String(selectedCourse.id) : undefined}
         initialData={selectedCourse}
         fallbackTitle={selectedCourse ? `${selectedCourse.title} - Forensic Course` : "Professional Forensic Science & Investigation Courses"}
         fallbackDescription={selectedCourse ? (selectedCourse.description || `Master forensic skills in ${selectedCourse.title} with expert instruction.`) : "Browse professional forensic science training courses. Master questioning protocols, DNA fingerprinting, cybercrime analysis, and trace evidence logging."}
         keywords={selectedCourse ? `${selectedCourse.title.toLowerCase()}, forensic course, learn forensics, certifed forensic training` : "forensic courses online, forensic certificates, learn forensics, crime scene investigation training, fingerprint lifting course, forenclue courses"}
         canonicalPath={selectedCourse ? `/courses?id=${selectedCourse.id}` : "/courses"}
-        fallbackImage={selectedCourse?.image || selectedCourse?.thumbnail || "/images/og/courses.png"}
+        fallbackImage={selectedCourse?.thumbnail || "/images/og/courses.png"}
         type={selectedCourse ? "course" : "website"}
         customSchema={selectedCourse ? [{
           "@context": "https://schema.org",

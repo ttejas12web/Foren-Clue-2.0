@@ -236,8 +236,8 @@ export default function Colleges() {
     return (
       <div className="min-h-screen bg-background pb-20 pt-6">
         <SEOManager
-          title={`${college.name} | Forensic Science Colleges`}
-          description={college.description}
+          fallbackTitle={`${college.name} | Forensic Science Colleges`}
+          fallbackDescription={college.description}
           canonicalPath={`/colleges/${college.id}`}
           fallbackImage={college.bannerImage || college.logo || "/images/og/colleges.png"}
           breadcrumbs={[
@@ -562,8 +562,8 @@ export default function Colleges() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <SEOManager 
-        title="Forensic Colleges Directory | Forenclue"
-        description="Explore top global universities and institutes offering accredited forensic science degree programs, diplomas, and research courses."
+        fallbackTitle="Forensic Colleges Directory | Forenclue"
+        fallbackDescription="Explore top global universities and institutes offering accredited forensic science degree programs, diplomas, and research courses."
         canonicalPath="/colleges"
         fallbackImage="/images/og/colleges.png"
         breadcrumbs={[
