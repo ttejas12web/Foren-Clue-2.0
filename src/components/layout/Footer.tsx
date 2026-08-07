@@ -8,8 +8,9 @@ export function Footer() {
   if (location.pathname.startsWith('/admin')) {
     return null;
   }
+
   return (
-    <footer className="print:hidden bg-crust border-t border-black/10 dark:border-white/10 pt-20 pb-10">
+    <footer className="print:hidden bg-crust border-t border-black/10 dark:border-white/10 pt-16 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Grid Section */}
