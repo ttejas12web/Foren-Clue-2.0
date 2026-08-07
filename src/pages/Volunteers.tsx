@@ -101,14 +101,6 @@ const activeVolunteers = [
     id: 'FC-VOL-2026-016',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfLdNfmlvifm0TbX_jMZ3w4Hu-B0eHMtzxhmE9E84M7Yv2VLTf6fl9ofyeAMqtXnZrwoZ922dUIVN52PeTQqZ2GVTMTwEZGY9tLtXtMtxFn0587XDwU6OX4ZKNqapc6VFniN1zNGRp6-ObJnlD5-OOrt-NejjhDw09OiYPO2LCsTwX83VbVLn6DkFGJyg/s1600/WhatsApp%20Image%202026-07-20%20at%2020.31.36.jpeg'
   },
-  { 
-    name: 'Sheetal Kumari', 
-    role: 'Forensic Analyst & Researcher', 
-    institute: 'Amity University', 
-    badge: 'Verified Contributor',
-    id: 'FC-VOL-2026-017',
-    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgII8E3uDMB1pddGXFvPmpIWY6Qyy1XHfZxh3p4WjHgkB9XQyS6mZZaz4prDJ8iUtEkNDHAfMbt3Fpo9KqVQgmdPJX82pw6Fl0mpiwP3PNAtfexIm1Au5sosYHCZvYvVj4D8kwHnbLmx3Pu1RhIS2SkWmLzWFOTzfh5lj1dsFl2Hx6T4ojajz-XCTZm3YA/s1280/WhatsApp%20Image%202026-07-20%20at%205.59.10%20PM.jpeg'
-  },
   {
     name: 'Okeke Rejoice',
     role: 'Forensic Research Associate',
