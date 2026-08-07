@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, googleProvider, db } from '../lib/firebase';
+import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, OAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, googleProvider, linkedinProvider, db } from '../lib/firebase';
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Fingerprint, Search, ShieldCheck, Activity } from 'lucide-react';
@@ -29,6 +29,7 @@ interface AuthContextType {
   isAdmin: boolean;
   accessToken: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithLinkedIn: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -149,12 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('manualUser');
     }
   };
-
-  const [showBypassModal, setShowBypassModal] = useState(false);
-  const [bypassEmail, setBypassEmail] = useState('forenclue@gmail.com');
-  const [bypassName, setBypassName] = useState('Investigator Jane');
-  const [bypassResolve, setBypassResolve] = useState<((value?: any) => void) | null>(null);
-  const [bypassReject, setBypassReject] = useState<((reason?: any) => void) | null>(null);
 
   // Auth Listener
   useEffect(() => {
@@ -304,51 +299,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      // First try the real popup
       const result = await signInWithPopup(auth, googleProvider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {
         setAccessToken(credential.accessToken);
       }
     } catch (error: any) {
-      console.warn("Real Google Sign-In blocked/failed in sandbox context. Opening Dev Authenticator bypass:", error);
-      
-      // Keep promise pending and trigger custom sandbox Google Simulator modal
-      return new Promise<void>((resolve, reject) => {
-        setBypassResolve(() => resolve);
-        setBypassReject(() => reject);
-        setShowBypassModal(true);
-      });
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+      console.error("Google Sign-In error:", error);
+      throw error;
     }
   };
 
-  const handleBypassSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bypassEmail || !bypassName) return;
-
-    const emailLower = bypassEmail.trim().toLowerCase();
-    const nameTrim = bypassName.trim();
-    const uid = `google_sim_${btoa(emailLower).replace(/=/g, '')}`;
-
-    const simulated = {
-      email: emailLower,
-      displayName: nameTrim,
-      uid,
-      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'
-    };
-
-    handleSetManualUser(simulated);
-    setShowBypassModal(false);
-
-    if (bypassResolve) {
-      bypassResolve();
-    }
-  };
-
-  const handleBypassCancel = () => {
-    setShowBypassModal(false);
-    if (bypassReject) {
-      bypassReject(new Error("Google Sign-In simulation cancelled by user."));
+  const signInWithLinkedIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, linkedinProvider);
+      const credential = OAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        setAccessToken(credential.accessToken);
+      }
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+      console.error("LinkedIn Sign-In error:", error);
+      throw error;
     }
   };
 
@@ -429,7 +406,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
+    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signInWithLinkedIn, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div 
@@ -524,100 +501,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           >
             {children}
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Sandbox Google Auth Bypass Modal */}
-      <AnimatePresence>
-        {showBypassModal && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={handleBypassCancel}
-              className="absolute inset-0 bg-crust/80 backdrop-blur-md"
-            />
-            
-            {/* Modal Body */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-md bg-[#111214] border border-warning/30 rounded-3xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden"
-            >
-              {/* Scanning top light effect */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-warning to-transparent animate-pulse" />
-              
-              <div className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center border border-warning/30 mb-4 shrink-0">
-                  <Fingerprint className="w-8 h-8 text-warning" />
-                </div>
-                
-                <h3 className="font-heading font-black text-lg sm:text-xl uppercase tracking-wider text-text-main">
-                  Google Authenticator
-                </h3>
-                <p className="text-xs text-text-muted mt-2 leading-relaxed max-w-xs">
-                  Popup logins are restricted inside sandboxed iframes. Use this secure simulator to authorize your Google identity.
-                </p>
-              </div>
-
-              <form onSubmit={handleBypassSubmit} className="mt-6 space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">
-                    Google Profile Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={bypassName}
-                    onChange={(e) => setBypassName(e.target.value)}
-                    placeholder="e.g. Jane Doe"
-                    className="w-full bg-base/50 text-text-main placeholder-text-muted/40 text-xs rounded-xl border border-white/10 px-4 h-11 focus:outline-none focus:border-warning/50 transition-all font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1.5">
-                    Google Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={bypassEmail}
-                    onChange={(e) => setBypassEmail(e.target.value)}
-                    placeholder="e.g. forenclue@gmail.com"
-                    className="w-full bg-base/50 text-text-main placeholder-text-muted/40 text-xs rounded-xl border border-white/10 px-4 h-11 focus:outline-none focus:border-warning/50 transition-all font-mono"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <button
-                    type="submit"
-                    className="w-full h-11 bg-warning text-crust font-heading font-black text-xs uppercase tracking-widest rounded-xl hover:bg-warning/90 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>Authorize Google Identity</span>
-                    <ShieldCheck size={16} />
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={handleBypassCancel}
-                    className="w-full h-11 bg-transparent hover:bg-white/5 border border-white/10 text-text-muted hover:text-text-main font-heading font-black text-xs uppercase tracking-widest rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-
-              {/* Helpful Tips */}
-              <div className="mt-4 pt-4 border-t border-white/5 text-[10px] text-text-muted/60 text-center uppercase tracking-wider">
-                💡 Using <span className="text-warning font-bold">forenclue@gmail.com</span> logs in as Administrator.
-              </div>
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
     </AuthContext.Provider>

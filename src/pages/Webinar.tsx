@@ -44,6 +44,7 @@ interface WebinarEvent {
   thumbnail?: string;
   tags: string[];
   feedbacks: Feedback[];
+  isFeedbackClosed?: boolean;
 }
 
 const WEBINARS_DATA: WebinarEvent[] = [
@@ -57,6 +58,7 @@ const WEBINARS_DATA: WebinarEvent[] = [
     description: "Session on Forensic Odontology and Criminal Profiling by renowned expert Dr. Angela Mathew.",
     fullDetails: "Session Details: 'Beyond The Smiles'. Join Dr. Angela Mathew as she delves into Forensic Odontology, Criminal Profiling, and Investigative Psychology.",
     youtubeId: "-UjiJuK6pkI",
+    isFeedbackClosed: true,
     speaker: {
       name: "Dr. Angela Mathew",
       role: "Forensic Odontologist | Dental Surgeon | Certified Professional in Criminal Profiling",
@@ -78,6 +80,7 @@ const WEBINARS_DATA: WebinarEvent[] = [
     description: "Explore incident response frameworks, cyber laws, state agency investigation workflows, and a concrete roadmap to land high-impact digital forensic roles in India.",
     fullDetails: "In this high-impact masterclass, Mr. Ashutosh Singh, a serving Digital Forensic Professional with the Delhi Police Crime Branch, shares critical industry insights, professional methodologies, and structural frameworks.\n\nLearn how public security investigations utilize cellular tracking, packet inspection, registry manipulation logs, and memory forensics to construct reliable judicial evidence. He lays out actionable steps to kickstart your cybersecurity and digital forensics career in India, covering necessary certifications (CEH, CHFI), hands-on lab projects, and internship pipelines.",
     youtubeId: "_mP2hfptGao", 
+    isFeedbackClosed: true,
     speaker: {
       name: "Mr. Ashutosh Singh",
       role: "Delhi Police Crime Branch Digital Forensic Professional",
@@ -276,7 +279,7 @@ export default function Webinar() {
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFeedback.name.trim() || !newFeedback.text.trim() || !currentEvent) return;
+    if (currentEvent?.isFeedbackClosed || !newFeedback.name.trim() || !newFeedback.text.trim() || !currentEvent) return;
 
     setSubmittingFeedback(true);
 
@@ -463,15 +466,31 @@ export default function Webinar() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-4">
                     <div className="space-y-1">
                       <h3 className="text-lg font-black uppercase text-text-main tracking-tight">
-                        Submit Session Feedback
+                        Session Feedback
                       </h3>
                       <p className="text-xs text-text-muted">
-                        Have you attended or watched "{currentEvent.title}"? Share your experience and rating with the ForenClue community.
+                        Have you attended or watched "{currentEvent.title}"?
                       </p>
                     </div>
                   </div>
 
-                  {feedbackSuccess ? (
+                  {currentEvent.isFeedbackClosed ? (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-surface/80 border border-black/10 dark:border-white/10 rounded-2xl text-center space-y-3"
+                    >
+                      <div className="w-12 h-12 bg-warning/15 text-warning rounded-full flex items-center justify-center mx-auto shadow-inner">
+                        <Clock size={24} />
+                      </div>
+                      <h4 className="font-black text-base text-text-main uppercase tracking-wider">
+                        Session Feedback Form Closed
+                      </h4>
+                      <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
+                        Feedback submissions for "{currentEvent.title}" (Session {currentEvent.sequence}) are now closed. Thank you to all participants who submitted their feedback!
+                      </p>
+                    </motion.div>
+                  ) : feedbackSuccess ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}

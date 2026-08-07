@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export default function Login() {
-  const { user, signInWithGoogle, signUpWithEmail, signInWithEmail, loading, adminLogin } = useAuth();
+  const { user, signInWithGoogle, signInWithLinkedIn, signUpWithEmail, signInWithEmail, loading, adminLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || "/dashboard";
@@ -94,10 +94,29 @@ export default function Login() {
     } catch (error: any) {
       console.error("Login failed:", error);
       let errMsg = error.message || "An unexpected error occurred during Google sign-in.";
-      if (error.code === 'auth/unauthorized-domain') {
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
         errMsg = "UNAUTHORIZED_DOMAIN";
-      } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found') {
+      } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found' || error.message?.includes('operation-not-allowed')) {
         errMsg = "GOOGLE_NOT_ENABLED";
+      } else if (error.code === 'auth/popup-blocked') {
+        errMsg = "The sign-in popup was blocked by your browser settings. Please allow popups for this site.";
+      }
+      setAuthError(errMsg);
+    }
+  };
+
+  const handleLinkedInLogin = async () => {
+    setAuthError('');
+    setAuthSuccess('');
+    try {
+      await signInWithLinkedIn();
+    } catch (error: any) {
+      console.error("LinkedIn Login failed:", error);
+      let errMsg = error.message || "An unexpected error occurred during LinkedIn sign-in.";
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+        errMsg = "UNAUTHORIZED_DOMAIN";
+      } else if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found' || error.message?.includes('operation-not-allowed')) {
+        errMsg = "LINKEDIN_NOT_ENABLED";
       } else if (error.code === 'auth/popup-blocked') {
         errMsg = "The sign-in popup was blocked by your browser settings. Please allow popups for this site.";
       }
@@ -285,9 +304,11 @@ export default function Login() {
                       {authError === 'EMAIL_NOT_ENABLED' 
                         ? "Email Sign-in Disabled" 
                         : authError === 'UNAUTHORIZED_DOMAIN' 
-                        ? "Unauthorized Domain for Google Login" 
+                        ? "Unauthorized Domain for Social Login" 
                         : authError === 'GOOGLE_NOT_ENABLED'
                         ? "Google Authentication Disabled"
+                        : authError === 'LINKEDIN_NOT_ENABLED'
+                        ? "LinkedIn Authentication Disabled"
                         : "Authorization Revoked"}
                     </span>
                     {authError === 'EMAIL_NOT_ENABLED' ? (
@@ -340,6 +361,21 @@ export default function Login() {
                           <li>Click on the <span className="font-bold">Sign-in method</span> tab.</li>
                           <li>Click <span className="font-bold">Add new provider</span> and select <span className="font-bold">Google</span>.</li>
                           <li>Toggle <span className="font-bold">Enable</span>, select your <span className="font-bold">Project support email</span>, and click <span className="font-bold">Save</span>.</li>
+                        </ol>
+                      </div>
+                    ) : authError === 'LINKEDIN_NOT_ENABLED' ? (
+                      <div className="mt-2 text-text-muted space-y-2">
+                        <p className="font-bold text-red-500 dark:text-red-400">
+                          LinkedIn Authentication is not enabled in Firebase Console.
+                        </p>
+                        <p className="text-[11px] text-text-main font-semibold">To enable LinkedIn Sign-In in Firebase:</p>
+                        <ol className="list-decimal pl-4 space-y-1.5 mt-1 font-sans text-[11px] text-text-muted select-text">
+                          <li>Go to your <span className="font-bold text-text-main underline">Firebase Console</span> &gt; <span className="font-bold">Authentication</span> &gt; <span className="font-bold">Sign-in method</span>.</li>
+                          <li>Click <span className="font-bold">Add new provider</span> &gt; select <span className="font-bold">OpenID Connect (OIDC)</span>.</li>
+                          <li>Set Provider Name: <code className="bg-black/20 dark:bg-white/10 px-1 py-0.5 rounded text-amber-500 font-mono">OpenID Connect</code></li>
+                          <li>Set Provider ID: <code className="bg-black/20 dark:bg-white/10 px-1 py-0.5 rounded text-amber-500 font-mono">linkedin.com</code></li>
+                          <li>Set Issuer (URL): <code className="bg-black/20 dark:bg-white/10 px-1 py-0.5 rounded text-amber-500 font-mono">https://www.linkedin.com</code></li>
+                          <li>Enter your LinkedIn Developer App's <span className="font-bold text-text-main">Client ID</span> and <span className="font-bold text-text-main">Client Secret</span>, then click <span className="font-bold">Save</span>.</li>
                         </ol>
                       </div>
                     ) : (
@@ -455,18 +491,18 @@ export default function Login() {
               </span>
             </div>
 
-            {/* Primary Google Login Engine (The real active button) */}
-            <div className="space-y-4">
+            {/* Social Authentication Engines (Google & LinkedIn) */}
+            <div className="space-y-3">
               <motion.button 
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="w-full h-14 bg-white text-black hover:bg-warning/20 border border-black/10 dark:border-white/5 font-heading font-black text-xs sm:text-sm uppercase tracking-[0.18em] rounded-xl hover:text-white transition-all flex items-center justify-center gap-4 group shadow-xl shadow-black/10 dark:shadow-warning/5 cursor-pointer disabled:opacity-50"
+                className="w-full h-13 bg-white text-black hover:bg-warning/20 border border-black/10 dark:border-white/5 font-heading font-black text-xs sm:text-sm uppercase tracking-[0.18em] rounded-xl hover:text-white transition-all flex items-center justify-center gap-4 group shadow-xl shadow-black/10 dark:shadow-warning/5 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  <div className="w-6 h-6 border-2 border-warning border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-warning border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -494,7 +530,29 @@ export default function Login() {
                   </>
                 )}
               </motion.button>
-              
+
+              <motion.button 
+                type="button"
+                onClick={handleLinkedInLogin}
+                disabled={loading}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full h-13 bg-[#0A66C2] text-white hover:bg-[#004182] font-heading font-black text-xs sm:text-sm uppercase tracking-[0.18em] rounded-xl transition-all flex items-center justify-center gap-4 group shadow-xl shadow-black/10 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <svg className="w-5 h-5 fill-current text-white" viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                    </svg>
+                    <span>
+                      {activeTab === 'signin' ? 'Continue with LinkedIn' : 'Register with LinkedIn'}
+                    </span>
+                    <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform text-white/80" />
+                  </>
+                )}
+              </motion.button>
             </div>
           </div>
 
