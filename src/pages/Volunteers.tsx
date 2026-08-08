@@ -60,16 +60,28 @@ const activeVolunteers = [
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgh_iueBO-7X7feaE-FKxU1oktps4zilIyn0s-NlfayYwbmcjlpUMue-20jw0tzhRQqNg7cFxllbvZHb6X90ZBS0bzz81BeUldr2_mCIpfa2UrIev8l0OvNt5td8MyVVTUxzO-g_o1TW0AG-JAiEX-63ZoId_hS8rvTnT5oq25O8OGHvR7ZSUl5RcylhjI/s1280/WhatsApp%20Image%202026-07-21%20at%2012.07.24.jpeg'
   },
   { 
+    name: 'Bhumi Gupta', 
+    role: 'Volunteer', 
+    id: 'FC-VOL-2026-042',
+    image: 'https://blogger.googleusercontent.com/img/a/AVvXsEjG6l0uLHM7FnhJ3xpGVZ6a5mZ5OtU396_4r85mGdC4IC7MOMtNOms7gErM1_T6_kUZJG45mjkez4f55K_wtRwrZHWTsBAGlKJZx-Sarm-h7itNybfxLSYJuuPX9WJyeHEdCT2Q1TYudwCv3rwyAG-GPJTN5Mf3_fn6_W1KOlb9rjboyGzt1Wh7nfn5900'
+  },
+  {
+    name: 'Sarannya Mukherjee',
+    role: 'Volunteer',
+    id: 'FC-VOL-2026-037',
+    image: 'https://blogger.googleusercontent.com/img/a/AVvXsEi5724LwsrX1qyvXG8mIGKb8knyxkungS3jl-ymd8jqh9KqRxSFUzY9dEMn4wG0zejHMJvcRFC07DhYRF9y4C6FmIGgHGGwaMM-GTpiJ9Wvb610BlVhzFN0baRAezZ--1pYmpYBkKnGGqTmM81UNGYdSEI8rLQYb0SjesdGmnhVZ59H7-VtZ41Z2BuIuMo'
+  },
+  {
+    name: 'ARSHIN AJESH O M',
+    role: 'Volunteer',
+    id: 'FC-VOL-2026-041',
+    image: 'https://blogger.googleusercontent.com/img/a/AVvXsEj5yKI7fOVi07MWv-kfd_DPaSkZykYxGj94j9I8nCnMwg87svIp23JAygMoNFUUlBcPf_7U6y3-HFeHjswYQZ8uypmsSuionbdTZ7KSwq39SAN3XYxf5k28HJQyw1Ik-iwotACKQrDVHE5aTpNpX-H_RZxc41gfhthciJVHSPj0p_AC5UE14O20NVbwdm0'
+  },
+  { 
     name: 'Akshat Dubey', 
     role: 'Forensic Research Associate', 
     id: 'FC-VOL-2026-002',
     image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg05f4gjDDi6aXxKjisOyunf7i7gs_QooVdhQjCuia8fUcr7Z163SOYlXJXKezWDKoskumVkL8KEw-TgdTuuK7ho4jO1hou-5SvcTXNTKQrJx8UMi7_UIlehyphenhyphen_Ok0gCZGpmI2dkVnMHXA0ummzj6T2BacpwZl3sszoQcHE4eZhkFFdzE0ynQcXwAvJ_UC8/s3184/WhatsApp%20Image%202026-07-20%20at%2018.03.52.jpeg'
-  },
-  { 
-    name: 'Yuvraj Nandan', 
-    role: 'Forensic Research Associate', 
-    id: 'FC-VOL-2026-009',
-    image: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhtbaWNihBiYQrc2IVhwyJe6eAMKl8byl_Ps4pJ-3o0PhYl3Q1gTBXh3aX7EamTrilbsXb8q0EbyGkWMsUoV7CeZxzfm7UzENNPsiZbhDvxZE7gsUzNJT6LdlV0E7QrUdNOA3aLPoS-B1AiMVQbezJudrxwG6Mx0RkubP8A2Po0c1GuScrKxVYSKHiFPV8/s1280/WhatsApp%20Image%202026-07-20%20at%2017.57.24.jpeg'
   },
   { 
     name: 'Ashmita Mondal', 
