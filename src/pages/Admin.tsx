@@ -4132,6 +4132,25 @@ export default function Admin() {
                               onChange={(e) => setNewQuizForm({ ...newQuizForm, scheduledStartTime: e.target.value })}
                               className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-xs text-text-main outline-none"
                             />
+                            {newQuizForm.scheduledStartTime && (
+                              <p className="text-[10px] text-amber-500 font-mono mt-1 font-bold">
+                                Converted to IST: {(() => {
+                                  try {
+                                    return new Date(newQuizForm.scheduledStartTime).toLocaleString('en-IN', {
+                                      timeZone: 'Asia/Kolkata',
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    }) + ' IST';
+                                  } catch (e) {
+                                    return '';
+                                  }
+                                })()}
+                              </p>
+                            )}
                           </div>
 
                           <div>

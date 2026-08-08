@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -43,11 +43,6 @@ try {
   storage = null;
 }
 export const googleProvider = new GoogleAuthProvider();
-
-export const linkedinProvider = new OAuthProvider('linkedin.com');
-linkedinProvider.addScope('openid');
-linkedinProvider.addScope('profile');
-linkedinProvider.addScope('email');
 
 let cachedAccessToken: string | null = null;
 export const getAccessToken = () => cachedAccessToken;
@@ -108,20 +103,6 @@ export const signInWithGoogle = async () => {
       return null;
     }
     console.error('Error signing in with Google:', error);
-    throw error;
-  }
-};
-
-export const signInWithLinkedIn = async () => {
-  try {
-    const result = await signInWithPopup(auth, linkedinProvider);
-    return result.user;
-  } catch (error: any) {
-    if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-      console.log("Sign-in popup closed by user.");
-      return null;
-    }
-    console.error('Error signing in with LinkedIn:', error);
     throw error;
   }
 };

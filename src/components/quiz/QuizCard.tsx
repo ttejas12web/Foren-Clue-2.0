@@ -72,13 +72,25 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return '';
-    return new Date(isoString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(isoString).toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }) + ' IST';
+    } catch (e) {
+      return new Date(isoString).toLocaleString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' (Local)';
+    }
   };
 
   return (

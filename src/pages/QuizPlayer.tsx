@@ -278,22 +278,39 @@ export default function QuizPlayer() {
   }
 
   const formattedDate = quiz.scheduledStartTime
-    ? new Date(quiz.scheduledStartTime).toLocaleString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? (() => {
+        try {
+          return new Date(quiz.scheduledStartTime).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }) + ' IST';
+        } catch (e) {
+          return new Date(quiz.scheduledStartTime).toLocaleString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+      })()
     : quiz.createdAt
-    ? new Date(quiz.createdAt).toLocaleDateString('en-US', {
+    ? new Date(quiz.createdAt).toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
         weekday: 'long',
         month: 'long',
         day: 'numeric',
         year: 'numeric',
       })
-    : new Date().toLocaleDateString('en-US', {
+    : new Date().toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -452,7 +469,7 @@ export default function QuizPlayer() {
             </div>
             <h2 className="text-2xl font-black uppercase tracking-tight">Challenge Upcoming</h2>
             <p className="text-text-muted text-sm leading-relaxed">
-              <strong>{quiz.title}</strong> will be live on {new Date(quiz.scheduledStartTime).toLocaleString()}.
+              <strong>{quiz.title}</strong> will be live on <span className="font-bold text-warning">{formattedDate}</span>.
             </p>
 
             {isEnrolled ? (

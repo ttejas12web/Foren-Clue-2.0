@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, OAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, googleProvider, linkedinProvider, db } from '../lib/firebase';
+import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, googleProvider, db } from '../lib/firebase';
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Fingerprint, Search, ShieldCheck, Activity } from 'lucide-react';
@@ -29,7 +29,6 @@ interface AuthContextType {
   isAdmin: boolean;
   accessToken: string | null;
   signInWithGoogle: () => Promise<void>;
-  signInWithLinkedIn: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -313,22 +312,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithLinkedIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, linkedinProvider);
-      const credential = OAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        setAccessToken(credential.accessToken);
-      }
-    } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        return;
-      }
-      console.error("LinkedIn Sign-In error:", error);
-      throw error;
-    }
-  };
-
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
@@ -406,7 +389,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signInWithLinkedIn, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
+    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div 

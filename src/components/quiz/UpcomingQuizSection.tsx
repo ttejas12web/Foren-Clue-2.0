@@ -153,13 +153,15 @@ export function UpcomingQuizSection() {
                           <Calendar size={13} className="text-warning shrink-0" /> Scheduled Start:
                         </span>
                         <span className="font-bold text-text-main text-[11px]">
-                          {startTime.toLocaleDateString('en-IN', {
+                          {startTime.toLocaleString('en-IN', {
+                            timeZone: 'Asia/Kolkata',
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                            minute: '2-digit',
+                            hour12: true
+                          }) + ' IST'}
                         </span>
                       </div>
                     )}
