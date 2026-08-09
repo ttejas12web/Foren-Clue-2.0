@@ -556,6 +556,24 @@ export async function fetchLeaderboard(quiz: Quiz): Promise<LeaderboardEntry[]> 
       }
     }
 
+    // Recalculate score from answers to fix legacy point calculation glitch
+    attempts = attempts.map(att => {
+      let trueScore = 0;
+      if (att.answers && quiz.questions) {
+        quiz.questions.forEach(q => {
+          if (att.answers[q.id] !== undefined && att.answers[q.id] === q.correctAnswerIndex) {
+            trueScore += q.points || 10;
+          }
+        });
+      } else {
+        trueScore = att.score;
+      }
+      return {
+        ...att,
+        score: Math.min(trueScore, att.totalPoints || 100)
+      };
+    });
+
     // Sort: score DESC, timeTakenSeconds ASC
     attempts.sort((a, b) => {
       if (b.score !== a.score) {

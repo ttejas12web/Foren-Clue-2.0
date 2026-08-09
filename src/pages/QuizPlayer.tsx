@@ -208,7 +208,7 @@ export default function QuizPlayer() {
     quiz.questions.forEach((q) => {
       const selected = userAnswers[q.id];
       if (selected !== undefined && selected === q.correctAnswerIndex) {
-        score += q.points || 20;
+        score += q.points || 10;
         correctCount += 1;
       }
     });
@@ -816,7 +816,7 @@ export default function QuizPlayer() {
                           </span>
                           {isCorrect ? (
                             <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shrink-0 font-mono">
-                              <CheckCircle2 size={13} /> Correct (+{q.points || 20} pts)
+                              <CheckCircle2 size={13} /> Correct (+{q.points || 10} pts)
                             </span>
                           ) : (
                             <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shrink-0 font-mono">
