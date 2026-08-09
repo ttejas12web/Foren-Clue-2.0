@@ -401,7 +401,30 @@ export async function enrollInQuiz(quizId: string, userId: string): Promise<bool
 // Submit Quiz Attempt
 export async function submitQuizAttempt(attempt: QuizAttempt): Promise<string> {
   const completedAt = attempt.completedAt || new Date().toISOString();
-  const attemptWithTime = { ...attempt, completedAt };
+  let isPractice = attempt.isPractice || false;
+
+  // Auto-detect if attempt should be marked as practice
+  if (attempt.quizId) {
+    try {
+      const quiz = await fetchQuizById(attempt.quizId);
+      if (quiz) {
+        if (!quiz.isWeeklyChallenge || isWeeklyChallengeExpired(quiz)) {
+          isPractice = true;
+        } else {
+          // Check if user has a prior live attempt for this weekly challenge
+          const userAttempts = await fetchUserQuizAttempts(attempt.userId);
+          const hasPriorAttempt = userAttempts.some(a => a.quizId === attempt.quizId && !a.isPractice);
+          if (hasPriorAttempt) {
+            isPractice = true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not determine practice status for attempt:", e);
+    }
+  }
+
+  const attemptWithTime: QuizAttempt = { ...attempt, completedAt, isPractice };
 
   // 1. Save to Local Storage Cache for instant retrieval
   if (attempt.userId) {
@@ -536,24 +559,56 @@ export async function fetchLeaderboard(quiz: Quiz): Promise<LeaderboardEntry[]> 
       attempts = [...attempts, ...seeds];
     }
 
-    // Filter attempts based on challenge timeframe
+    // Filter attempts based on challenge timeframe & practice status
     if (quiz.isWeeklyChallenge) {
-      let endTime = 0;
+      let startTime = 0;
+      let endTime = Infinity;
+
+      if (quiz.scheduledStartTime) {
+        startTime = new Date(quiz.scheduledStartTime).getTime();
+      }
       if (quiz.scheduledEndTime) {
         endTime = new Date(quiz.scheduledEndTime).getTime();
-      } else if (quiz.scheduledStartTime) {
-        // If no explicit end time, assume it ends after its duration from start time
-        // Actually, typically a weekly challenge has a specific window, but let's follow the expiration logic:
-        endTime = new Date(quiz.scheduledStartTime).getTime() + (quiz.durationMinutes || 15) * 60000;
+      } else if (startTime > 0) {
+        endTime = startTime + (quiz.durationMinutes || 15) * 60000;
       }
 
-      if (endTime > 0) {
-        attempts = attempts.filter(a => {
-          // Assume sample seeds without completedAt are valid (or they have completedAt)
-          if (!a.completedAt) return true;
-          return new Date(a.completedAt).getTime() <= endTime;
-        });
+      // 1. Exclude practice attempts and attempts submitted outside official challenge window
+      attempts = attempts.filter(a => {
+        if (a.isPractice) return false;
+        if (!a.completedAt) return true; // keep sample seeds
+
+        const compTime = new Date(a.completedAt).getTime();
+        if (startTime > 0 && compTime < startTime) return false;
+        if (endTime < Infinity && compTime > endTime) return false;
+
+        return true;
+      });
+
+      // 2. Keep only each user's FIRST (earliest) attempt taken during the live challenge
+      const firstAttempts = new Map<string, QuizAttempt>();
+      const sortedByTime = [...attempts].sort((a, b) => {
+        const tA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const tB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return tA - tB;
+      });
+
+      for (const att of sortedByTime) {
+        if (!firstAttempts.has(att.userId)) {
+          firstAttempts.set(att.userId, att);
+        }
       }
+      attempts = Array.from(firstAttempts.values());
+    } else {
+      // For practice quizzes, keep each user's best attempt
+      const bestAttempts = new Map<string, QuizAttempt>();
+      for (const att of attempts) {
+        const existing = bestAttempts.get(att.userId);
+        if (!existing || att.score > existing.score || (att.score === existing.score && att.timeTakenSeconds < existing.timeTakenSeconds)) {
+          bestAttempts.set(att.userId, att);
+        }
+      }
+      attempts = Array.from(bestAttempts.values());
     }
 
     // Recalculate score from answers to fix legacy point calculation glitch

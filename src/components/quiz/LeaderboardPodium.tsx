@@ -37,6 +37,9 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
             {quizTitle}
           </p>
         )}
+        <p className="text-text-muted/70 text-xs max-w-lg mx-auto italic">
+          * Shows official initial submissions recorded during the live time-bounded challenge window. Subsequent reattempts or practice attempts are excluded from altering official rankings.
+        </p>
       </div>
 
       {entries.length === 0 ? (

@@ -41,6 +41,7 @@ export interface QuizAttempt {
   timeTakenSeconds: number;
   completedAt: string;
   answers: Record<string, number>; // questionId -> selectedIndex
+  isPractice?: boolean; // True if attempt was taken in practice mode / after challenge concluded / reattempt
 }
 
 export interface LeaderboardEntry extends QuizAttempt {
