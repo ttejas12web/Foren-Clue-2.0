@@ -26,7 +26,7 @@ export default function QuizLeaderboard() {
     setSelectedQuiz(activeQuiz);
 
     if (activeQuiz) {
-      const topEntries = await fetchLeaderboard(activeQuiz.id);
+      const topEntries = await fetchLeaderboard(activeQuiz);
       setEntries(topEntries);
     }
     setLoading(false);
@@ -37,7 +37,7 @@ export default function QuizLeaderboard() {
     if (found) {
       setSelectedQuiz(found);
       setLoading(true);
-      const topEntries = await fetchLeaderboard(found.id);
+      const topEntries = await fetchLeaderboard(found);
       setEntries(topEntries);
       setLoading(false);
     }

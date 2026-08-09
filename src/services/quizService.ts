@@ -510,12 +510,12 @@ export async function fetchUserQuizAttempts(userId: string): Promise<QuizAttempt
 }
 
 // Fetch Top 10 Leaderboard for a quiz
-export async function fetchLeaderboard(quizId: string): Promise<LeaderboardEntry[]> {
+export async function fetchLeaderboard(quiz: Quiz): Promise<LeaderboardEntry[]> {
   try {
     const attemptsRef = collection(db, ATTEMPTS_COLLECTION);
     const q = query(
       attemptsRef, 
-      where('quizId', '==', quizId)
+      where('quizId', '==', quiz.id)
     );
     const snap = await getDocs(q);
     let attempts: QuizAttempt[] = [];
@@ -525,15 +525,35 @@ export async function fetchLeaderboard(quizId: string): Promise<LeaderboardEntry
     });
 
     // If snap is empty and we have sample seeds for this quiz, merge sample seeds
-    if (quizId === 'weekly-challenge-1') {
+    if (quiz.id === 'weekly-challenge-1') {
       // Do not use any sample seeds/mock seeds for challenge 1. Only show real attempts!
     } else if (attempts.length === 0) {
-      attempts = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quizId);
+      attempts = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quiz.id);
     } else {
       // Merge sample seeds to ensure rich leaderboard
       const existingUserIds = new Set(attempts.map(a => a.userId));
-      const seeds = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quizId && !existingUserIds.has(s.userId));
+      const seeds = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quiz.id && !existingUserIds.has(s.userId));
       attempts = [...attempts, ...seeds];
+    }
+
+    // Filter attempts based on challenge timeframe
+    if (quiz.isWeeklyChallenge) {
+      let endTime = 0;
+      if (quiz.scheduledEndTime) {
+        endTime = new Date(quiz.scheduledEndTime).getTime();
+      } else if (quiz.scheduledStartTime) {
+        // If no explicit end time, assume it ends after its duration from start time
+        // Actually, typically a weekly challenge has a specific window, but let's follow the expiration logic:
+        endTime = new Date(quiz.scheduledStartTime).getTime() + (quiz.durationMinutes || 15) * 60000;
+      }
+
+      if (endTime > 0) {
+        attempts = attempts.filter(a => {
+          // Assume sample seeds without completedAt are valid (or they have completedAt)
+          if (!a.completedAt) return true;
+          return new Date(a.completedAt).getTime() <= endTime;
+        });
+      }
     }
 
     // Sort: score DESC, timeTakenSeconds ASC
@@ -554,10 +574,10 @@ export async function fetchLeaderboard(quizId: string): Promise<LeaderboardEntry
     return top10;
   } catch (err) {
     console.warn("Using sample leaderboard fallback:", err);
-    if (quizId === 'weekly-challenge-1') {
+    if (quiz.id === 'weekly-challenge-1') {
       return [];
     }
-    const seeds = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quizId);
+    const seeds = SAMPLE_LEADERBOARD_SEED.filter(s => s.quizId === quiz.id);
     seeds.sort((a, b) => b.score - a.score || a.timeTakenSeconds - b.timeTakenSeconds);
     return seeds.slice(0, 10).map((att, idx) => ({
       ...att,
