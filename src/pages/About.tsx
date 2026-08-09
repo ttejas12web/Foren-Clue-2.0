@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { SEO } from '@/components/layout/SEO';
+import { Linkedin, Youtube, Mail } from 'lucide-react';
 
 const TeamCard = ({ member, index = 0 }: { member: any, index?: number }) => {
   const x = useMotionValue(0);
@@ -66,6 +67,25 @@ const TeamCard = ({ member, index = 0 }: { member: any, index?: number }) => {
         style={{ transform: "translateZ(30px)" }}
         className="relative z-10 text-center"
       >
+        {(member.linkedin || member.youtube || member.email) && (
+          <div className="flex items-center justify-center gap-4 mb-3">
+             {member.linkedin && (
+               <a href={member.linkedin} target="_blank" rel="noreferrer" className="text-text-muted hover:text-warning transition-colors">
+                  <Linkedin size={20} />
+               </a>
+             )}
+             {member.youtube && (
+               <a href={member.youtube} target="_blank" rel="noreferrer" className="text-text-muted hover:text-[#FF0000] transition-colors">
+                  <Youtube size={20} />
+               </a>
+             )}
+             {member.email && (
+               <a href={`mailto:${member.email}`} className="text-text-muted hover:text-warning transition-colors">
+                  <Mail size={20} />
+               </a>
+             )}
+          </div>
+        )}
         <h3 className="text-2xl font-bold font-heading drop-shadow-md">{member.name}</h3>
         <p className="text-warning mb-4 uppercase tracking-widest text-xs font-bold drop-shadow-md">{member.role}</p>
         <div className="flex flex-col gap-2">
@@ -97,6 +117,9 @@ export default function About() {
       name: "Tejas Tapse",
       role: "Founder",
       image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhBbTT3QCs_EHXasFjAT9pC1laU-vAIRhIQ7qjpQHS3ErsprqykE9eT63H-XnATqutTGhCjq-zzbmvCeFhHfE0_DZ1wtZmu8pmARltV1makLhdqyCwftxjW55J0qyPbmjn6H6Abb6OzIHPUrkbkYOwmDeVxLmGyH_0nbr9qOnWtWKEg3NaPIvEJKTNg8vU/s1323/IMG_0865.PNG",
+      linkedin: "https://www.linkedin.com/in/ttapse12/",
+      youtube: "https://www.youtube.com/@TejasTapse",
+      email: "tejastapse12@gmail.com",
       points: [
         "Creator of Neet Cracker",
         "Passionate about forensic education",
@@ -107,6 +130,8 @@ export default function About() {
       name: "Mrunmayee Bodhe",
       role: "Chief Executive Officer",
       image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjt-N4hwGU4tzUkx9XwNKGHv2Te4J3tbfxJWFRXS6Z3KzdZX1f9VKZB88MYTeF4OqePRwDcGMbqjmOpoROSJlsSHaZJnLEIMnP2S98gBLOlP6IDs33SBqLf7yhLEyWCICI90IfGk5XV06fUYonMDC5zufGitO8-sTe1sIExdZcckiMh0VuZmmmPJpxhGQs/s1352/IMG_0866.PNG",
+      linkedin: "https://www.linkedin.com/in/mrunmayee-bodhe-bb3a8a394/",
+      email: "mrunmayeebodhe118@gmail.com",
       points: [
         "CEO Of ForenClue Ventures",
         "Forensic Enthusiast",
@@ -117,8 +142,19 @@ export default function About() {
       name: "Ayush Gaikwad",
       role: "Co-Founder",
       image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjsllQMEHs5qT_GJSyZnGVcFH64Zadagai4Y9rlbFHQ9vuaVgX-3CgkApXQu660nTDPB0C3mEMJoZSnhLnOpBtTOt5mlEEADPKcOZbzcem8pq3flsJWbG6adC-aDmg9tlmyu4nGyaDh-TLzHanJ4dde67VUggiI5rMCb-4dVVUzRhY-A_EJKmiQgLkJez4/s1462/IMG_0859%20(1).PNG",
+      linkedin: "https://www.linkedin.com/in/ayush-gaikwad-41313a3bb/",
+      email: "ayushgaikwad705o@gmail.com",
       points: [
         "Forensic Science Student"
+      ]
+    },
+    {
+      name: "Purva Bhawsar",
+      role: "Managing Director (MD)",
+      image: "https://blogger.googleusercontent.com/img/a/AVvXsEiM1O7O22rSrLMRZ_SXD3_qK-OSm8SbNdLWS2cf_PyLenPdBtSLAxZlIrhYMTaD9S_LicuKBSMooFcTDSa4PKMXqTkJdA2wNxa0alWSTxLi339qyvbe5qJSsmzg__tvm2bgkg4I6ZMstLztbi4aAqp7BX6Ul2TDabYYbVSfq9VPqVcVstaWDXFxoByip9A",
+      linkedin: "https://www.linkedin.com/in/purva-bhawsar-289495323/",
+      points: [
+        "Managing Director at ForenClue"
       ]
     }
   ];

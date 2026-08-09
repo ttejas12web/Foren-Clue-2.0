@@ -195,11 +195,11 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
           {/* Ranks 4 to 10 Table */}
           {restEntries.length > 0 && (
             <div className="bg-surface rounded-2xl border border-white/10 overflow-hidden shadow-xl mt-8">
-              <div className="px-6 py-4 bg-black/40 border-b border-white/5 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-text-muted">
+              <div className="px-4 sm:px-6 py-4 bg-black/40 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-text-muted">
                   Runner-Up Rankings (Ranks 4 - 10)
                 </span>
-                <span className="text-xs text-text-muted">
+                <span className="text-[10px] sm:text-xs text-text-muted">
                   Sorted by Score & Completion Time
                 </span>
               </div>
@@ -208,14 +208,14 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                 {restEntries.map((entry) => (
                   <div 
                     key={entry.userId + entry.completedAt}
-                    className="p-4 px-6 flex items-center justify-between hover:bg-white/5 transition-colors gap-4"
+                    className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-white/5 transition-colors gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <span className="w-8 h-8 rounded-full bg-black/60 border border-white/10 flex items-center justify-center font-black text-sm text-text-muted">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <span className="w-8 h-8 rounded-full bg-black/60 border border-white/10 flex items-center justify-center font-black text-sm text-text-muted shrink-0">
                         #{entry.rank}
                       </span>
 
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-dark flex-shrink-0 border border-white/10">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-dark shrink-0 border border-white/10">
                         {entry.userPhoto ? (
                           <img src={entry.userPhoto} alt={entry.userName} className="w-full h-full object-cover" />
                         ) : (
@@ -225,31 +225,30 @@ export function LeaderboardPodium({ entries, quizTitle }: LeaderboardPodiumProps
                         )}
                       </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="font-bold text-sm text-text-main truncate">
                           {entry.userName}
                         </div>
-                        
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 flex-shrink-0 text-right">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 shrink-0 sm:text-right pl-[52px] sm:pl-0">
                       <div>
-                        <div className="text-xs text-text-muted">Accuracy</div>
-                        <div className="font-bold text-sm text-info">{entry.accuracyPercentage}%</div>
+                        <div className="text-[10px] sm:text-xs text-text-muted">Accuracy</div>
+                        <div className="font-bold text-xs sm:text-sm text-info">{entry.accuracyPercentage}%</div>
                       </div>
 
                       <div>
-                        <div className="text-xs text-text-muted">Time Taken</div>
-                        <div className="font-bold text-sm text-text-main flex items-center gap-1 justify-end">
-                          <Clock size={12} className="text-text-muted" />
+                        <div className="text-[10px] sm:text-xs text-text-muted">Time Taken</div>
+                        <div className="font-bold text-xs sm:text-sm text-text-main flex items-center gap-1 sm:justify-end">
+                          <Clock size={12} className="text-text-muted shrink-0" />
                           {formatTime(entry.timeTakenSeconds)}
                         </div>
                       </div>
 
-                      <div className="bg-black/40 border border-white/10 px-3 py-1.5 rounded-xl">
-                        <div className="text-[10px] uppercase text-text-muted">Points</div>
-                        <div className="font-black text-sm text-warning">{entry.score} pts</div>
+                      <div className="bg-black/40 border border-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-center sm:text-right">
+                        <div className="text-[9px] sm:text-[10px] uppercase text-text-muted">Points</div>
+                        <div className="font-black text-xs sm:text-sm text-warning">{entry.score} pts</div>
                       </div>
                     </div>
                   </div>
