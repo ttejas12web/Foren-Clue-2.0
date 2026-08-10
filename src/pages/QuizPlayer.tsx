@@ -44,6 +44,7 @@ export default function QuizPlayer() {
   const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
   const [showCheatWarningModal, setShowCheatWarningModal] = useState(false);
   const [showExitWarningModal, setShowExitWarningModal] = useState(false);
+  const [showClipboardNotice, setShowClipboardNotice] = useState(false);
 
   // Result state
   const [finalScore, setFinalScore] = useState(0);
@@ -89,7 +90,7 @@ export default function QuizPlayer() {
     };
   }, [quiz, isSubmitted, quizStartedAt]);
 
-  // Anti-Cheat: Tab/Window switching detection
+  // Anti-Cheat: Tab/Window switching detection & Clipboard protection (No copy, cut, paste)
   useEffect(() => {
     if (!quiz || isSubmitted || !quizStartedAt || !user) return;
     
@@ -121,14 +122,55 @@ export default function QuizPlayer() {
       handleViolation();
     };
 
+    // Block Copy, Cut, Paste, Right Click, and Keyboard Shortcuts
+    const handleClipboardEvent = (e: Event) => {
+      e.preventDefault();
+      setShowClipboardNotice(true);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      const key = e.key.toLowerCase();
+
+      // Block Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+A, Ctrl+U, Ctrl+P, F12
+      if (
+        (isCmdOrCtrl && ['c', 'x', 'v', 'a', 'u', 'p'].includes(key)) ||
+        key === 'f12'
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowClipboardNotice(true);
+      }
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
+    document.addEventListener("copy", handleClipboardEvent);
+    document.addEventListener("cut", handleClipboardEvent);
+    document.addEventListener("paste", handleClipboardEvent);
+    document.addEventListener("contextmenu", handleClipboardEvent);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
+      document.removeEventListener("copy", handleClipboardEvent);
+      document.removeEventListener("cut", handleClipboardEvent);
+      document.removeEventListener("paste", handleClipboardEvent);
+      document.removeEventListener("contextmenu", handleClipboardEvent);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [quiz, isSubmitted, quizStartedAt, user]);
+
+  // Auto-hide clipboard notification notice after 3 seconds
+  useEffect(() => {
+    if (showClipboardNotice) {
+      const timer = setTimeout(() => {
+        setShowClipboardNotice(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showClipboardNotice]);
 
   // Back Button Navigation & Unload Guard
   useEffect(() => {
@@ -513,72 +555,77 @@ export default function QuizPlayer() {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-warning/5 rounded-full blur-[120px] pointer-events-none -z-0" />
       <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[150px] pointer-events-none -z-0" />
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-8 relative z-10">
         
         {/* Sticky Top Bar: Quiz Header & Live Timer */}
-        <div className="sticky top-16 z-30 bg-surface/80 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-14 sm:top-16 z-30 bg-surface/90 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-xl transition-all">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             {!isSubmitted && (
               <button
                 onClick={() => setShowExitWarningModal(true)}
-                className="p-2.5 rounded-2xl bg-base border border-black/10 dark:border-white/10 text-text-muted hover:text-red-500 hover:border-red-500/40 hover:bg-red-500/10 transition-all cursor-pointer shrink-0 shadow-sm"
+                className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-base border border-black/10 dark:border-white/10 text-text-muted hover:text-red-500 hover:border-red-500/40 hover:bg-red-500/10 transition-all cursor-pointer shrink-0 shadow-sm"
                 title="Exit Quiz Attempt"
               >
-                <ArrowLeft size={18} />
+                <ArrowLeft size={16} />
               </button>
             )}
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-black uppercase tracking-wider text-warning bg-warning/10 px-3 py-1 rounded-full border border-warning/20 shadow-sm">
+            <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider text-warning bg-warning/10 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-warning/20 shadow-sm">
                   {quiz.category}
                 </span>
-                <span className="text-xs font-mono font-bold text-text-muted">
-                  Question {currentQuestionIdx + 1} of {quiz.questions.length}
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-text-muted">
+                  Q{currentQuestionIdx + 1}/{quiz.questions.length}
                 </span>
-                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md shadow-sm">
-                  {answeredCount} Answered
+                <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm">
+                  {answeredCount} Done
                 </span>
                 {flaggedCount > 0 && (
-                  <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
-                    <Bookmark size={11} className="fill-current" /> {flaggedCount} Flagged
+                  <span className="text-[10px] sm:text-xs font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
+                    <Bookmark size={10} className="fill-current" /> {flaggedCount}
+                  </span>
+                )}
+                {!isSubmitted && (
+                  <span className="text-[10px] sm:text-xs font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 sm:px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1" title="Copy, Cut, and Paste actions are disabled during quiz attempt">
+                    <ShieldCheck size={12} /> No Copy/Paste
                   </span>
                 )}
               </div>
-              <h1 className="font-heading font-black text-lg sm:text-xl text-text-main line-clamp-1 tracking-tight">
+              <h1 className="font-heading font-black text-sm sm:text-xl text-text-main truncate tracking-tight">
                 {quiz.title}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 border-t sm:border-t-0 border-black/5 dark:border-white/5 pt-2 sm:pt-0">
             {/* Questions Grid Drawer Toggle */}
             {!isSubmitted && (
               <button
                 onClick={() => setShowQuestionsGrid(!showQuestionsGrid)}
                 className={cn(
-                  "px-4 py-2.5 rounded-xl border font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-sm",
+                  "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-sm",
                   showQuestionsGrid 
                     ? "bg-warning text-crust border-warning shadow-warning/20 ring-2 ring-warning/30" 
                     : "bg-surface border-black/10 dark:border-white/10 text-text-main hover:border-warning/50 hover:bg-black/5 dark:hover:bg-white/5"
                 )}
               >
-                <LayoutGrid size={16} />
-                <span className="hidden sm:inline">Grid</span>
+                <LayoutGrid size={14} className="sm:w-4 sm:h-4" />
+                <span>Grid</span>
               </button>
             )}
 
             {/* Timer Pill */}
             {!isSubmitted && (
               <div className={cn(
-                "px-5 py-2.5 rounded-xl border flex items-center gap-2 font-mono transition-all shadow-md",
+                "px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border flex items-center gap-2 sm:gap-2.5 font-mono transition-all shadow-lg ml-auto sm:ml-0 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white border-red-400/30 shadow-red-600/30",
                 timeRemainingSec < 120 
-                  ? "bg-red-500/20 border-red-500/50 text-red-500 dark:text-red-400 animate-pulse ring-2 ring-red-500/20" 
-                  : "bg-gray-900 border-gray-700 text-white shadow-inner"
+                  ? "animate-pulse ring-2 ring-red-400 border-red-300 shadow-red-500/60 scale-105" 
+                  : "hover:scale-[1.02]"
               )}>
-                <Clock size={18} className={timeRemainingSec < 120 ? "" : "text-warning"} />
+                <Clock size={18} className="text-yellow-300 shrink-0 drop-shadow-sm" />
                 <div className="text-right flex flex-col justify-center">
-                  <span className="text-[9px] uppercase font-black text-gray-400 block leading-none">Time Left</span>
-                  <span className="font-black text-lg tracking-widest leading-tight">{formatTimer(timeRemainingSec)}</span>
+                  <span className="text-[8px] sm:text-[9px] uppercase font-black text-red-100/90 block leading-none tracking-wider">Time Left</span>
+                  <span className="font-black text-base sm:text-xl text-white tracking-widest leading-tight drop-shadow-sm">{formatTimer(timeRemainingSec)}</span>
                 </div>
               </div>
             )}
@@ -809,24 +856,24 @@ export default function QuizPlayer() {
                     const origIndex = quiz.questions.findIndex(orig => orig.id === q.id);
 
                     return (
-                      <div key={q.id} className="p-5 rounded-2xl bg-base border border-black/10 dark:border-white/10 space-y-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <span className="font-heading font-extrabold text-base text-text-main">
+                      <div key={q.id} className="p-4 sm:p-5 rounded-2xl bg-base border border-black/10 dark:border-white/10 space-y-3 sm:space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                          <span className="font-heading font-extrabold text-sm sm:text-base text-text-main leading-snug">
                             {origIndex + 1}. {q.question}
                           </span>
                           {isCorrect ? (
-                            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shrink-0 font-mono">
-                              <CheckCircle2 size={13} /> Correct (+{q.points || 10} pts)
+                            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-mono self-start">
+                              <CheckCircle2 size={12} /> Correct (+{q.points || 10} pts)
                             </span>
                           ) : (
-                            <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shrink-0 font-mono">
-                              <AlertTriangle size={13} /> Incorrect (0 pts)
+                            <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-mono self-start">
+                              <AlertTriangle size={12} /> Incorrect (0 pts)
                             </span>
                           )}
                         </div>
 
                         {/* Options breakdown */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
                           {q.options.map((opt, optIdx) => {
                             const isOptionCorrect = optIdx === q.correctAnswerIndex;
                             const isOptionSelected = optIdx === selected;
@@ -835,17 +882,17 @@ export default function QuizPlayer() {
                               <div 
                                 key={optIdx}
                                 className={cn(
-                                  "p-3 rounded-xl border font-semibold text-xs sm:text-sm flex items-center justify-between",
+                                  "p-2.5 sm:p-3 rounded-xl border font-semibold text-xs sm:text-sm flex items-center justify-between gap-2 min-w-0",
                                   isOptionCorrect && "bg-emerald-500/15 border-emerald-500/50 text-emerald-400 font-bold",
                                   isOptionSelected && !isOptionCorrect && "bg-red-500/15 border-red-500/50 text-red-400 line-through",
                                   !isOptionCorrect && !isOptionSelected && "bg-surface border-black/5 dark:border-white/5 text-text-muted"
                                 )}
                               >
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-full border border-current text-[10px] flex items-center justify-center font-bold">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <span className="w-5 h-5 rounded-full border border-current text-[10px] flex items-center justify-center font-bold shrink-0">
                                     {String.fromCharCode(65 + optIdx)}
                                   </span>
-                                  <span>{opt}</span>
+                                  <span className="break-words min-w-0 flex-1">{opt}</span>
                                 </div>
                                 {isOptionCorrect && <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />}
                               </div>
@@ -867,11 +914,11 @@ export default function QuizPlayer() {
           </motion.div>
         ) : (
           /* ACTIVE QUIZ PLAYER VIEW */
-          <div className="bg-surface/80 backdrop-blur-xl rounded-3xl border border-white/10 dark:border-white/5 p-6 sm:p-8 sm:px-10 space-y-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] relative overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
+          <div className="bg-surface/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/10 dark:border-white/5 p-4 sm:p-8 sm:px-10 space-y-6 sm:space-y-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] relative overflow-hidden ring-1 ring-black/5 dark:ring-white/5 select-none">
             
             {/* Top Progress Bar & Question Stats */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs font-mono text-text-muted font-bold tracking-wider">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs font-mono text-text-muted font-bold tracking-wider">
                 <span>PROGRESS: {Math.round(((currentQuestionIdx + 1) / quiz.questions.length) * 100)}%</span>
                 <span>{answeredCount} of {quiz.questions.length} Completed</span>
               </div>
@@ -893,21 +940,21 @@ export default function QuizPlayer() {
                   animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                   exit={{ opacity: 0, x: slideDirection === 'right' ? -20 : 20, filter: 'blur(4px)' }}
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                 >
                   {/* Question Header & Flag Toggle */}
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-warning bg-warning/10 px-2 py-1 rounded-md border border-warning/20">
+                  <div className="flex items-start justify-between gap-3 sm:gap-6">
+                    <div className="space-y-2 sm:space-y-3 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-warning bg-warning/10 px-2 py-0.5 rounded-md border border-warning/20">
                           Question #{currentQuestionIdx + 1}
                         </span>
-                        <span className="text-[10px] font-mono text-text-muted bg-black/5 dark:bg-white/5 px-2 py-1 rounded-md">
+                        <span className="text-[10px] font-mono text-text-muted bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md">
                           {currentQ.points || 10} Points
                         </span>
                       </div>
                       
-                      <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-black text-text-main leading-snug sm:leading-tight">
+                      <h2 className="text-lg sm:text-2xl md:text-3xl font-heading font-black text-text-main leading-snug sm:leading-tight break-words">
                         {currentQ.question}
                       </h2>
                     </div>
@@ -916,14 +963,14 @@ export default function QuizPlayer() {
                     <button
                       onClick={() => toggleFlagQuestion(currentQ.id)}
                       className={cn(
-                        "p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 text-[10px] uppercase font-black tracking-wider cursor-pointer shrink-0 shadow-sm",
+                        "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all flex flex-col items-center gap-1 text-[10px] uppercase font-black tracking-wider cursor-pointer shrink-0 shadow-sm",
                         flaggedQuestions[currentQ.id]
                           ? "bg-amber-500 text-black border-amber-400 shadow-amber-500/30"
                           : "bg-surface border-black/10 dark:border-white/10 text-text-muted hover:text-warning hover:border-warning/40 hover:bg-black/5 dark:hover:bg-white/5"
                       )}
                       title="Flag question to review before final submission"
                     >
-                      <Bookmark size={20} className={flaggedQuestions[currentQ.id] ? "fill-black" : ""} />
+                      <Bookmark size={18} className={cn("sm:w-5 sm:h-5", flaggedQuestions[currentQ.id] ? "fill-black" : "")} />
                       <span className="hidden sm:inline">
                         {flaggedQuestions[currentQ.id] ? 'Flagged' : 'Flag'}
                       </span>
@@ -931,7 +978,7 @@ export default function QuizPlayer() {
                   </div>
 
                   {/* Options List */}
-                  <div className="space-y-3.5">
+                  <div className="space-y-2.5 sm:space-y-3.5">
                     {currentQ.options.map((option, optIdx) => {
                       const isSelected = userAnswers[currentQ.id] === optIdx;
                       const isEliminated = (eliminatedOptions[currentQ.id] || []).includes(optIdx);
@@ -941,17 +988,17 @@ export default function QuizPlayer() {
                           key={optIdx}
                           onClick={() => !isEliminated && handleSelectOption(currentQ.id, optIdx)}
                           className={cn(
-                            "group relative w-full text-left p-4 sm:p-5 rounded-2xl border font-semibold text-sm sm:text-base transition-all duration-200 flex items-center justify-between cursor-pointer select-none shadow-sm",
+                            "group relative w-full text-left p-3.5 sm:p-5 rounded-2xl border font-semibold transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer select-none shadow-sm",
                             isSelected 
-                              ? "bg-warning/10 border-warning text-text-main shadow-[0_4px_20px_rgba(252,211,77,0.15)] ring-1 ring-warning/50 z-10 scale-[1.01]" 
+                              ? "bg-warning/10 border-warning text-text-main shadow-[0_4px_20px_rgba(252,211,77,0.15)] ring-1 ring-warning/50 z-10" 
                               : isEliminated
                                 ? "bg-black/5 dark:bg-white/5 border-transparent text-text-muted/40 line-through opacity-50"
                                 : "bg-white dark:bg-white/10 border-black/10 dark:border-white/20 hover:border-warning/40 hover:bg-black/5 dark:hover:bg-white/20 text-text-main hover:shadow-md"
                           )}
                         >
-                          <div className="flex items-center gap-4 pr-8">
+                          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
                             <span className={cn(
-                              "w-10 h-10 rounded-xl border text-sm flex items-center justify-center font-mono font-black transition-all shrink-0",
+                              "w-8 h-8 sm:w-10 sm:h-10 rounded-xl border text-xs sm:text-sm flex items-center justify-center font-mono font-black transition-all shrink-0",
                               isSelected 
                                 ? "border-warning bg-warning text-crust shadow-md" 
                                 : "border-black/10 dark:border-white/20 text-text-muted bg-black/5 dark:bg-white/10 group-hover:border-warning/50 group-hover:bg-warning/10 group-hover:text-warning"
@@ -959,25 +1006,28 @@ export default function QuizPlayer() {
                               {String.fromCharCode(65 + optIdx)}
                             </span>
                             
-                            <span className={cn(isEliminated ? "line-through text-text-muted/50" : "", "leading-relaxed")}>
+                            <span className={cn(
+                              isEliminated ? "line-through text-text-muted/50" : "", 
+                              "leading-snug sm:leading-relaxed break-words min-w-0 flex-1 text-xs sm:text-base"
+                            )}>
                               {option}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                             {/* Eliminate Option Button */}
                             <button
                               type="button"
                               onClick={(e) => toggleEliminateOption(currentQ.id, optIdx, e)}
                               className={cn(
-                                "p-2 rounded-xl border transition-all text-[10px] font-mono flex items-center gap-1.5 cursor-pointer backdrop-blur-sm",
+                                "p-1.5 sm:p-2 rounded-xl border transition-all text-[10px] font-mono flex items-center gap-1 cursor-pointer backdrop-blur-sm",
                                 isEliminated 
-                                  ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20" 
-                                  : "opacity-0 group-hover:opacity-100 bg-surface border-black/10 dark:border-white/10 text-text-muted hover:text-text-main hover:border-black/20 dark:hover:border-white/20"
+                                  ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20 opacity-100" 
+                                  : "opacity-70 sm:opacity-0 group-hover:opacity-100 bg-surface border-black/10 dark:border-white/10 text-text-muted hover:text-text-main hover:border-black/20 dark:hover:border-white/20"
                               )}
                               title={isEliminated ? "Restore Choice" : "Eliminate Choice"}
                             >
-                              <EyeOff size={14} />
+                              <EyeOff size={13} className="sm:w-3.5 sm:h-3.5" />
                               <span className="hidden md:inline">{isEliminated ? 'Restore' : 'Cross out'}</span>
                             </button>
 
@@ -987,7 +1037,7 @@ export default function QuizPlayer() {
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                               >
-                                <CheckCircle2 size={24} className="text-warning shrink-0 drop-shadow-md" />
+                                <CheckCircle2 size={20} className="sm:w-6 sm:h-6 text-warning shrink-0 drop-shadow-md" />
                               </motion.div>
                             )}
                           </div>
@@ -1000,17 +1050,9 @@ export default function QuizPlayer() {
             </AnimatePresence>
 
             {/* Bottom Question Navigation Bar */}
-            <div className="pt-8 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <button
-                onClick={handlePrevQuestion}
-                disabled={currentQuestionIdx === 0}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-xs font-black uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
-              >
-                <ArrowLeft size={16} /> Previous
-              </button>
-
+            <div className="pt-6 sm:pt-8 border-t border-black/10 dark:border-white/10 flex flex-col gap-4 sm:gap-6">
               {/* Number Buttons Toolbar */}
-              <div className="flex items-center gap-2 overflow-x-auto max-w-full py-2 px-3 no-scrollbar mask-edges">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-full py-1.5 px-2 no-scrollbar mask-edges justify-start sm:justify-center">
                 {quiz.questions.map((q, idx) => {
                   const isAnswered = userAnswers[q.id] !== undefined;
                   const isFlagged = flaggedQuestions[q.id];
@@ -1024,9 +1066,9 @@ export default function QuizPlayer() {
                         setCurrentQuestionIdx(idx);
                       }}
                       className={cn(
-                        "w-9 h-9 rounded-xl text-xs transition-all duration-200 flex items-center justify-center cursor-pointer relative shrink-0 border",
+                        "w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs transition-all duration-200 flex items-center justify-center cursor-pointer relative shrink-0 border",
                         isCurrent 
-                          ? "bg-warning border-warning text-crust font-black shadow-[0_4px_12px_rgba(252,211,77,0.4)] scale-110 z-10" 
+                          ? "bg-warning border-warning text-crust font-black shadow-[0_4px_12px_rgba(252,211,77,0.4)] scale-105 z-10" 
                           : isAnswered 
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold hover:bg-emerald-500/20" 
                             : "bg-surface border-black/10 dark:border-white/10 text-text-muted hover:border-warning/50 font-semibold hover:text-text-main"
@@ -1034,28 +1076,39 @@ export default function QuizPlayer() {
                     >
                       {idx + 1}
                       {isFlagged && (
-                        <span className="absolute -top-1.5 -right-1.5 text-[10px] drop-shadow-md">🚩</span>
+                        <span className="absolute -top-1 -right-1 text-[9px] drop-shadow-md">🚩</span>
                       )}
                     </button>
                   );
                 })}
               </div>
 
-              {currentQuestionIdx < quiz.questions.length - 1 ? (
+              {/* Action Buttons Row */}
+              <div className="flex items-center justify-between gap-3 w-full">
                 <button
-                  onClick={handleNextQuestion}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-warning hover:bg-warning-dark text-crust font-black text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(252,211,77,0.3)] hover:shadow-[0_8px_25px_rgba(252,211,77,0.4)] hover:-translate-y-0.5"
+                  onClick={handlePrevQuestion}
+                  disabled={currentQuestionIdx === 0}
+                  className="flex-1 sm:flex-initial px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-xs font-black uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-sm hover:shadow-md"
                 >
-                  Next <ArrowRight size={16} />
+                  <ArrowLeft size={16} /> <span>Previous</span>
                 </button>
-              ) : (
-                <button
-                  onClick={() => setShowConfirmModal(true)}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:shadow-[0_8px_25px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 cursor-pointer"
-                >
-                  Submit Quiz <CheckCircle2 size={16} />
-                </button>
-              )}
+
+                {currentQuestionIdx < quiz.questions.length - 1 ? (
+                  <button
+                    onClick={handleNextQuestion}
+                    className="flex-1 sm:flex-initial px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl bg-warning hover:bg-warning-dark text-crust font-black text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-[0_4px_20px_rgba(252,211,77,0.3)] hover:shadow-[0_8px_25px_rgba(252,211,77,0.4)]"
+                  >
+                    <span>Next</span> <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowConfirmModal(true)}
+                    className="flex-1 sm:flex-initial px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_4px_20px_rgba(245,158,11,0.4)] cursor-pointer"
+                  >
+                    <span>Submit</span> <CheckCircle2 size={16} />
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>
@@ -1208,6 +1261,21 @@ export default function QuizPlayer() {
                 </div>
               </motion.div>
             </div>
+          )}
+        </AnimatePresence>
+
+        {/* Anti-cheat Clipboard Action Notice Toast */}
+        <AnimatePresence>
+          {showClipboardNotice && !isSubmitted && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border border-red-400 flex items-center gap-2.5 max-w-md pointer-events-none"
+            >
+              <AlertTriangle size={18} className="shrink-0 animate-bounce" />
+              <span>Copy, cut, and paste actions are strictly disabled during quiz attempts.</span>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
