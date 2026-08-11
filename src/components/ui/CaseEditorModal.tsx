@@ -119,24 +119,34 @@ export function CaseEditorModal({ onClose, caseToEdit, userEmail }: CaseEditorMo
       
       // Fallback path: compress images, directly encode other files
       if (file.type.startsWith('image/')) {
-        const { compressImage } = await import('@/lib/image-utils');
-        const compressedBlob = await compressImage(file, 800, 0.6); // aggressively compress for firestore
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(compressedBlob);
-        });
+        try {
+          const { compressImage } = await import('@/lib/image-utils');
+          const compressedBlob = await compressImage(file, 800, 0.6); // aggressively compress for firestore
+          return await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => {
+              console.warn("Failed to read compressed image as data URL, using object URL");
+              resolve(URL.createObjectURL(file));
+            };
+            reader.readAsDataURL(compressedBlob);
+          });
+        } catch (e) {
+          console.warn("Error compressing image in upload fallback:", e);
+        }
       }
 
       if (file.size > 800000) {
-        throw new Error(`File ${file.name} is too large (>800kb) for direct upload. Please use a smaller file or configure a Storage bucket.`);
+        throw new Error(`File ${file.name} is too large (>800kb) for direct offline upload. Please ensure your cloud storage bucket or direct server connection is reachable.`);
       }
 
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => {
+          console.warn("Failed to read file as data URL, using object URL");
+          resolve(URL.createObjectURL(file));
+        };
         reader.readAsDataURL(file);
       });
     }

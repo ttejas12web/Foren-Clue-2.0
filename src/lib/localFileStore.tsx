@@ -46,7 +46,7 @@ class LocalFileStore {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error('Failed to read file as Data URL'));
         reader.readAsDataURL(file);
       });
     }
@@ -100,7 +100,7 @@ const convertToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
+    reader.onerror = () => reject(new Error('Failed to convert file to Base64'));
   });
 };
 
@@ -230,6 +230,27 @@ export async function uploadFileResilient(
     fileToUpload = new File([file], `evidence_${Date.now()}.${extension}`, { type: file.type });
   }
 
+  // Primary Storage Target: Server Cloudflare R2 Object Storage / Server pipeline
+  try {
+    if (onStatusChange) onStatusChange('Routing upload to Cloudflare R2 Object Storage...');
+    let serverUrl: string;
+    if (fileToUpload.size > 300 * 1024) {
+      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing chunked upload pipeline.`);
+      serverUrl = await uploadChunksToServer(fileToUpload, cloudPath, onStatusChange);
+    } else {
+      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing direct upload.`);
+      serverUrl = await uploadToServerDisk(fileToUpload, cloudPath, onStatusChange);
+    }
+    return { url: serverUrl, isFallback: false };
+  } catch (serverErr: any) {
+    const errorMsg = serverErr instanceof Error ? serverErr.message : String(serverErr);
+    console.warn("Server R2 upload pipeline rejected or unavailable. Trying Firebase Storage fallback:", serverErr);
+    if (onStatusChange) {
+      onStatusChange(`Server Upload Warning: ${errorMsg}. Trying Firebase Storage...`);
+    }
+  }
+
+  // Secondary Fallback: Firebase Storage
   if (storage) {
     try {
       if (onStatusChange) onStatusChange('Connecting to Firebase Cloud Storage...');
@@ -277,34 +298,14 @@ export async function uploadFileResilient(
         );
       });
 
-      // Attempt Firebase Storage upload with a generous 45-second timeout
-      const result = await withTimeout(uploadPromise, 45000, "Firebase Storage took too long to complete.");
+      // Attempt Firebase Storage upload with a 30-second timeout
+      const result = await withTimeout(uploadPromise, 30000, "Firebase Storage took too long to complete.");
       return result;
     } catch (err: any) {
-      console.warn("Cloud storage upload rejected or timed out. Handing off to Express server disk layer:", err);
+      console.warn("Firebase Cloud storage upload rejected or timed out:", err);
     }
-  } else {
-    console.warn("Firebase Storage is not initialized in firebase.ts. Resorting to Express server disk layer.");
   }
 
-  // Fallback 1: High-performance shared Server Disk storage (Using chunked upload if file is over 500KB to bypass Nginx limitations)
-  try {
-    let serverUrl: string;
-    if (fileToUpload.size > 500 * 1024) {
-      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing chunked upload pipeline.`);
-      serverUrl = await uploadChunksToServer(fileToUpload, cloudPath, onStatusChange);
-    } else {
-      console.log(`[uploadFileResilient] File size is ${fileToUpload.size} bytes. Utilizing direct upload.`);
-      serverUrl = await uploadToServerDisk(fileToUpload, cloudPath, onStatusChange);
-    }
-    return { url: serverUrl, isFallback: false };
-  } catch (serverErr: any) {
-    const errorMsg = serverErr instanceof Error ? serverErr.message : String(serverErr);
-    console.error("Express server disk write failed or rejected. Complete Error details:", serverErr);
-    if (onStatusChange) {
-      onStatusChange(`Server Upload Failed: ${errorMsg}. Resorting to offline-fallback.`);
-    }
-  }
 
   // Fallback 2: For images, convert to highly-compressed Base64 data-URL so other users can view it too!
   if (fileToUpload.type.startsWith('image/')) {
@@ -316,7 +317,7 @@ export async function uploadFileResilient(
       const base64Url = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error('Failed to read compressed image file'));
         reader.readAsDataURL(compressedBlob);
       });
       return { url: base64Url, isFallback: true };
@@ -325,7 +326,7 @@ export async function uploadFileResilient(
       const base64Url = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error('Failed to read raw image file for Base64'));
         reader.readAsDataURL(fileToUpload);
       });
       return { url: base64Url, isFallback: true };

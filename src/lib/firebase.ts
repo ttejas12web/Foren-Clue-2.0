@@ -15,10 +15,7 @@ const getRuntimeConfig = () => {
       config.authDomain = 'forenclue.com';
     }
   }
-  // Standardize the storage bucket to legacy appspot.com if the modern .firebasestorage.app bucket is not yet active/provisioned
-  if (config.storageBucket && config.storageBucket.endsWith('.firebasestorage.app')) {
-    config.storageBucket = config.storageBucket.replace('.firebasestorage.app', '.appspot.com');
-  }
+  // Ensure storageBucket is used as specified in firebase-applet-config.json
   return config;
 };
 

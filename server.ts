@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { COURSES } from './src/constants.js';
 
@@ -49,9 +50,85 @@ function getDbAdmin() {
   return _dbAdmin;
 }
 
+// Initialize Cloudflare R2 Client lazily
+let _r2Client: S3Client | null = null;
+function getR2Client(): S3Client | null {
+  if (_r2Client) return _r2Client;
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    return null;
+  }
+
+  try {
+    _r2Client = new S3Client({
+      region: "auto",
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+    return _r2Client;
+  } catch (err) {
+    console.error("Failed to initialize Cloudflare R2 Client:", err);
+    return null;
+  }
+}
+
+async function uploadToR2(buffer: Buffer, objectKey: string, contentType?: string): Promise<string | null> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+
+  if (!client || !bucketName) {
+    console.log("[Cloudflare R2] R2 credentials not fully configured (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME required). Skipping R2 upload.");
+    return null;
+  }
+
+  try {
+    const cleanKey = objectKey.replace(/^\/+/, "");
+    console.log(`[Cloudflare R2] Uploading object "${cleanKey}" (${buffer.length} bytes) to R2 bucket "${bucketName}"...`);
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: cleanKey,
+      Body: buffer,
+      ContentType: contentType || "application/octet-stream",
+    });
+
+    await client.send(command);
+
+    let domain = process.env.R2_CUSTOM_DOMAIN || "https://www.forenclue.in";
+    if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
+      domain = `https://${domain}`;
+    }
+    domain = domain.replace(/\/+$/, "");
+
+    const publicUrl = `${domain}/${cleanKey}`;
+    console.log(`[Cloudflare R2] Successfully uploaded to R2 Object Storage! Public URL: ${publicUrl}`);
+    return publicUrl;
+  } catch (err: any) {
+    console.error("[Cloudflare R2 Upload Error]:", err);
+    return null;
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  // CORS Middleware for cross-domain / preview iframe file uploads and API calls
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -411,60 +488,75 @@ async function startServer() {
 
         // Perform standard upload logic
         const sanitizedName = (fileName || `upload_${Date.now()}`).replace(/[^a-zA-Z0-9.\-_]/g, "_");
+        const objectPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
         let finalUrl = "";
+        let uploadedToR2 = false;
         let uploadedToFirebase = false;
 
-        // Try permanently uploading of consolidated file to Firebase Storage from Server Admin SDK
+        // 1. Try Cloudflare R2 Object Storage upload first
         try {
-          getDbAdmin();
-
-          const bucketCandidates: string[] = [];
-          if (firebaseConfig.storageBucket) {
-            bucketCandidates.push(firebaseConfig.storageBucket);
+          const r2Url = await uploadToR2(consolidatedBuffer, objectPath, fileType);
+          if (r2Url) {
+            finalUrl = r2Url;
+            uploadedToR2 = true;
           }
-          if (firebaseConfig.projectId) {
-            const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
-            const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
-            const rawIdBucket = firebaseConfig.projectId;
-            if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
-            if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
-            if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
-          }
+        } catch (r2Err) {
+          console.warn("[Cloudflare R2 chunked upload attempt warning]:", r2Err);
+        }
 
-          const gcsPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
-          const token = crypto.randomUUID();
-          let lastErr: any = null;
+        // 2. Try permanently uploading of consolidated file to Firebase Storage if R2 was not used
+        if (!uploadedToR2) {
+          try {
+            getDbAdmin();
 
-          for (const bucketName of bucketCandidates) {
-            try {
-              console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
-              const bucket = admin.storage().bucket(bucketName);
-              const gcsFile = bucket.file(gcsPath);
-
-              await gcsFile.save(consolidatedBuffer, {
-                metadata: {
-                  contentType: fileType || "application/octet-stream",
-                  metadata: {
-                    firebaseStorageDownloadTokens: token,
-                  }
-                },
-                resumable: false,
-              });
-
-              finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
-              console.log(`[Firebase Storage Admin upload] Successfully uploaded consolidated file ${gcsPath} to ${bucketName} with url ${finalUrl}`);
-              uploadedToFirebase = true;
-              break;
-            } catch (err: any) {
-              lastErr = err;
+            const bucketCandidates: string[] = [];
+            if (firebaseConfig.storageBucket) {
+              bucketCandidates.push(firebaseConfig.storageBucket);
             }
-          }
+            if (firebaseConfig.projectId) {
+              const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
+              const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
+              const rawIdBucket = firebaseConfig.projectId;
+              if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
+              if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
+              if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
+            }
 
-          if (!uploadedToFirebase && lastErr) {
-            throw lastErr;
+            const gcsPath = objectPath;
+            const token = crypto.randomUUID();
+            let lastErr: any = null;
+
+            for (const bucketName of bucketCandidates) {
+              try {
+                console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
+                const bucket = admin.storage().bucket(bucketName);
+                const gcsFile = bucket.file(gcsPath);
+
+                await gcsFile.save(consolidatedBuffer, {
+                  metadata: {
+                    contentType: fileType || "application/octet-stream",
+                    metadata: {
+                      firebaseStorageDownloadTokens: token,
+                    }
+                  },
+                  resumable: false,
+                });
+
+                finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
+                console.log(`[Firebase Storage Admin upload] Successfully uploaded consolidated file ${gcsPath} to ${bucketName} with url ${finalUrl}`);
+                uploadedToFirebase = true;
+                break;
+              } catch (err: any) {
+                lastErr = err;
+              }
+            }
+
+            if (!uploadedToFirebase && lastErr) {
+              throw lastErr;
+            }
+          } catch (storageErr: any) {
+            // Fall back gracefully to local storage
           }
-        } catch (storageErr: any) {
-          // Fall back gracefully to local storage
         }
 
         // Always save to server disk as fail-safe backup
@@ -473,7 +565,7 @@ async function startServer() {
         await fs.promises.writeFile(filePath, consolidatedBuffer);
         console.log(`[Server disk upload cache, consolidated file written] ${uniqueFileName} (${consolidatedBuffer.length} bytes)`);
 
-        if (!uploadedToFirebase) {
+        if (!finalUrl) {
           finalUrl = `/api/uploads/${uniqueFileName}`;
         }
 
@@ -494,6 +586,7 @@ async function startServer() {
           relativePath: `/api/uploads/${uniqueFileName}`,
           fileName: uniqueFileName,
           size: consolidatedBuffer.length,
+          uploadedToR2,
           uploadedToFirebase
         });
       }
@@ -524,62 +617,77 @@ async function startServer() {
       const buffer = Buffer.from(base64Clean, "base64");
 
       const sanitizedName = (fileName || `upload_${Date.now()}`).replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const objectPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
 
       let finalUrl = "";
+      let uploadedToR2 = false;
       let uploadedToFirebase = false;
 
-      // Try uploading to Firebase Storage permanently from Server
+      // 1. Try Cloudflare R2 Object Storage upload first
       try {
-        // Ensure Admin SDK is initialized via lazy helper
-        getDbAdmin();
-
-        const bucketCandidates: string[] = [];
-        if (firebaseConfig.storageBucket) {
-          bucketCandidates.push(firebaseConfig.storageBucket);
+        const r2Url = await uploadToR2(buffer, objectPath, fileType);
+        if (r2Url) {
+          finalUrl = r2Url;
+          uploadedToR2 = true;
         }
-        if (firebaseConfig.projectId) {
-          const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
-          const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
-          const rawIdBucket = firebaseConfig.projectId;
-          if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
-          if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
-          if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
-        }
+      } catch (r2Err) {
+        console.warn("[Cloudflare R2 upload attempt warning]:", r2Err);
+      }
 
-        const gcsPath = cloudPath || `uploads/${Date.now()}_${sanitizedName}`;
-        const token = crypto.randomUUID();
-        let lastErr: any = null;
+      // 2. Try uploading to Firebase Storage permanently from Server if R2 was not used
+      if (!uploadedToR2) {
+        try {
+          // Ensure Admin SDK is initialized via lazy helper
+          getDbAdmin();
 
-        for (const bucketName of bucketCandidates) {
-          try {
-            console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
-            const bucket = admin.storage().bucket(bucketName);
-            const gcsFile = bucket.file(gcsPath);
-
-            await gcsFile.save(buffer, {
-              metadata: {
-                contentType: fileType || "application/octet-stream",
-                metadata: {
-                  firebaseStorageDownloadTokens: token,
-                }
-              },
-              resumable: false,
-            });
-
-            finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
-            console.log(`[Firebase Storage Admin upload] Successfully uploaded ${gcsPath} to ${bucketName} with url ${finalUrl}`);
-            uploadedToFirebase = true;
-            break;
-          } catch (err: any) {
-            lastErr = err;
+          const bucketCandidates: string[] = [];
+          if (firebaseConfig.storageBucket) {
+            bucketCandidates.push(firebaseConfig.storageBucket);
           }
-        }
+          if (firebaseConfig.projectId) {
+            const appspotBucket = `${firebaseConfig.projectId}.appspot.com`;
+            const firebasestorageBucket = `${firebaseConfig.projectId}.firebasestorage.app`;
+            const rawIdBucket = firebaseConfig.projectId;
+            if (!bucketCandidates.includes(appspotBucket)) bucketCandidates.push(appspotBucket);
+            if (!bucketCandidates.includes(firebasestorageBucket)) bucketCandidates.push(firebasestorageBucket);
+            if (!bucketCandidates.includes(rawIdBucket)) bucketCandidates.push(rawIdBucket);
+          }
 
-        if (!uploadedToFirebase && lastErr) {
-          throw lastErr;
+          const gcsPath = objectPath;
+          const token = crypto.randomUUID();
+          let lastErr: any = null;
+
+          for (const bucketName of bucketCandidates) {
+            try {
+              console.log(`[Firebase Storage Admin upload] Trying bucket: ${bucketName}...`);
+              const bucket = admin.storage().bucket(bucketName);
+              const gcsFile = bucket.file(gcsPath);
+
+              await gcsFile.save(buffer, {
+                metadata: {
+                  contentType: fileType || "application/octet-stream",
+                  metadata: {
+                    firebaseStorageDownloadTokens: token,
+                  }
+                },
+                resumable: false,
+              });
+
+              finalUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(gcsPath)}?alt=media&token=${token}`;
+              console.log(`[Firebase Storage Admin upload] Successfully uploaded ${gcsPath} to ${bucketName} with url ${finalUrl}`);
+              uploadedToFirebase = true;
+              break;
+            } catch (err: any) {
+              lastErr = err;
+            }
+          }
+
+          if (!uploadedToFirebase && lastErr) {
+            throw lastErr;
+          }
+        } catch (storageErr) {
+          // Fall back gracefully to local storage
         }
-      } catch (storageErr) {
-        // Fall back gracefully to local storage
       }
 
       // Always write to server disk as duplicate cache/failsafe
@@ -588,7 +696,7 @@ async function startServer() {
       await fs.promises.writeFile(filePath, buffer);
       console.log(`[Server disk upload cache, file written] ${uniqueFileName} (${buffer.length} bytes)`);
 
-      if (!uploadedToFirebase) {
+      if (!finalUrl) {
         finalUrl = `/api/uploads/${uniqueFileName}`;
       }
 
@@ -598,8 +706,10 @@ async function startServer() {
         relativePath: `/api/uploads/${uniqueFileName}`,
         fileName: uniqueFileName,
         size: buffer.length,
+        uploadedToR2,
         uploadedToFirebase
       });
+
     } catch (err: any) {
       console.error("[Server disk upload error]:", err);
       res.status(500).json({ error: err.message || "Failed to save file to server storage." });
