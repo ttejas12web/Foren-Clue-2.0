@@ -383,12 +383,14 @@ export async function resolveFileUrl(url: string | null | undefined): Promise<st
   return url;
 }
 
-export function ResilientImage({ src, alt, className, ...props }: { src: string; alt: string; className?: string; [key: string]: any }) {
+export function ResilientImage({ src, alt, className, fallbackText, ...props }: { src: string; alt: string; className?: string; fallbackText?: string; [key: string]: any }) {
   const [resolvedSrc, setResolvedSrc] = useState<string>('');
+  const [hasError, setHasError] = useState<boolean>(false);
 
   useEffect(() => {
     let active = true;
     let objectUrl = '';
+    setHasError(false);
 
     const resolve = async () => {
       if (!src) return;
@@ -415,12 +417,27 @@ export function ResilientImage({ src, alt, className, ...props }: { src: string;
     };
   }, [src]);
 
+  if (hasError && fallbackText) {
+    return (
+      <div className={className ? className + " flex items-center justify-center bg-warning/20 text-warning font-bold text-sm" : "w-full h-full flex items-center justify-center bg-warning/20 text-warning font-bold text-sm rounded-lg"}>
+        {fallbackText}
+      </div>
+    );
+  }
+
   if (!resolvedSrc) {
     return <div className={className ? className + " animate-pulse bg-black/5 dark:bg-white/5" : "animate-pulse bg-black/5 dark:bg-white/5 rounded-lg w-full h-full"} />;
   }
 
   return (
-    <img src={resolvedSrc} alt={alt} className={className} referrerPolicy="no-referrer" {...props} />
+    <img 
+      src={resolvedSrc} 
+      alt={alt} 
+      className={className} 
+      referrerPolicy="no-referrer" 
+      onError={() => setHasError(true)}
+      {...props} 
+    />
   );
 }
 

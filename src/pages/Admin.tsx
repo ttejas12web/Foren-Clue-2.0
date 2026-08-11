@@ -405,6 +405,10 @@ export default function Admin() {
     clearanceLevel: 'Level 1 - Employee'
   });
 
+  const [isUploadingEmpPhoto, setIsUploadingEmpPhoto] = useState(false);
+  const [empPhotoErrorText, setEmpPhotoErrorText] = useState('');
+  const [empPhotoSuccessText, setEmpPhotoSuccessText] = useState('');
+
   // Seed Demo Employees & Certificates (Restore Databases)
   const seedDemoEmployees = async () => {
     setEmployeeLoading(true);
@@ -745,6 +749,8 @@ export default function Admin() {
       });
       setIsEditingEmployee(false);
       setEditEmployeeId(null);
+      setEmpPhotoSuccessText('');
+      setEmpPhotoErrorText('');
       fetchCollections();
     } catch (err: any) {
       console.error('Error saving employee profile:', err);
@@ -1837,6 +1843,37 @@ export default function Admin() {
         setAudioErrorText(`Audio upload failed: ${err.message || err}`);
       } finally {
         setIsUploadingAudio(false);
+      }
+    }
+  };
+
+  const handleEmployeePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmpPhotoErrorText('');
+    setEmpPhotoSuccessText('');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        setEmpPhotoErrorText('Please select a valid image file (PNG, JPG, WEBP).');
+        return;
+      }
+      setIsUploadingEmpPhoto(true);
+      setEmpPhotoSuccessText('Uploading profile photo to R2 storage...');
+      try {
+        const cleanName = `employees/avatars/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const uploadResult = await uploadFileResilient(file, cleanName, (msg) => setEmpPhotoSuccessText(msg));
+        setEmployeeFormData(prev => ({
+          ...prev,
+          imageUrl: uploadResult.url
+        }));
+        setEmpPhotoSuccessText(uploadResult.isFallback
+          ? `Profile photo saved offline! (${file.name})`
+          : `Profile photo uploaded to R2 successfully: ${file.name}`
+        );
+      } catch (err: any) {
+        console.error('Error uploading employee photo:', err);
+        setEmpPhotoErrorText(`Photo upload failed: ${err.message || err}`);
+      } finally {
+        setIsUploadingEmpPhoto(false);
       }
     }
   };
@@ -3910,15 +3947,54 @@ export default function Admin() {
                               className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
                             />
                           </div>
-                          <div className="md:col-span-2">
-                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Profile Photo URL</label>
-                            <input 
-                              type="text" 
-                              value={employeeFormData.imageUrl} 
-                              onChange={e => setEmployeeFormData({...employeeFormData, imageUrl: e.target.value})} 
-                              placeholder="e.g. https://domain.com/photo.jpg" 
-                              className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
-                            />
+                          <div className="md:col-span-2 space-y-2">
+                            <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">
+                              Profile Photo (Upload from Local Storage to R2 or Paste URL)
+                            </label>
+                            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                              {employeeFormData.imageUrl && (
+                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-warning/50 shrink-0 bg-base flex items-center justify-center">
+                                  <ResilientImage 
+                                    src={employeeFormData.imageUrl} 
+                                    alt="Employee avatar preview" 
+                                    className="w-full h-full object-cover"
+                                    fallbackText={employeeFormData.fullName ? employeeFormData.fullName.charAt(0) : "E"}
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 w-full space-y-2">
+                                <div className="flex gap-2 items-center">
+                                  <input 
+                                    type="text" 
+                                    value={employeeFormData.imageUrl} 
+                                    onChange={e => setEmployeeFormData({...employeeFormData, imageUrl: e.target.value})} 
+                                    placeholder="e.g. https://www.forenclue.in/uploads/photo.jpg or upload from local device" 
+                                    className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
+                                  />
+                                  <label className={`cursor-pointer px-4 py-2 rounded-xl bg-warning/10 hover:bg-warning/20 border border-warning/30 text-warning text-xs font-bold uppercase tracking-wider flex items-center gap-2 shrink-0 transition-colors ${isUploadingEmpPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    <Upload size={14} />
+                                    <span>{isUploadingEmpPhoto ? 'Uploading...' : 'Upload Photo'}</span>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      onChange={handleEmployeePhotoUpload} 
+                                      disabled={isUploadingEmpPhoto}
+                                      className="hidden" 
+                                    />
+                                  </label>
+                                </div>
+                                {empPhotoSuccessText && (
+                                  <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                                    {empPhotoSuccessText}
+                                  </p>
+                                )}
+                                {empPhotoErrorText && (
+                                  <p className="text-[11px] font-mono text-red-400 font-medium">
+                                    {empPhotoErrorText}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
 
