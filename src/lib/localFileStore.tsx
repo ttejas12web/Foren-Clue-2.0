@@ -73,6 +73,23 @@ class LocalFileStore {
       return null;
     }
   }
+
+  async deleteFile(key: string): Promise<boolean> {
+    try {
+      const db = await this.init();
+      return new Promise((resolve) => {
+        const transaction = db.transaction(this.storeName, "readwrite");
+        const store = transaction.objectStore(this.storeName);
+        const cleanedKey = key.replace("localdb://", "");
+        const request = store.delete(cleanedKey);
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => resolve(false);
+      });
+    } catch (err) {
+      console.error("IndexedDB deleteFile error:", err);
+      return false;
+    }
+  }
 }
 
 export const localFileStore = new LocalFileStore();
@@ -440,4 +457,60 @@ export function ResilientImage({ src, alt, className, fallbackText, ...props }: 
     />
   );
 }
+
+/**
+ * Deletes a file from storage (handles Cloudflare R2 via backend server endpoint and local IndexedDB)
+ */
+export async function deleteFileResilient(fileUrlOrKey: string): Promise<{ success: boolean; message: string; deletedFromR2: boolean }> {
+  if (!fileUrlOrKey || typeof fileUrlOrKey !== 'string') {
+    return { success: false, message: 'No valid file URL or key provided.', deletedFromR2: false };
+  }
+
+  const cleanUrl = fileUrlOrKey.trim();
+
+  // If local IndexedDB URL
+  if (cleanUrl.startsWith('localdb://')) {
+    try {
+      await localFileStore.deleteFile(cleanUrl);
+      return { success: true, message: 'Deleted file from local offline store.', deletedFromR2: false };
+    } catch (err: any) {
+      console.warn('Error deleting localdb file:', err);
+      return { success: false, message: 'Failed to remove local file.', deletedFromR2: false };
+    }
+  }
+
+  // If data URI or blob URL, no remote deletion needed
+  if (cleanUrl.startsWith('data:') || cleanUrl.startsWith('blob:')) {
+    return { success: true, message: 'Transient memory URL cleared.', deletedFromR2: false };
+  }
+
+  // Request deletion from backend server (handles Cloudflare R2)
+  try {
+    const res = await fetch('/api/delete-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileUrl: cleanUrl })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        success: true,
+        message: data.message || 'File deletion request succeeded.',
+        deletedFromR2: !!data.deletedFromR2
+      };
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        message: errData.error || 'Server file deletion endpoint returned error.',
+        deletedFromR2: false
+      };
+    }
+  } catch (err: any) {
+    console.warn('Error deleting file via API:', err);
+    return { success: false, message: 'Failed to connect to file deletion server endpoint.', deletedFromR2: false };
+  }
+}
+
 

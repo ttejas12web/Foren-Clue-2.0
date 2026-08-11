@@ -13,7 +13,7 @@ import {
 import { db, storage, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { ResilientImage, uploadFileResilient } from '@/lib/localFileStore';
+import { ResilientImage, uploadFileResilient, deleteFileResilient } from '@/lib/localFileStore';
 import { cn } from '@/lib/utils';
 import { Quiz, QuizQuestion } from '@/types/quiz';
 import { fetchQuizzes as fetchAdminQuizzes, saveQuiz, deleteQuiz } from '@/services/quizService';
@@ -779,16 +779,44 @@ export default function Admin() {
     });
   };
 
+  const deleteAttachedFilesFromR2 = async (urls: (string | undefined | null)[]): Promise<{ count: number; messages: string[] }> => {
+    const validUrls = Array.from(new Set(urls.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)));
+    let deletedCount = 0;
+    const messages: string[] = [];
+
+    for (const url of validUrls) {
+      try {
+        const res = await deleteFileResilient(url);
+        if (res.deletedFromR2) {
+          deletedCount++;
+          messages.push(`Deleted ${url.split('/').pop()} from Cloudflare R2 storage`);
+        }
+      } catch (e) {
+        console.warn('Failed to delete file from R2:', url, e);
+      }
+    }
+
+    return { count: deletedCount, messages };
+  };
+
   const handleEmployeeDelete = async (id: string) => {
-    if (!window.confirm(`Are you absolutely sure you want to revoke and delete credentials for Employee ID "${id}"? This action cannot be undone.`)) return;
+    const empRecord = adminEmployees.find((e: any) => e.employeeId === id || e.docId === id || e.id === id);
+    const empName = empRecord?.fullName || id;
+
+    if (!window.confirm(`Are you sure you want to revoke and delete credentials for Employee "${empName}" (${id})? Any profile photo in Cloudflare R2 storage will also be permanently deleted. This action cannot be undone.`)) return;
 
     setEmployeeLoading(true);
     setSuccessMsg('');
     setErrMsg('');
     try {
+      const fileUrls = [empRecord?.imageUrl, empRecord?.avatarUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       const safeId = id.toUpperCase().trim().replace(/[\/\s]/g, '_');
       await deleteDoc(doc(db, 'employees', safeId));
-      setSuccessMsg(`Credentials for ${id} have been successfully revoked.`);
+
+      const r2Notice = count > 0 ? ` and removed profile photo from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Credentials for "${empName}" (${id}) successfully revoked and deleted${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       console.error('Error deleting record:', err);
@@ -1180,16 +1208,21 @@ export default function Admin() {
   };
 
   const handleAdminDeleteCollege = async (id: string, name: string) => {
-    // Security Mandate: Ask double confirmation before destructive modification of admin data!
-    const firstConfirm = window.confirm(`WARNING: You are about to delete the college/university record for "${name}". Do you want to proceed?`);
+    const college = colleges.find((c: any) => c.id === id || c.docId === id);
+
+    const firstConfirm = window.confirm(`WARNING: You are about to delete the college/university record for "${name}". Any associated logo/banner images will also be permanently deleted from Cloudflare R2 storage. Do you want to proceed?`);
     if (!firstConfirm) return;
 
-    const secondConfirm = window.confirm(`DOUBLE CONFIRMATION: Are you absolutely sure you want to permanently delete "${name}" from Firestore? This action cannot be undone.`);
+    const secondConfirm = window.confirm(`DOUBLE CONFIRMATION: Are you absolutely sure you want to permanently delete "${name}"? This action cannot be undone.`);
     if (!secondConfirm) return;
 
     try {
+      const fileUrls = [college?.logo, college?.bannerImage, (college as any)?.logoUrl, (college as any)?.imageUrl, (college as any)?.bannerUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteAdminCollege(id);
-      setSuccessMsg(`College record "${name}" deleted.`);
+      const r2Notice = count > 0 ? ` and removed ${count} media file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`College record "${name}" deleted from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Failed to delete college: ${err.message}`);
@@ -1288,10 +1321,18 @@ export default function Admin() {
   };
 
   const handleAdminDeleteQuiz = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this quiz?")) return;
+    const quiz = adminQuizzes.find((q: any) => q.id === id || q.docId === id);
+    const quizTitle = quiz?.title || id;
+
+    if (!window.confirm(`Are you sure you want to delete Quiz / Challenge "${quizTitle}"? Any attached images will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
     try {
+      const fileUrls = [(quiz as any)?.bannerUrl, (quiz as any)?.imageUrl, (quiz as any)?.coverUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteQuiz(id);
-      setSuccessMsg("Quiz deleted successfully.");
+      const r2Notice = count > 0 ? ` and removed ${count} media file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Quiz "${quizTitle}" deleted successfully from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Failed to delete quiz: ${err.message}`);
@@ -1600,34 +1641,80 @@ export default function Admin() {
 
   // Delete Course
   const handleDeleteCourse = async (courseId: string) => {
-    if (!window.confirm("Are you sure you want to declassify and delete this course? This action cannot be undone.")) return;
+    const course = courses.find((c: any) => c.docId === courseId || c.id === courseId);
+    const courseTitle = course?.title || courseId;
+
+    if (!window.confirm(`Are you sure you want to delete course "${courseTitle}"? Any uploaded covers, thumbnails, or course documents will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
+    setCourseLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
     try {
+      const fileUrls = [course?.thumbnail, course?.thumbnailUrl, course?.imageUrl, course?.coverUrl, course?.pdfUrl, course?.instructorImage];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteDoc(doc(db, 'courses', courseId));
-      setSuccessMsg("Investigation course successfully purged.");
+      const r2Notice = count > 0 ? ` and removed ${count} media file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Course "${courseTitle}" successfully deleted from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Purge failed: ${err.message}`);
+    } finally {
+      setCourseLoading(false);
     }
   };
 
   // Delete Ebook
   const handleDeleteEbook = async (ebookId: string) => {
-    if (!window.confirm("Delete this eBook resource?")) return;
+    const ebook = ebooks.find((b: any) => b.docId === ebookId || b.id === ebookId);
+    const ebookTitle = ebook?.title || ebookId;
+
+    if (!window.confirm(`Are you sure you want to delete eBook "${ebookTitle}"? Its cover image and PDF document will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
+    setEbookLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
     try {
+      const fileUrls = [ebook?.coverUrl, ebook?.pdfUrl, ebook?.downloadUrl, ebook?.thumbnailUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteDoc(doc(db, 'ebooks', ebookId));
-      setSuccessMsg("Resource successfully deleted.");
+      const r2Notice = count > 0 ? ` and removed ${count} file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`eBook "${ebookTitle}" successfully deleted from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Resource deletion failed: ${err.message}`);
+    } finally {
+      setEbookLoading(false);
     }
   };
 
   // Delete Case
   const handleDeleteCase = async (caseId: string) => {
-    if (!window.confirm("Are you sure you want to delete this case study?")) return;
+    let caseItem: any = null;
     try {
+      const caseSnap = await getDoc(doc(db, 'cases', caseId));
+      if (caseSnap.exists()) {
+        caseItem = caseSnap.data();
+      }
+    } catch (e) {
+      // ignore lookup error
+    }
+
+    const caseTitle = caseItem?.title || caseId;
+
+    if (!window.confirm(`Are you sure you want to delete Case Study "${caseTitle}"? All attached evidence images and documents will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
+    setSuccessMsg('');
+    setErrMsg('');
+    try {
+      const mediaArray = Array.isArray(caseItem?.mediaUrls) ? caseItem.mediaUrls : [];
+      const fileUrls = [caseItem?.imageUrl, caseItem?.pdfUrl, ...mediaArray];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteDoc(doc(db, 'cases', caseId));
-      setSuccessMsg("Case Study deleted successfully.");
+      const r2Notice = count > 0 ? ` and removed ${count} media file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Case Study "${caseTitle}" deleted successfully from database${r2Notice}`);
       fetchCollections();
     } catch(e: any) {
       setErrMsg(`Failed to delete case: ${e.message}`);
@@ -1684,13 +1771,26 @@ export default function Admin() {
 
   // Delete Certificate
   const handleDeleteCertificate = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this certificate? This action cannot be undone.")) return;
+    const cert = certificates.find((c: any) => c.id === id || c.docId === id || c.certificateNo === id);
+    const certNo = cert?.certificateNo || id;
+
+    if (!window.confirm(`Are you sure you want to delete Certificate #${certNo}? The certificate visual image and PDF copy will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
+    setCertificateLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
     try {
+      const fileUrls = [cert?.imageUrl, cert?.pdfUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteDoc(doc(db, 'certificates', id));
-      setSuccessMsg("Certificate successfully deleted.");
+      const r2Notice = count > 0 ? ` and removed ${count} document copy/copies from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Certificate #${certNo} successfully deleted from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Delete failed: ${err.message}`);
+    } finally {
+      setCertificateLoading(false);
     }
   };
 
@@ -1926,13 +2026,26 @@ export default function Admin() {
   };
 
   const handleDeletePodcastEpisode = async (episodeId: string) => {
-    if (!window.confirm("Are you sure you want to delete this podcast episode?")) return;
+    const episode = podcastEpisodes.find((ep: any) => ep.docId === episodeId || ep.id === episodeId);
+    const epTitle = episode?.title || episodeId;
+
+    if (!window.confirm(`Are you sure you want to delete Podcast Episode "${epTitle}"? Its audio MP3 file and cover image will also be permanently deleted from Cloudflare R2 storage. This action cannot be undone.`)) return;
+
+    setPodcastLoading(true);
+    setSuccessMsg('');
+    setErrMsg('');
     try {
+      const fileUrls = [episode?.coverUrl, episode?.audioUrl];
+      const { count } = await deleteAttachedFilesFromR2(fileUrls);
+
       await deleteDoc(doc(db, 'podcastEpisodes', episodeId));
-      setSuccessMsg("Podcast Episode successfully deleted.");
+      const r2Notice = count > 0 ? ` and removed ${count} audio/cover file(s) from Cloudflare R2 storage.` : '.';
+      setSuccessMsg(`Podcast Episode "${epTitle}" successfully deleted from database${r2Notice}`);
       fetchCollections();
     } catch (err: any) {
       setErrMsg(`Failed to delete podcast: ${err.message}`);
+    } finally {
+      setPodcastLoading(false);
     }
   };
 

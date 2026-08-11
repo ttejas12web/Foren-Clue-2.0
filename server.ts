@@ -7,7 +7,7 @@ import crypto from 'crypto';
 import admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 import { COURSES } from './src/constants.js';
 
@@ -112,6 +112,33 @@ async function uploadToR2(buffer: Buffer, objectKey: string, contentType?: strin
   } catch (err: any) {
     console.error("[Cloudflare R2 Upload Error]:", err);
     return null;
+  }
+}
+
+async function deleteFromR2(objectKey: string): Promise<boolean> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+
+  if (!client || !bucketName) {
+    console.log("[Cloudflare R2] R2 credentials not fully configured. Skipping R2 deletion.");
+    return false;
+  }
+
+  try {
+    const cleanKey = objectKey.replace(/^\/+/, "");
+    console.log(`[Cloudflare R2] Deleting object "${cleanKey}" from R2 bucket "${bucketName}"...`);
+
+    const command = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: cleanKey,
+    });
+
+    await client.send(command);
+    console.log(`[Cloudflare R2] Successfully deleted object "${cleanKey}" from R2 bucket "${bucketName}".`);
+    return true;
+  } catch (err: any) {
+    console.error(`[Cloudflare R2 Delete Error] for object "${objectKey}":`, err);
+    return false;
   }
 }
 
@@ -713,6 +740,65 @@ async function startServer() {
     } catch (err: any) {
       console.error("[Server disk upload error]:", err);
       res.status(500).json({ error: err.message || "Failed to save file to server storage." });
+    }
+  });
+
+  // Delete File API Route (removes file from Cloudflare R2 storage)
+  app.post("/api/delete-file", async (req, res) => {
+    try {
+      const { fileUrl, keyName } = req.body;
+      let targetKey = keyName;
+
+      if (!targetKey && fileUrl) {
+        if (typeof fileUrl === 'string') {
+          if (fileUrl.startsWith('data:') || fileUrl.startsWith('blob:') || fileUrl.startsWith('localdb://')) {
+            return res.json({ success: true, isLocal: true, message: "Local transient data handled." });
+          }
+          try {
+            if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+              const urlObj = new URL(fileUrl);
+              // Strip leading slash
+              targetKey = urlObj.pathname.replace(/^\/+/, '');
+            } else {
+              targetKey = fileUrl.replace(/^\/+/, '');
+            }
+          } catch (e) {
+            targetKey = fileUrl.replace(/^\/+/, '');
+          }
+        }
+      }
+
+      if (!targetKey) {
+        return res.status(400).json({ error: "Missing fileUrl or keyName for deletion." });
+      }
+
+      targetKey = decodeURIComponent(targetKey);
+
+      const r2Deleted = await deleteFromR2(targetKey);
+
+      // Also try deleting local disk file duplicate if it exists in uploadsDir
+      try {
+        const localFileName = path.basename(targetKey);
+        const localFilePath = path.join(uploadsDir, localFileName);
+        if (fs.existsSync(localFilePath)) {
+          await fs.promises.unlink(localFilePath);
+          console.log(`[Local Disk Cache] Removed duplicate local file "${localFileName}".`);
+        }
+      } catch (localErr) {
+        // Ignored
+      }
+
+      return res.json({
+        success: true,
+        keyName: targetKey,
+        deletedFromR2: r2Deleted,
+        message: r2Deleted 
+          ? `File "${targetKey}" permanently deleted from Cloudflare R2 storage.` 
+          : `File deletion request processed for "${targetKey}".`
+      });
+    } catch (err: any) {
+      console.error("[Delete file endpoint error]:", err);
+      return res.status(500).json({ error: err.message || "Failed to delete file from storage." });
     }
   });
 
