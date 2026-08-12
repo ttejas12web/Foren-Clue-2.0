@@ -318,11 +318,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '86fnkfb4khjr8g';
       const protocol = window.location.protocol;
       const host = window.location.host;
-      const origin = `${protocol}//${host}`;
+      let origin = `${protocol}//${host}`;
+      if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
+        origin = `https://${host}`;
+      }
       
       const redirectUri = `${origin}/api/auth/linkedin/callback`;
-      const state = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
+      const nonce = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
         .map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const stateObj = { nonce, redirectUri };
+      const state = encodeURIComponent(btoa(JSON.stringify(stateObj)));
       
       const scope = encodeURIComponent("openid profile email");
       const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scope}`;
@@ -363,15 +369,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isSettled) return;
           isSettled = true;
           cleanup();
-          const { customToken } = event.data;
+          const { customToken, tempPassword, email, user: linkedinUser } = event.data;
           try {
             if (customToken) {
               await signInWithCustomToken(auth, customToken);
+            } else if (email && tempPassword) {
+              await signInWithEmailAndPassword(auth, email, tempPassword);
+            } else if (linkedinUser) {
+              handleSetManualUser(linkedinUser);
             }
             resolve();
           } catch (err: any) {
-            console.error("LinkedIn custom token sign-in error:", err);
-            reject(err);
+            console.warn("Firebase custom auth error, falling back to session auth:", err);
+            if (linkedinUser) {
+              handleSetManualUser(linkedinUser);
+              resolve();
+            } else {
+              reject(err);
+            }
           }
         } else if (event.data?.type === 'LINKEDIN_AUTH_ERROR') {
           if (isSettled) return;
