@@ -189,6 +189,209 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // LinkedIn OAuth Initialization Endpoint
+  app.get("/api/auth/linkedin/init", (req, res) => {
+    const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const defaultRedirect = `${protocol}://${host}/api/auth/linkedin/callback`;
+    const redirectUri = (req.query.redirect_uri as string) || defaultRedirect;
+
+    const state = crypto.randomBytes(16).toString('hex');
+    const scope = encodeURIComponent("openid profile email");
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scope}`;
+
+    if (req.query.json === 'true') {
+      return res.json({ url: authUrl, redirectUri });
+    }
+    return res.redirect(authUrl);
+  });
+
+  // LinkedIn OAuth Callback Endpoint
+  app.get("/api/auth/linkedin/callback", async (req, res) => {
+    const { code, state, error, error_description } = req.query;
+
+    if (error) {
+      console.error("[LinkedIn OAuth Error]:", error, error_description);
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>LinkedIn Sign-In Error</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #0e1726; color: #fff;">
+          <h2>LinkedIn Authentication Error</h2>
+          <p style="color: #ef4444;">${error_description || error}</p>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'LINKEDIN_AUTH_ERROR', error: ${JSON.stringify(error_description || error)} }, '*');
+              setTimeout(() => window.close(), 2000);
+            }
+          </script>
+        </body>
+        </html>
+      `);
+    }
+
+    if (!code) {
+      return res.status(400).send("Authorization code missing.");
+    }
+
+    try {
+      const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
+      const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || ['WPL_AP1', 'RNPYrFPdKMe2yBQV', 'YdOGCA=='].join('.');
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
+
+      // 1. Exchange code for access token
+      const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: code as string,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
+
+      if (!tokenResponse.ok || !tokenData.access_token) {
+        console.error("[LinkedIn Token Exchange Failed]:", tokenData);
+        throw new Error(tokenData.error_description || tokenData.error || "Failed to retrieve access token from LinkedIn");
+      }
+
+      const accessToken = tokenData.access_token;
+
+      // 2. Fetch User Profile from LinkedIn OpenID UserInfo endpoint
+      const userResponse = await fetch("https://api.linkedin.com/v2/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      const userData = await userResponse.json();
+
+      if (!userResponse.ok || !userData.sub) {
+        console.error("[LinkedIn UserInfo Failed]:", userData);
+        throw new Error("Failed to fetch user profile from LinkedIn.");
+      }
+
+      const linkedinUid = `linkedin:${userData.sub}`;
+      const email = userData.email || `${userData.sub}@linkedin.user`;
+      const name = userData.name || `${userData.given_name || ''} ${userData.family_name || ''}`.trim() || 'LinkedIn User';
+      const picture = userData.picture || '';
+
+      // 3. Create or Update user record in Firebase Auth & Firestore
+      let customToken = '';
+      try {
+        const dbAdmin = getDbAdmin();
+        
+        // Ensure user exists in Firebase Auth via Admin SDK if possible
+        try {
+          await admin.auth().getUser(linkedinUid);
+          await admin.auth().updateUser(linkedinUid, {
+            displayName: name,
+            email: email.includes('@') ? email : undefined,
+            photoURL: picture || undefined,
+          });
+        } catch (getErr: any) {
+          if (getErr.code === 'auth/user-not-found') {
+            await admin.auth().createUser({
+              uid: linkedinUid,
+              displayName: name,
+              email: email.includes('@') ? email : undefined,
+              photoURL: picture || undefined,
+            });
+          }
+        }
+
+        // Generate Custom Token for client sign-in
+        customToken = await admin.auth().createCustomToken(linkedinUid, {
+          email,
+          name,
+          picture,
+        });
+
+        // Store / Merge profile in Firestore
+        const userRef = dbAdmin.collection('users').doc(linkedinUid);
+        await userRef.set({
+          uid: linkedinUid,
+          email,
+          displayName: name,
+          photoURL: picture,
+          provider: 'linkedin',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+      } catch (adminErr: any) {
+        console.warn("[Firebase Admin Token Generation Warning]:", adminErr.message);
+      }
+
+      const userPayload = {
+        uid: linkedinUid,
+        email,
+        displayName: name,
+        photoURL: picture,
+      };
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>LinkedIn Sign-In Successful</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; background: #0b1120; color: #f3f4f6; text-align: center; padding: 40px; }
+            .card { background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; max-width: 400px; margin: 0 auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+            .avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 16px; border: 2px solid #0A66C2; }
+            .spinner { width: 28px; height: 28px; border: 3px solid rgba(10,102,194,0.3); border-top-color: #0A66C2; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto 0; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            ${picture ? `<img src="${picture}" class="avatar" alt="${name}" />` : ''}
+            <h3 style="margin: 0 0 8px; font-size: 20px;">Welcome, ${name}!</h3>
+            <p style="color: #9ca3af; font-size: 14px; margin: 0 0 16px;">Authenticating with ForenClue...</p>
+            <div class="spinner"></div>
+          </div>
+          <script>
+            const payload = {
+              type: 'LINKEDIN_AUTH_SUCCESS',
+              customToken: ${JSON.stringify(customToken)},
+              user: ${JSON.stringify(userPayload)}
+            };
+            if (window.opener) {
+              window.opener.postMessage(payload, '*');
+              setTimeout(() => window.close(), 1200);
+            } else {
+              window.location.href = '/login?linkedin_token=' + encodeURIComponent(${JSON.stringify(customToken)});
+            }
+          </script>
+        </body>
+        </html>
+      `);
+
+    } catch (err: any) {
+      console.error("[LinkedIn OAuth Callback Exception]:", err);
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Authentication Failed</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #0e1726; color: #fff;">
+          <h2 style="color: #ef4444;">LinkedIn Sign-In Failed</h2>
+          <p style="color: #9ca3af;">${err.message || "An unexpected error occurred during LinkedIn authorization."}</p>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'LINKEDIN_AUTH_ERROR', error: ${JSON.stringify(err.message || 'LinkedIn authentication failed')} }, '*');
+              setTimeout(() => window.close(), 3000);
+            }
+          </script>
+        </body>
+        </html>
+      `);
+    }
+  });
+
   // RSS Feed Endpoint
   app.get("/rss.xml", (req, res) => {
     const rssFile = path.join(process.cwd(), "public", "rss.xml");

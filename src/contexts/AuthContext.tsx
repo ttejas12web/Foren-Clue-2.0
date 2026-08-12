@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signInWithCustomToken, signOut, GoogleAuthProvider, OAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,7 @@ interface AuthContextType {
   isAdmin: boolean;
   accessToken: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithLinkedIn: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -312,6 +313,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithLinkedIn = async () => {
+    return new Promise<void>((resolve, reject) => {
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+      const redirectUri = `${protocol}//${host}/api/auth/linkedin/callback`;
+      const initUrl = `/api/auth/linkedin/init?redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+
+      const popup = window.open(
+        initUrl,
+        'LinkedIn Authorization',
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+
+      if (!popup) {
+        reject(new Error("The sign-in popup was blocked by your browser settings. Please allow popups for this site."));
+        return;
+      }
+
+      let isSettled = false;
+
+      const cleanup = () => {
+        clearInterval(timer);
+        window.removeEventListener('message', handleMessage);
+      };
+
+      const timer = setInterval(() => {
+        if (popup.closed && !isSettled) {
+          cleanup();
+          isSettled = true;
+          resolve();
+        }
+      }, 1000);
+
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.data?.type === 'LINKEDIN_AUTH_SUCCESS') {
+          if (isSettled) return;
+          isSettled = true;
+          cleanup();
+          const { customToken } = event.data;
+          try {
+            if (customToken) {
+              await signInWithCustomToken(auth, customToken);
+            }
+            resolve();
+          } catch (err: any) {
+            console.error("LinkedIn custom token sign-in error:", err);
+            reject(err);
+          }
+        } else if (event.data?.type === 'LINKEDIN_AUTH_ERROR') {
+          if (isSettled) return;
+          isSettled = true;
+          cleanup();
+          reject(new Error(event.data.error || 'LinkedIn authentication failed'));
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+    });
+  };
+
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
@@ -389,7 +455,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
+    <AuthContext.Provider value={{ user: effectiveUser, userProfile: effectiveUserProfile, loading, isAdmin, accessToken, signInWithGoogle, signInWithLinkedIn, signUpWithEmail, signInWithEmail, logout, adminLogin }}>
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div 
