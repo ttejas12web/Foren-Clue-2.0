@@ -189,6 +189,42 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Firebase Auth Handler Proxy for Custom Domains (forenclue.in)
+  app.use("/__/auth", async (req, res) => {
+    const targetUrl = `https://gen-lang-client-0244976845.firebaseapp.com/__/auth${req.url}`;
+    try {
+      const headers: Record<string, string> = {};
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (key.toLowerCase() !== 'host' && typeof value === 'string') {
+          headers[key] = value;
+        }
+      }
+      headers['host'] = 'gen-lang-client-0244976845.firebaseapp.com';
+
+      const fetchOptions: RequestInit = {
+        method: req.method,
+        headers,
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
+        fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      }
+
+      const proxyRes = await fetch(targetUrl, fetchOptions);
+      res.status(proxyRes.status);
+      proxyRes.headers.forEach((val, key) => {
+        if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'content-encoding') {
+          res.setHeader(key, val);
+        }
+      });
+      const buffer = await proxyRes.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    } catch (err: any) {
+      console.error("[Firebase Auth Proxy Error]:", err);
+      res.status(500).send("Auth proxy error");
+    }
+  });
+
   // LinkedIn OAuth Initialization Endpoint
   app.all(["/api/auth/linkedin/init", "/api/auth/linkedin/init/"], (req, res) => {
     const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
@@ -1165,9 +1201,10 @@ async function startServer() {
       return next();
     }
     
-    // Ignore API routes, Vite internals, static asset directories, or non-HTML file extensions
+    // Ignore API routes, Firebase internal routes, Vite internals, static asset directories, or non-HTML file extensions
     if (
       req.path.startsWith('/api/') ||
+      req.path.startsWith('/__/') ||
       req.path.startsWith('/assets/') ||
       req.path.startsWith('/src/') ||
       req.path.startsWith('/node_modules/') ||

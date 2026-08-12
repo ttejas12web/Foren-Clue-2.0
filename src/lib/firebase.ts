@@ -9,10 +9,11 @@ const getRuntimeConfig = () => {
   const config = { ...firebaseConfig };
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    if (hostname === 'forensicspot.com' || hostname === 'www.forensicspot.com') {
-      config.authDomain = 'forensicspot.com';
-    } else if (hostname === 'forenclue.com' || hostname === 'www.forenclue.com') {
-      config.authDomain = 'forenclue.com';
+    if (
+      hostname.includes('forenclue') ||
+      hostname.includes('forensicspot')
+    ) {
+      config.authDomain = hostname.startsWith('www.') ? hostname.replace('www.', '') : hostname;
     }
   }
   // Ensure storageBucket is used as specified in firebase-applet-config.json

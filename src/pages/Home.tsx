@@ -182,17 +182,17 @@ The ForenClue Curriculum Board
           >
             <motion.span 
               style={{ translateZ: 20 }}
-              className="inline-block py-1 px-3 rounded-full bg-warning/10 border border-warning/30 text-warning text-sm font-semibold mb-3 uppercase tracking-wider block-shadow"
+              className="inline-block py-1 px-4 rounded-full bg-warning/10 border border-warning/30 text-warning text-sm font-semibold mb-3 uppercase tracking-wider block-shadow"
             >
-              India's First Dedicated Platform
+              ForenClue • Forensic Education & Investigation Platform
             </motion.span>
             <motion.h1 
               style={{ translateZ: 50 }}
-              className="font-heading font-black text-5xl md:text-7xl lg:text-8xl leading-[0.9] tracking-tighter mb-8 uppercase text-text-main drop-shadow-2xl"
+              className="font-heading font-black text-5xl md:text-7xl lg:text-8xl leading-[0.9] tracking-tighter mb-6 uppercase text-text-main drop-shadow-2xl"
             >
-              Forensic <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-warning to-warning-dark inline-block transform -skew-x-6 mt-2">
-                Precision
+              Foren<span className="text-warning">Clue</span> <br/>
+              <span className="text-3xl md:text-5xl lg:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-warning to-warning-dark block mt-2">
+                Forensic Precision
               </span>
             </motion.h1>
             <motion.p 
@@ -201,7 +201,7 @@ The ForenClue Curriculum Board
             >
               <EditableText 
                 id="home_hero_subtitle" 
-                defaultText="Empowering students, educators, and professionals with real-world forensic knowledge, case-based learning, and career guidance."
+                defaultText="ForenClue is India's dedicated forensic science platform empowering students, educators, and legal professionals with case-based learning, e-books, virtual simulations, and career pathways."
                 isTextArea
                 className="text-center"
               />
@@ -304,51 +304,95 @@ The ForenClue Curriculum Board
       {/* Featured Recently Uploaded E-Library Material */}
       <RecentELibrarySection />
 
-      {/* About Snapshot */}
+      {/* About ForenClue & Application Purpose */}
       <motion.section 
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6 }}
-        className="py-24 bg-crust relative overflow-hidden"
+        className="py-20 bg-crust relative overflow-hidden"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="text-center mb-12">
+            <h2 className="font-heading font-black text-3xl md:text-5xl uppercase tracking-tight text-text-main">
+              About <span className="text-warning">ForenClue</span> & Purpose
+            </h2>
+            <p className="text-text-muted text-base max-w-2xl mx-auto mt-3">
+              ForenClue is designed for public access to forensic knowledge, case studies, and career tools.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
             
-            <div className="relative">
-              <div className="absolute -inset-4 bg-warning/10 border border-warning/20 transform rotate-3" />
-              <div className="bg-surface p-8 relative border border-black/10 dark:border-white/5 shadow-2xl backdrop-blur-sm">
-                 <EvidenceMarker number={<Star size={24} fill="currentColor" />} className="absolute -top-10 -left-6" />
-                 <h2 className="font-heading font-black text-4xl mb-6">Bridge the Gap</h2>
-                 <p className="text-text-muted text-lg leading-relaxed mb-6">
-                   <EditableText id="home_about_par1" defaultText="ForenClue is a next-generation forensic education platform designed to bridge the gap between theoretical learning and real-world forensic science applications." isTextArea />
-                 </p>
-                 <p className="text-text-muted text-lg leading-relaxed border-l-4 border-warning pl-4">
-                   <EditableText id="home_about_par2" defaultText="We provide structured e-books, case studies, and career pathways tailored for aspiring forensic professionals." isTextArea />
-                 </p>
+            <div className="relative flex flex-col justify-between">
+              <div className="absolute -inset-2 bg-warning/10 border border-warning/20 transform rotate-1 rounded-2xl" />
+              <div className="bg-surface p-8 relative rounded-2xl border border-black/10 dark:border-white/5 shadow-2xl backdrop-blur-sm h-full flex flex-col justify-between">
+                 <div>
+                   <EvidenceMarker number={<Star size={24} fill="currentColor" />} className="absolute -top-10 -left-6" />
+                   <h3 className="font-heading font-black text-2xl mb-4 text-text-main uppercase">
+                     Educational Purpose
+                   </h3>
+                   <p className="text-text-muted text-base leading-relaxed mb-4">
+                     <EditableText id="home_about_par1" defaultText="ForenClue is an expert-led forensic science edtech and research platform designed to bridge the gap between theoretical forensic education and real-world criminal investigation protocols." isTextArea />
+                   </p>
+                   <p className="text-text-muted text-base leading-relaxed border-l-4 border-warning pl-4 mb-4">
+                     <EditableText id="home_about_par2" defaultText="Visitors can freely browse case study breakdowns, e-library resource catalogues, webinar recordings, forensic podcasts, and virtual laboratory simulations without needing to log in." isTextArea />
+                   </p>
+                 </div>
+                 
+                 <div className="bg-base/60 p-4 rounded-xl border border-black/10 dark:border-white/5 mt-4">
+                   <h4 className="font-bold text-xs uppercase tracking-wider text-warning mb-1">
+                     Public & Open Access
+                   </h4>
+                   <p className="text-xs text-text-muted leading-normal">
+                     All learning materials, case study summaries, podcasts, webinars, and college directories on ForenClue are accessible publicly without requiring account registration or payment.
+                   </p>
+                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                { icon: Search, title: "Case-Based", desc: "Real crime case breakdowns" },
-                { icon: BookOpen, title: "E-Library", desc: "Expert books & materials" },
-                { icon: Users, title: "Career Path", desc: "Skills roadmap & guidance" },
-                { icon: ShieldAlert, title: "Certified", desc: "Recognized certification programs" }
-              ].map((feature, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-base/50 border border-black/10 dark:border-white/5 p-6 hover:border-warning/30 transition-colors group"
-                >
-                  <feature.icon size={32} className="text-warning mb-4 group-hover:scale-110 transition-transform" />
-                  <h3 className="font-heading font-bold text-xl mb-2">{feature.title}</h3>
-                  <p className="text-sm text-text-muted">{feature.desc}</p>
-                </motion.div>
-              ))}
+            <div className="flex flex-col justify-between gap-6">
+              <div className="bg-surface p-6 rounded-2xl border border-black/10 dark:border-white/5 shadow-xl">
+                <h3 className="font-heading font-bold text-xl mb-3 text-text-main uppercase flex items-center gap-2">
+                  <ShieldAlert size={20} className="text-warning" />
+                  Why Sign In With Google?
+                </h3>
+                <p className="text-sm text-text-muted leading-relaxed mb-3">
+                  Logging in with your Google account is optional and provides personalized learner features:
+                </p>
+                <ul className="space-y-2 text-xs text-text-muted">
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">•</span>
+                    <span><strong>Learner Profile:</strong> Save course completion progress and active quiz scores.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">•</span>
+                    <span><strong>Verified Certificates:</strong> Generate authenticated certificates for completed forensic masterclasses.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">•</span>
+                    <span><strong>Community Forum:</strong> Post forensic investigation doubts and participate in discussions with peers.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Search, title: "Case Studies", desc: "Real crime case breakdowns" },
+                  { icon: BookOpen, title: "E-Library", desc: "Expert books & materials" },
+                  { icon: Users, title: "Career Guidance", desc: "Forensic roadmap" },
+                  { icon: ShieldAlert, title: "Certifications", desc: "Recognized certificates" }
+                ].map((feature, i) => (
+                  <div 
+                    key={i}
+                    className="bg-surface/80 border border-black/10 dark:border-white/5 p-4 rounded-xl hover:border-warning/30 transition-colors group"
+                  >
+                    <feature.icon size={24} className="text-warning mb-2 group-hover:scale-110 transition-transform" />
+                    <h4 className="font-heading font-bold text-sm mb-1">{feature.title}</h4>
+                    <p className="text-[11px] text-text-muted leading-snug">{feature.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
           </div>

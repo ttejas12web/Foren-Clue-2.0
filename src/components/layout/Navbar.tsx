@@ -115,28 +115,25 @@ export function Navbar() {
           {/* Logo */}
           <Link 
             to={location.pathname === '/podcast' ? "/podcast" : "/"} 
-            className="group block"
+            className="group flex items-center shrink-0 py-1"
           >
             {location.pathname === '/podcast' ? (
                <div className="flex items-center gap-3">
                  <span className="font-black text-xl tracking-tight text-text-main group-hover:text-warning transition-colors">ForenClue Podcast</span>
                </div>
             ) : (
-              <>
-                <Logo />
-                <span className="text-[9px] text-text-muted uppercase tracking-widest mt-1 block">Your Partner in Forensic Precision.</span>
-              </>
+              <Logo />
             )}
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-0.5 xl:gap-1">
             {directLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "px-3 py-2 font-medium text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  "px-2 xl:px-3 py-2 font-medium text-xs xl:text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap",
                   location.pathname === link.path
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
@@ -150,7 +147,7 @@ export function Navbar() {
             <div className="relative group/resources-dropdown">
               <button
                 className={cn(
-                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  "flex items-center gap-1 px-2 xl:px-3 py-2 font-medium text-xs xl:text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap",
                   ['/quizzes', '/ebooks', '/podcast', '/webinar', '/simulations'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
@@ -186,7 +183,7 @@ export function Navbar() {
             <div className="relative group/verify-dropdown">
               <button
                 className={cn(
-                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  "flex items-center gap-1 px-2 xl:px-3 py-2 font-medium text-xs xl:text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap",
                   ['/certificate', '/employees'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
@@ -222,7 +219,7 @@ export function Navbar() {
             <div className="relative group/team-dropdown">
               <button
                 className={cn(
-                  "flex items-center gap-1 px-3 py-2 font-medium text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                  "flex items-center gap-1 px-2 xl:px-3 py-2 font-medium text-xs xl:text-sm transition-colors cursor-default rounded-md hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap",
                   ['/volunteers', '/ambassadors'].includes(location.pathname)
                     ? "text-warning"
                     : "text-text-muted hover:text-text-main"
@@ -258,7 +255,7 @@ export function Navbar() {
             <Link
               to="/about"
               className={cn(
-                "px-3 py-2 font-medium text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5",
+                "px-2 xl:px-3 py-2 font-medium text-xs xl:text-sm transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5 whitespace-nowrap",
                 location.pathname === '/about'
                   ? "text-warning"
                   : "text-text-muted hover:text-text-main"
