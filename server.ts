@@ -238,9 +238,10 @@ async function startServer() {
     try {
       const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
       const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || ['WPL_AP1', 'RNPYrFPdKMe2yBQV', 'YdOGCA=='].join('.');
-      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-      const host = req.headers['x-forwarded-host'] || req.get('host');
-      const redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      let host = req.headers['x-forwarded-host'] || req.get('host') || 'www.forenclue.in';
+      if (Array.isArray(host)) host = host[0];
+      const redirectUri = (req.query.redirect_uri as string) || `${protocol}://${host}/api/auth/linkedin/callback`;
 
       // 1. Exchange code for access token
       const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {

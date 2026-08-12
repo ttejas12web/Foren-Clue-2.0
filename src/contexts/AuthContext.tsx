@@ -315,10 +315,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithLinkedIn = async () => {
     return new Promise<void>((resolve, reject) => {
+      const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID || '86fnkfb4khjr8g';
       const protocol = window.location.protocol;
       const host = window.location.host;
-      const redirectUri = `${protocol}//${host}/api/auth/linkedin/callback`;
-      const initUrl = `/api/auth/linkedin/init?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const origin = `${protocol}//${host}`;
+      
+      const redirectUri = `${origin}/api/auth/linkedin/callback`;
+      const state = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const scope = encodeURIComponent("openid profile email");
+      const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scope}`;
 
       const width = 600;
       const height = 700;
@@ -326,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const top = window.screen.height / 2 - height / 2;
 
       const popup = window.open(
-        initUrl,
+        linkedinAuthUrl,
         'LinkedIn Authorization',
         `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
       );
