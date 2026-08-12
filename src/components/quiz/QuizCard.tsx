@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { Quiz, QuizAttempt } from '@/types/quiz';
 import { Clock, Calendar, Users, Award, Trophy, ArrowRight, CheckCircle2, Lock, Sparkles, Target, Timer, BookOpen, Zap, Share2, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -94,12 +95,18 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
   };
 
   return (
-    <div className={cn(
-      "bg-surface rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden relative group",
-      quiz.isWeeklyChallenge 
-        ? "border-amber-500/30 hover:border-amber-500/70 shadow-lg shadow-amber-500/5" 
-        : "border-black/10 dark:border-white/10 hover:border-warning/60 shadow-md hover:shadow-warning/5"
-    )}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={cn(
+        "bg-surface rounded-2xl border transition-all duration-300 flex flex-col justify-between overflow-hidden relative group",
+        quiz.isWeeklyChallenge 
+          ? "border-amber-500/30 hover:border-amber-500/70 shadow-lg shadow-amber-500/5" 
+          : "border-black/10 dark:border-white/10 hover:border-warning/60 shadow-md hover:shadow-warning/5"
+      )}
+    >
       {/* Top Banner Tag */}
       {quiz.isWeeklyChallenge ? (
         <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 px-4 py-1.5 flex items-center justify-between text-black font-extrabold text-[11px] uppercase tracking-widest">
@@ -365,6 +372,6 @@ export function QuizCard({ quiz, onEnroll, isEnrolling, userAttempt }: QuizCardP
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
