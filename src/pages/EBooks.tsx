@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   BookOpen, 
@@ -16,7 +17,9 @@ import {
   Share2,
   Copy,
   Check,
-  X
+  X,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { SEO } from '@/components/layout/SEO';
 import { SEOManager } from '@/components/layout/SEOManager';
@@ -43,155 +46,16 @@ interface ForensicResource {
   coverImage?: string;
   rating?: number;
   downloads?: number;
+  // Volunteer & Member Contributor Recognition
+  uploadedBy?: string;
+  uploaderName?: string;
+  uploaderRole?: string;
+  uploaderPhoto?: string;
+  volunteerId?: string;
 }
 
 // Premium forensic academic collection (fallback & defaults)
-const defaultResources: ForensicResource[] = [
-  { 
-    id: 'reddy', 
-    title: 'Concise Forensic Medicine & Toxicology', 
-    author: 'Dr. K. S. Narayan Reddy', 
-    year: 2015, 
-    category: 'Forensic Medicine & Pathology', 
-    tabCategory: 'books',
-    type: 'PDF', 
-    size: '28MB', 
-    desc: 'The authoritative, de facto medical manual detailing legal inquests, dactylography pattern identification, postmortem changes, mechanical injuries, and clinical toxicological protocols.',
-    rating: 4.9,
-    downloads: 1420,
-    image: bookCoverUrl
-  },
-  { 
-    id: 'nandy', 
-    title: 'Principles of Forensic Medicine', 
-    author: 'Apurba Nandy', 
-    year: 2021, 
-    category: 'Forensic Medicine & Pathology', 
-    tabCategory: 'books',
-    type: 'PDF', 
-    size: '15MB',
-    desc: 'Critical guidelines for identifying postmortem artifacts, medical laws, ethics, and physical injury classifications for medical practitioners.',
-    rating: 4.8,
-    downloads: 890
-  },
-  { 
-    id: 'bertino', 
-    title: 'Forensic Science: Fundamentals and Investigations', 
-    author: 'Anthony J. Bertino', 
-    year: 2020, 
-    category: 'General', 
-    tabCategory: 'books',
-    type: 'PDF', 
-    size: '22MB',
-    desc: 'A modern academic survey covering crime scene investigation foundations, hair/fiber analysis, human skeleton models, and ballistics.',
-    rating: 4.7,
-    downloads: 640
-  },
-  { 
-    id: 'swanson', 
-    title: 'Criminal Investigation', 
-    author: 'Charles R. Swanson', 
-    year: 2018, 
-    category: 'Crime Scene Investigation', 
-    tabCategory: 'books',
-    type: 'EPUB', 
-    size: '10MB',
-    desc: 'Tactical study of physical evidence tracking, eyewitness interview systems, scene documentation, and criminal profiling logic.',
-    rating: 4.6,
-    downloads: 410
-  },
-  { 
-    id: 'note-toxicology', 
-    title: 'Toxicology Quick Revision Notes', 
-    author: 'Dr. Amit Sharma', 
-    year: 2024, 
-    category: 'Toxicology & Pharmacology', 
-    tabCategory: 'notes',
-    type: 'PDF', 
-    size: '2MB', 
-    desc: 'High-yield revision summaries covering corrosive classifications, chelating therapy (EDTA, B.A.L.), organic irritants, and poison timelines.', 
-    rating: 4.9,
-    downloads: 1250
-  },
-  { 
-    id: 'note-fingerprints', 
-    title: 'Fingerprint Patterns & Poroscopy Guide', 
-    author: 'Prof. Davis Pathak', 
-    year: 2023, 
-    category: 'Fingerprinting & Dactyloscopy', 
-    tabCategory: 'notes',
-    type: 'PDF', 
-    size: '4MB', 
-    desc: 'A condensed guide analyzing Galton ridges, latent fingerprint development reagents, and microscopic pore frequency calculations.', 
-    rating: 4.8,
-    downloads: 940
-  },
-  { 
-    id: 'paper-ugc-2023', 
-    title: 'UGC NET Forensic Science 2023 Solved Paper II', 
-    author: 'ForenClue Academy', 
-    year: 2023, 
-    category: 'Question Papers', 
-    tabCategory: 'papers',
-    type: 'PDF', 
-    size: '5MB', 
-    desc: 'Solved UGC National Eligibility Test fully solved solutions with thorough reasoning for analytical chemical and biological sections.', 
-    rating: 4.9,
-    downloads: 2100
-  },
-  { 
-    id: 'paper-fact-2021', 
-    title: 'FACT Exam Solved Questionnaire (2021)', 
-    author: 'ForenClue Team', 
-    year: 2021, 
-    category: 'Question Papers', 
-    tabCategory: 'papers',
-    type: 'PDF', 
-    size: '4.5MB', 
-    desc: 'Forensic Aptitude and Caliber Test solved questions and syllabus blueprints for entry-level analyst eligibility exam criteria.', 
-    rating: 4.7,
-    downloads: 1150
-  },
-  { 
-    id: 'research-decomposition', 
-    title: 'Microbial Succession Models on Soil Postmortem Degradation', 
-    author: 'Dr. Jane Vance', 
-    year: 2022, 
-    category: 'DNA & Serology', 
-    tabCategory: 'other',
-    type: 'PDF', 
-    size: '7.8MB', 
-    desc: 'An advanced research paper detailing chemical soil profile shifts and bacterial successions for estimating postmortem intervals.', 
-    rating: 4.8,
-    downloads: 320
-  },
-  { 
-    id: 'case-asphyxia', 
-    title: 'Medicolegal Autopsy Findings of Homicidal Asphyxia Case Files', 
-    author: 'Dr. R. K. Saxena', 
-    year: 2021, 
-    category: 'Forensic Medicine & Pathology', 
-    tabCategory: 'other',
-    type: 'PDF', 
-    size: '6.4MB', 
-    desc: 'Expert study files highlighting suicidal hangings versus homicidal strangulations based on cervical trauma.', 
-    rating: 4.9,
-    downloads: 710
-  },
-  { 
-    id: 'manual-toxicology', 
-    title: 'Standard Toxicological Extraction Protocols Manual', 
-    author: 'Academic Council', 
-    year: 2023, 
-    category: 'Toxicology & Pharmacology', 
-    tabCategory: 'other',
-    type: 'PDF', 
-    size: '8.2MB', 
-    desc: 'Step-by-step chemical isolation protocols for acid/basic toxins from visceral tissues using chromatographic isolation methods.', 
-    rating: 4.8,
-    downloads: 1540
-  }
-];
+const defaultResources: ForensicResource[] = [];
 
 const forensicCategories = [
   'All',
@@ -233,7 +97,12 @@ export default function EBooks() {
           pdfUrl: d.pdfUrl || '',
           image: d.image || d.coverImage || '',
           rating: d.rating || 4.5,
-          downloads: d.downloads || 0
+          downloads: d.downloads || 0,
+          uploadedBy: d.uploadedBy || d.uploaderName || '',
+          uploaderName: d.uploaderName || d.uploadedBy || '',
+          uploaderRole: d.uploaderRole || 'Volunteer Contributor',
+          uploaderPhoto: d.uploaderPhoto || '',
+          volunteerId: d.volunteerId || ''
         });
       });
       setDbEBooks(list);
@@ -258,7 +127,9 @@ export default function EBooks() {
       const titleMatch = (item.title || '').toLowerCase().includes(queryStr);
       const authorMatch = (item.author || '').toLowerCase().includes(queryStr);
       const descMatch = (item.desc || '').toLowerCase().includes(queryStr);
-      if (!titleMatch && !authorMatch && !descMatch) return false;
+      const uploaderMatch = (item.uploadedBy || item.uploaderName || '').toLowerCase().includes(queryStr);
+      const volIdMatch = (item.volunteerId || '').toLowerCase().includes(queryStr);
+      if (!titleMatch && !authorMatch && !descMatch && !uploaderMatch && !volIdMatch) return false;
     }
 
     return true;
@@ -692,6 +563,16 @@ interface ResourceCardProps {
 }
 
 function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) {
+  const navigate = useNavigate();
+  const profileQuery = item.volunteerId || item.uploaderName || item.uploadedBy || '';
+
+  const handleProfileRedirect = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (profileQuery) {
+      navigate(`/employees?id=${encodeURIComponent(profileQuery.trim())}`);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -706,7 +587,7 @@ function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) 
       <div className="space-y-4">
         {/* Book Spine Portrait or Accent Banner */}
         <div 
-          onClick={onDownload}
+          onClick={onOpen}
           className="aspect-[5/3] w-full rounded-xl bg-gradient-to-br from-[#0e1726] to-[#040812] border border-black/10 dark:border-white/5 relative overflow-hidden flex items-center justify-center p-4 shadow-inner cursor-pointer group-hover:border-warning/20"
         >
           {/* Subtle visual grid texture */}
@@ -746,11 +627,20 @@ function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) 
         {/* Action Button Row */}
         <div className="flex items-center gap-2">
           <button
-            onClick={onDownload}
+            onClick={onOpen}
             className="flex-1 py-2.5 px-3 bg-warning hover:bg-warning/90 active:scale-[0.98] text-crust text-xs font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md hover:shadow-lg cursor-pointer truncate"
           >
+            <Eye size={14} />
+            <span>Read PDF</span>
+          </button>
+
+          <button
+            onClick={onDownload}
+            className="py-2.5 px-3 bg-base hover:bg-black/10 dark:hover:bg-white/10 active:scale-[0.98] text-text-main border border-black/15 dark:border-white/15 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:border-warning/50 text-xs font-bold shrink-0"
+            title="Download PDF Document"
+          >
             <Download size={14} />
-            <span>Download</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider hidden sm:inline">Download</span>
           </button>
           
           <button
@@ -759,7 +649,7 @@ function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) 
             title="Share on WhatsApp, Instagram, Twitter, LinkedIn"
           >
             <Share2 size={14} className="text-warning" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Share</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider hidden sm:inline">Share</span>
           </button>
         </div>
 
@@ -775,7 +665,7 @@ function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) 
           </div>
 
           <h3 
-            onClick={onDownload}
+            onClick={onOpen}
             className="text-sm font-extrabold text-text-main leading-snug cursor-pointer hover:text-warning transition-colors uppercase line-clamp-1"
             title={item.title}
           >
@@ -785,6 +675,56 @@ function ResourceCard({ item, onOpen, onDownload, onShare }: ResourceCardProps) 
           <p className="text-[11px] text-text-muted line-clamp-2 leading-relaxed h-[34px]">
             {item.desc}
           </p>
+
+          {/* Volunteer & Member Contributor Recognition */}
+          {(item.uploadedBy || item.uploaderName || item.volunteerId) && (
+            <div 
+              onClick={handleProfileRedirect}
+              className="mt-3 p-2.5 bg-warning/5 hover:bg-warning/15 dark:bg-warning/10 dark:hover:bg-warning/20 border border-warning/25 hover:border-warning/50 rounded-xl flex items-center justify-between gap-2 shadow-sm transition-all cursor-pointer group/uploader"
+              title="Click to view digital ID card in verification system"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Profile Photo / Avatar Icon with Verification Checkmark */}
+                <div className="relative shrink-0">
+                  {item.uploaderPhoto ? (
+                    <img 
+                      src={item.uploaderPhoto} 
+                      alt={item.uploaderName || item.uploadedBy || 'Contributor'} 
+                      referrerPolicy="no-referrer"
+                      className="w-8 h-8 rounded-full object-cover border border-warning/40 shadow-sm group-hover/uploader:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-warning/20 text-warning font-black text-xs flex items-center justify-center border border-warning/40 shadow-sm group-hover/uploader:scale-105 transition-transform">
+                      {(item.uploaderName || item.uploadedBy || 'V').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center border border-surface text-[8px] text-white font-bold" title="Verified Volunteer/Member">
+                    ✓
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-extrabold text-text-main group-hover/uploader:text-warning transition-colors truncate leading-tight">
+                      {item.uploaderName || item.uploadedBy}
+                    </span>
+                    <span className="text-[8px] font-mono bg-warning/20 text-warning px-1.5 py-0.2 rounded font-bold uppercase shrink-0">
+                      {item.uploaderRole || 'Volunteer Contributor'}
+                    </span>
+                  </div>
+                  {item.volunteerId && (
+                    <div className="text-[9px] font-mono text-text-muted truncate mt-0.5">
+                      Volunteer ID: <span className="font-bold text-warning">{item.volunteerId}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="shrink-0 text-text-muted group-hover/uploader:text-warning transition-colors p-1" title="View Digital ID Card">
+                <ShieldCheck size={16} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

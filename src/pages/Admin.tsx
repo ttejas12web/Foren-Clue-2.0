@@ -134,7 +134,12 @@ export default function Admin() {
     size: '12MB',
     image: '',
     pdfUrl: '',
-    desc: ''
+    desc: '',
+    uploadedBy: '',
+    uploaderName: '',
+    uploaderRole: 'Volunteer Contributor',
+    uploaderPhoto: '',
+    volunteerId: ''
   });
 
   // Podcast Episode dynamic state
@@ -462,6 +467,22 @@ export default function Admin() {
           imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150',
           clearanceLevel: 'Level 3 - Member',
           checksum: 'c2e8f1920acbb83e748d1b1dfcf9a228394b92c4f1c7bf9e8a93e3d9fdf196d4',
+          createdAt: new Date().toISOString()
+        },
+        {
+          employeeId: 'FC-EMP-708',
+          fullName: 'Dr. Amit Sharma',
+          position: 'Lead Forensic Researcher & Academic Scientist',
+          department: 'Research & Development (R&D)',
+          joiningDate: '2024-03-01',
+          expiryDate: '2029-03-01',
+          status: 'Active' as const,
+          email: 'amit.sharma@forenclue.com',
+          phone: '+91 98765 12345',
+          skills: ['Toxicological Analysis', 'Chemical Profiling', 'Postmortem Interval Estimation', 'Academic Publishing'],
+          imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
+          clearanceLevel: 'Level 3 - Member',
+          checksum: '9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e',
           createdAt: new Date().toISOString()
         }
       ];
@@ -1587,7 +1608,12 @@ export default function Admin() {
         size: newEbook.size,
         image: newEbook.image || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=300',
         pdfUrl: newEbook.pdfUrl,
-        desc: newEbook.desc || 'Forensic reference files.'
+        desc: newEbook.desc || 'Forensic reference files.',
+        uploadedBy: newEbook.uploadedBy || newEbook.uploaderName || '',
+        uploaderName: newEbook.uploaderName || newEbook.uploadedBy || '',
+        uploaderRole: newEbook.uploaderRole || 'Volunteer Contributor',
+        uploaderPhoto: newEbook.uploaderPhoto || '',
+        volunteerId: newEbook.volunteerId || ''
       };
 
       if (editingEbookId) {
@@ -1608,7 +1634,12 @@ export default function Admin() {
         size: '12MB',
         image: '',
         pdfUrl: '',
-        desc: ''
+        desc: '',
+        uploadedBy: '',
+        uploaderName: '',
+        uploaderRole: 'Volunteer Contributor',
+        uploaderPhoto: '',
+        volunteerId: ''
       });
       fetchCollections();
     } catch (err: any) {
@@ -3234,6 +3265,136 @@ export default function Admin() {
                           />
                         </div>
 
+                        {/* Volunteer & Member Recognition Section */}
+                        <div className="p-4 bg-warning/5 border border-warning/20 rounded-2xl space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Award className="w-4 h-4 text-warning" />
+                            <h4 className="text-xs font-extrabold uppercase tracking-wide text-text-main">
+                              Volunteer / Member Recognition (Contributor Attribution)
+                            </h4>
+                          </div>
+                          <p className="text-[10px] text-text-muted font-sans">
+                            Connect this material to a verified volunteer or employee from the Employee Verification System. When site visitors click on the contributor profile, they will be redirected to their digital cryptographic ID card.
+                          </p>
+
+                          {/* Quick Selector from Employee Verification System */}
+                          <div className="bg-base p-3 border border-black/10 dark:border-white/10 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <label className="text-[10px] font-mono font-bold text-text-main uppercase flex items-center gap-1.5">
+                                <ShieldCheck size={14} className="text-emerald-500" />
+                                <span>Link Verified Employee / Volunteer (Verification System)</span>
+                              </label>
+                              <span className="text-[9px] font-mono text-text-muted">
+                                {adminEmployees.length} verified identities found
+                              </span>
+                            </div>
+
+                            <select
+                              value={newEbook.volunteerId || ''}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
+                                if (!selectedId) {
+                                  setNewEbook({
+                                    ...newEbook,
+                                    volunteerId: '',
+                                    uploadedBy: '',
+                                    uploaderName: '',
+                                    uploaderRole: 'Volunteer Contributor',
+                                    uploaderPhoto: ''
+                                  });
+                                  return;
+                                }
+                                const matchedEmp = adminEmployees.find(emp => emp.employeeId === selectedId);
+                                if (matchedEmp) {
+                                  setNewEbook({
+                                    ...newEbook,
+                                    volunteerId: matchedEmp.employeeId,
+                                    uploadedBy: matchedEmp.fullName,
+                                    uploaderName: matchedEmp.fullName,
+                                    uploaderRole: `${matchedEmp.position || 'Volunteer'} (${matchedEmp.department || 'ForenClue'})`,
+                                    uploaderPhoto: matchedEmp.imageUrl || ''
+                                  });
+                                }
+                              }}
+                              className="w-full bg-surface border border-black/15 dark:border-white/15 rounded-xl py-2 px-3 text-xs font-sans text-text-main focus:border-warning outline-none cursor-pointer"
+                            >
+                              <option value="">-- Select Volunteer / Employee ID from Verification System --</option>
+                              {adminEmployees.map((emp) => (
+                                <option key={emp.employeeId} value={emp.employeeId}>
+                                  {emp.employeeId} - {emp.fullName} ({emp.position || emp.department})
+                                </option>
+                              ))}
+                            </select>
+
+                            {/* Active Connection Badge */}
+                            {(newEbook.volunteerId || newEbook.uploadedBy) && (
+                              <div className="pt-2 flex items-center justify-between gap-2 text-[10px] font-mono border-t border-black/5 dark:border-white/5 flex-wrap">
+                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
+                                  <CheckCircle2 size={13} />
+                                  <span>Connected ID: <strong>{newEbook.volunteerId || 'Manual ID'}</strong> &bull; {newEbook.uploaderName || newEbook.uploadedBy}</span>
+                                </div>
+                                {newEbook.volunteerId && (
+                                  <a
+                                    href={`/employees?id=${encodeURIComponent(newEbook.volunteerId)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-warning hover:underline font-bold flex items-center gap-1"
+                                  >
+                                    <span>Preview Digital ID Card</span>
+                                    <ExternalLink size={11} />
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Volunteer / Uploader Name</label>
+                              <input 
+                                type="text" 
+                                value={newEbook.uploadedBy || newEbook.uploaderName} 
+                                onChange={e => setNewEbook({...newEbook, uploadedBy: e.target.value, uploaderName: e.target.value})} 
+                                placeholder="e.g. Rohan Verma" 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-sans outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Volunteer / Member ID</label>
+                              <input 
+                                type="text" 
+                                value={newEbook.volunteerId} 
+                                onChange={e => setNewEbook({...newEbook, volunteerId: e.target.value})} 
+                                placeholder="e.g. FC-VOL-2024-182" 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-sans outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Contributor Role / Badge</label>
+                              <input 
+                                type="text" 
+                                value={newEbook.uploaderRole} 
+                                onChange={e => setNewEbook({...newEbook, uploaderRole: e.target.value})} 
+                                placeholder="e.g. Senior Research Volunteer" 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-sans outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-mono text-text-muted uppercase mb-1">Profile Photo URL (Optional)</label>
+                              <input 
+                                type="text" 
+                                value={newEbook.uploaderPhoto} 
+                                onChange={e => setNewEbook({...newEbook, uploaderPhoto: e.target.value})} 
+                                placeholder="https://..." 
+                                className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-sans outline-none text-text-main focus:border-warning/50 transition-colors"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="flex items-center gap-4 mt-4">
                           <button 
                             type="submit" 
@@ -3249,7 +3410,8 @@ export default function Admin() {
                                 setNewEbook({
                                   title: '', author: '', year: new Date().getFullYear(),
                                   category: 'Fundamentals', tabCategory: 'books', type: 'PDF',
-                                  size: '12MB', image: '', pdfUrl: '', desc: ''
+                                  size: '12MB', image: '', pdfUrl: '', desc: '',
+                                  uploadedBy: '', uploaderName: '', uploaderRole: 'Volunteer Contributor', uploaderPhoto: '', volunteerId: ''
                                 });
                               }}
                               className="px-6 py-3 bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center"
@@ -3276,6 +3438,11 @@ export default function Admin() {
                                 <div>
                                   <h4 className="text-xs font-black uppercase text-text-main leading-tight line-clamp-1">{b.title}</h4>
                                   <span className="text-[10px] font-mono uppercase tracking-widest text-warning font-black">{b.tabCategory} • {b.author || 'Author unspecified'}</span>
+                                  {(b.uploadedBy || b.uploaderName) && (
+                                    <div className="text-[9px] font-mono text-emerald-400 mt-0.5">
+                                      Volunteer: {b.uploaderName || b.uploadedBy} {b.volunteerId && `(${b.volunteerId})`}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -3292,7 +3459,12 @@ export default function Admin() {
                                       size: b.size || '12MB',
                                       image: b.image || '',
                                       pdfUrl: b.pdfUrl || '',
-                                      desc: b.desc || ''
+                                      desc: b.desc || '',
+                                      uploadedBy: b.uploadedBy || b.uploaderName || '',
+                                      uploaderName: b.uploaderName || b.uploadedBy || '',
+                                      uploaderRole: b.uploaderRole || 'Volunteer Contributor',
+                                      uploaderPhoto: b.uploaderPhoto || '',
+                                      volunteerId: b.volunteerId || ''
                                     });
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
@@ -3972,6 +4144,9 @@ export default function Admin() {
                               onChange={e => setEmployeeFormData({...employeeFormData, department: e.target.value})} 
                               className="w-full bg-base border border-black/10 dark:border-white/10 rounded-xl py-2 px-3 text-xs font-bold outline-none text-text-main focus:border-warning/50 transition-colors"
                             >
+                              <option>Research & Development (R&D)</option>
+                              <option>Forensic Research & Academic Publications</option>
+                              <option>Research & Intelligence</option>
                               <option>Forensic Case Studies & Publications</option>
                               <option>Business Development & Partnerships</option>
                               <option>Human Resources (HR)</option>

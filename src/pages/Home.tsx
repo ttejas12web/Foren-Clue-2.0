@@ -8,6 +8,7 @@ import { EditableText } from '@/components/ui/EditableText';
 import { SEO } from '@/components/layout/SEO';
 import { ForensicGridCanvas } from '@/components/ui/ForensicGridCanvas';
 import { UpcomingQuizSection } from '@/components/quiz/UpcomingQuizSection';
+import { RecentELibrarySection } from '@/components/library/RecentELibrarySection';
 
 const MotionLink = motion.create(Link);
 
@@ -299,6 +300,9 @@ The ForenClue Curriculum Board
 
       {/* Upcoming & Active Quiz Challenges */}
       <UpcomingQuizSection />
+
+      {/* Featured Recently Uploaded E-Library Material */}
+      <RecentELibrarySection />
 
       {/* About Snapshot */}
       <motion.section 
