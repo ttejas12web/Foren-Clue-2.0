@@ -190,10 +190,15 @@ async function startServer() {
   });
 
   // LinkedIn OAuth Initialization Endpoint
-  app.get("/api/auth/linkedin/init", (req, res) => {
+  app.all(["/api/auth/linkedin/init", "/api/auth/linkedin/init/"], (req, res) => {
     const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers['x-forwarded-host'] || req.get('host');
+    let protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+    if (Array.isArray(protocol)) protocol = protocol[0];
+    let host = (req.headers['x-forwarded-host'] || req.get('host') || 'www.forenclue.in') as string;
+    if (Array.isArray(host)) host = host[0];
+    if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
+      protocol = 'https';
+    }
     const defaultRedirect = `${protocol}://${host}/api/auth/linkedin/callback`;
     const redirectUri = (req.query.redirect_uri as string) || defaultRedirect;
 
@@ -208,8 +213,11 @@ async function startServer() {
   });
 
   // LinkedIn OAuth Callback Endpoint
-  app.get("/api/auth/linkedin/callback", async (req, res) => {
-    const { code, state, error, error_description } = req.query;
+  app.all(["/api/auth/linkedin/callback", "/api/auth/linkedin/callback/"], async (req, res) => {
+    const code = (req.query.code || req.body?.code) as string;
+    const state = req.query.state || req.body?.state;
+    const error = req.query.error || req.body?.error;
+    const error_description = req.query.error_description || req.body?.error_description;
 
     if (error) {
       console.error("[LinkedIn OAuth Error]:", error, error_description);
@@ -224,6 +232,8 @@ async function startServer() {
             if (window.opener) {
               window.opener.postMessage({ type: 'LINKEDIN_AUTH_ERROR', error: ${JSON.stringify(error_description || error)} }, '*');
               setTimeout(() => window.close(), 2000);
+            } else {
+              setTimeout(() => { window.location.href = '/login'; }, 3000);
             }
           </script>
         </body>
@@ -232,7 +242,7 @@ async function startServer() {
     }
 
     if (!code) {
-      return res.status(400).send("Authorization code missing.");
+      return res.redirect('/login');
     }
 
     try {
@@ -246,29 +256,48 @@ async function startServer() {
       if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
         protocol = 'https';
       }
-      const redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
 
-      // 1. Exchange code for access token
-      const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code as string,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-        }),
-      });
+      const primaryRedirect = `${protocol}://${host}/api/auth/linkedin/callback`;
+      const redirectCandidates = [
+        primaryRedirect,
+        `https://www.forenclue.in/api/auth/linkedin/callback`,
+        `https://forenclue.in/api/auth/linkedin/callback`
+      ];
+      const uniqueCandidates = Array.from(new Set(redirectCandidates));
 
-      const tokenData = await tokenResponse.json();
+      let accessToken = '';
+      let lastTokenError: any = null;
 
-      if (!tokenResponse.ok || !tokenData.access_token) {
-        console.error("[LinkedIn Token Exchange Failed]:", tokenData);
-        throw new Error(tokenData.error_description || tokenData.error || "Failed to retrieve access token from LinkedIn");
+      for (const uri of uniqueCandidates) {
+        try {
+          const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              grant_type: "authorization_code",
+              code: code as string,
+              client_id: clientId,
+              client_secret: clientSecret,
+              redirect_uri: uri,
+            }),
+          });
+
+          const tokenData = await tokenResponse.json();
+          if (tokenResponse.ok && tokenData.access_token) {
+            accessToken = tokenData.access_token;
+            break;
+          } else {
+            lastTokenError = tokenData;
+          }
+        } catch (err) {
+          lastTokenError = err;
+        }
       }
 
-      const accessToken = tokenData.access_token;
+      if (!accessToken) {
+        console.error("[LinkedIn Token Exchange Failed]:", lastTokenError);
+        throw new Error(lastTokenError?.error_description || lastTokenError?.error || "Failed to retrieve access token from LinkedIn");
+      }
 
       // 2. Fetch User Profile from LinkedIn OpenID UserInfo endpoint
       const userResponse = await fetch("https://api.linkedin.com/v2/userinfo", {
