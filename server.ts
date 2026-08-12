@@ -239,35 +239,14 @@ async function startServer() {
       const clientId = process.env.LINKEDIN_CLIENT_ID || process.env.VITE_LINKEDIN_CLIENT_ID || "86fnkfb4khjr8g";
       const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || ['WPL_AP1', 'RNPYrFPdKMe2yBQV', 'YdOGCA=='].join('.');
       
-      let redirectUri = '';
-      if (req.query.state && typeof req.query.state === 'string') {
-        const rawState = req.query.state;
-        try {
-          const decodedStr = Buffer.from(rawState, 'base64').toString('utf-8');
-          const parsedState = JSON.parse(decodedStr);
-          if (parsedState && parsedState.redirectUri) {
-            redirectUri = parsedState.redirectUri;
-          }
-        } catch (e) {
-          try {
-            const decodedStr = Buffer.from(decodeURIComponent(rawState), 'base64').toString('utf-8');
-            const parsedState = JSON.parse(decodedStr);
-            if (parsedState && parsedState.redirectUri) {
-              redirectUri = parsedState.redirectUri;
-            }
-          } catch (e2) {}
-        }
+      let protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+      if (Array.isArray(protocol)) protocol = protocol[0];
+      let host = (req.headers['x-forwarded-host'] || req.get('host') || 'www.forenclue.in') as string;
+      if (Array.isArray(host)) host = host[0];
+      if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
+        protocol = 'https';
       }
-
-      if (!redirectUri) {
-        let protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-        let host = (req.headers['x-forwarded-host'] || req.get('host') || 'www.forenclue.in') as string;
-        if (Array.isArray(host)) host = host[0];
-        if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
-          protocol = 'https';
-        }
-        redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
-      }
+      const redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
 
       // 1. Exchange code for access token
       const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
@@ -410,9 +389,13 @@ async function startServer() {
             };
             if (window.opener) {
               window.opener.postMessage(payload, '*');
-              setTimeout(() => window.close(), 1200);
+              setTimeout(() => window.close(), 1000);
             } else {
-              window.location.href = '/login?linkedin_token=' + encodeURIComponent(${JSON.stringify(customToken)});
+              try {
+                localStorage.setItem('manualUser', JSON.stringify(${JSON.stringify(userPayload)}));
+                sessionStorage.setItem('manualUser', JSON.stringify(${JSON.stringify(userPayload)}));
+              } catch (e) {}
+              window.location.href = '/';
             }
           </script>
         </body>

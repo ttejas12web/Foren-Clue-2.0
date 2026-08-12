@@ -324,11 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       const redirectUri = `${origin}/api/auth/linkedin/callback`;
-      const nonce = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
+      const state = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
         .map(b => b.toString(16).padStart(2, '0')).join('');
-      
-      const stateObj = { nonce, redirectUri };
-      const state = encodeURIComponent(btoa(JSON.stringify(stateObj)));
       
       const scope = encodeURIComponent("openid profile email");
       const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scope}`;
